@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
-const GHL_KEY = process.env.VITE_GHL_API_KEY!
-const LOC = process.env.VITE_GHL_LOCATION_ID!
+const GHL_KEY = (process.env.GHL_API_KEY || process.env.VITE_GHL_API_KEY)!
+const LOC = (process.env.GHL_LOCATION_ID || process.env.VITE_GHL_LOCATION_ID)!
 const BASE = 'https://services.leadconnectorhq.com'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
