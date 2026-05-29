@@ -16,8 +16,10 @@ async function fetchByUser(userId: string, startTime: string, endTime: string) {
       headers: { Authorization: `Bearer ${GHL_KEY}`, Version: '2021-04-15' }
     })
     const data = await r.json()
+    console.log(`userId=${userId} status=${r.status} events=${(data.events||[]).length} raw=${JSON.stringify(data).slice(0,200)}`)
     return data.events || []
-  } catch {
+  } catch (e) {
+    console.error(`userId=${userId} error:`, e)
     return []
   }
 }
@@ -40,6 +42,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const active = unique.filter(e => !e.deleted && e.appointmentStatus !== 'cancelled')
   active.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
 
-  console.log(`Agenda ${date}: start=${start} end=${end} total=${all.length} active=${active.length}`)
-  res.json({ events: active })
+  console.log(`Agenda ${date}: start=${start} end=${end} total=${all.length} active=${active.length} keyPresent=${!!GHL_KEY}`)
+  res.json({ events: active, _debug: { start, end, keyPresent: !!GHL_KEY, total: all.length } })
 }
