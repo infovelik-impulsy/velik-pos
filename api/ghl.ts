@@ -14,17 +14,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   })
 
   const url = `${BASE}/${pathStr}${params.toString() ? '?' + params.toString() : ''}`
+  console.log('GHL proxy →', url)
+  console.log('Key present:', !!GHL_KEY, '| LOC:', LOC)
 
-  const r = await fetch(url, {
-    method: req.method,
-    headers: {
-      Authorization: `Bearer ${GHL_KEY}`,
-      Version: '2021-07-28',
-      'Content-Type': 'application/json',
-    },
-    body: req.method !== 'GET' ? JSON.stringify(req.body) : undefined,
-  })
+  try {
+    const r = await fetch(url, {
+      method: req.method,
+      headers: {
+        Authorization: `Bearer ${GHL_KEY}`,
+        Version: '2021-07-28',
+        'Content-Type': 'application/json',
+      },
+      body: req.method !== 'GET' ? JSON.stringify(req.body) : undefined,
+    })
 
-  const data = await r.json()
-  res.status(r.status).json(data)
+    const data = await r.json()
+    console.log('GHL response status:', r.status, JSON.stringify(data).slice(0, 200))
+    res.status(r.status).json(data)
+  } catch (e) {
+    console.error('GHL proxy error:', e)
+    res.status(500).json({ error: String(e) })
+  }
 }

@@ -20,12 +20,13 @@ export async function getAppointmentsForDay(date: Date): Promise<GHLAppointment[
   const params = new URLSearchParams({
     path: 'calendars/events',
     locationId: LOC,
-    startTime: start.toISOString(),
-    endTime: end.toISOString(),
+    startTime: String(start.getTime()),
+    endTime: String(end.getTime()),
   })
 
   const r = await fetch(`${PROXY}?${params}`)
   const data = await r.json()
+  console.log('GHL events response:', data)
   return data.events || []
 }
 
