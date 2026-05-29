@@ -15,7 +15,7 @@ export async function getAppointmentsForDay(date: Date): Promise<GHLAppointment[
   const yyyy = date.getFullYear()
   const mm = String(date.getMonth() + 1).padStart(2, '0')
   const dd = String(date.getDate()).padStart(2, '0')
-  const r = await fetch(`/api/agenda?date=${yyyy}-${mm}-${dd}`)
+  const r = await fetch(`https://santiagon8nmejia.dominadoresia.com/webhook/velik-agenda?date=${yyyy}-${mm}-${dd}`)
   const data = await r.json()
   return data.events || []
 }
