@@ -12,22 +12,23 @@ export interface GHLAppointment {
 }
 
 export async function getAppointmentsForDay(date: Date): Promise<GHLAppointment[]> {
-  const start = new Date(date)
-  start.setHours(0, 0, 0, 0)
-  const end = new Date(date)
-  end.setHours(23, 59, 59, 999)
+  const yyyy = date.getFullYear()
+  const mm = String(date.getMonth() + 1).padStart(2, '0')
+  const dd = String(date.getDate()).padStart(2, '0')
+  const dateStr = `${yyyy}-${mm}-${dd}`
 
   const params = new URLSearchParams({
-    path: 'calendars/events/appointments',
+    path: 'appointments/',
     locationId: LOC,
-    startTime: String(start.getTime()),
-    endTime: String(end.getTime()),
+    startDate: dateStr,
+    endDate: dateStr,
   })
 
   const r = await fetch(`${PROXY}?${params}`)
   const data = await r.json()
-  console.log('GHL events response:', data)
-  return data.events || []
+  console.log('GHL appointments response:', data)
+  // try both possible response shapes
+  return data.appointments || data.events || []
 }
 
 export async function getContact(contactId: string) {
