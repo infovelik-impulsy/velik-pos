@@ -18,7 +18,7 @@ export async function getAppointmentsForDay(date: Date): Promise<GHLAppointment[
   end.setHours(23, 59, 59, 999)
 
   const params = new URLSearchParams({
-    path: 'calendars/events',
+    path: 'calendars/events/appointments',
     locationId: LOC,
     startTime: String(start.getTime()),
     endTime: String(end.getTime()),

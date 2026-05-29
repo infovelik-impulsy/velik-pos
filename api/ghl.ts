@@ -17,7 +17,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   console.log('GHL proxy →', url)
   console.log('Key present:', !!GHL_KEY, '| LOC:', LOC)
 
-  const version = pathStr.startsWith('calendars') ? '2021-04-15' : '2021-07-28'
+  const version = pathStr.startsWith('calendars') || pathStr.startsWith('contacts') && pathStr.includes('appointments') ? '2021-04-15' : '2021-07-28'
 
   try {
     const r = await fetch(url, {
