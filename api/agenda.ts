@@ -16,8 +16,8 @@ async function fetchByUser(userId: string, startTime: string, endTime: string) {
       headers: { Authorization: `Bearer ${GHL_KEY}`, Version: '2021-04-15' }
     })
     const data = await r.json()
-    console.log(`userId=${userId} status=${r.status} events=${(data.events||[]).length} raw=${JSON.stringify(data).slice(0,200)}`)
-    return data.events || []
+    console.log(`userId=${userId} status=${r.status} raw=${JSON.stringify(data).slice(0,300)}`)
+    return { events: data.events || [], raw: data, status: r.status }
   } catch (e) {
     console.error(`userId=${userId} error:`, e)
     return []
@@ -37,11 +37,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     PROFESIONALES.map(p => fetchByUser(p.id, start, end))
   )
 
-  const all = results.flat()
-  const unique = Array.from(new Map(all.map(e => [e.id, e])).values())
-  const active = unique.filter(e => !e.deleted && e.appointmentStatus !== 'cancelled')
-  active.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
+  const rawResponses = results.map((r: any, i) => ({ userId: PROFESIONALES[i].id, status: r.status, raw: r.raw }))
+  const all = results.flatMap((r: any) => r.events)
+  const unique = Array.from(new Map(all.map((e: any) => [e.id, e])).values())
+  const active = (unique as any[]).filter((e: any) => !e.deleted && e.appointmentStatus !== 'cancelled')
 
-  console.log(`Agenda ${date}: start=${start} end=${end} total=${all.length} active=${active.length} keyPresent=${!!GHL_KEY}`)
-  res.json({ events: active, _debug: { start, end, keyPresent: !!GHL_KEY, total: all.length } })
+  res.json({ events: active, _debug: { start, end, keyPresent: !!GHL_KEY, total: all.length, rawResponses } })
 }
