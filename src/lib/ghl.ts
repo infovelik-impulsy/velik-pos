@@ -15,20 +15,9 @@ export async function getAppointmentsForDay(date: Date): Promise<GHLAppointment[
   const yyyy = date.getFullYear()
   const mm = String(date.getMonth() + 1).padStart(2, '0')
   const dd = String(date.getDate()).padStart(2, '0')
-  const dateStr = `${yyyy}-${mm}-${dd}`
-
-  const params = new URLSearchParams({
-    path: 'appointments/',
-    locationId: LOC,
-    startDate: dateStr,
-    endDate: dateStr,
-  })
-
-  const r = await fetch(`${PROXY}?${params}`)
+  const r = await fetch(`/api/agenda?date=${yyyy}-${mm}-${dd}`)
   const data = await r.json()
-  console.log('GHL appointments response:', data)
-  // try both possible response shapes
-  return data.appointments || data.events || []
+  return data.events || []
 }
 
 export async function getContact(contactId: string) {
