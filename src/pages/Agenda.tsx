@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { format, addDays, subDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { ChevronLeft, ChevronRight, Clock, User, CheckCircle, PlusCircle } from 'lucide-react'
-import { getAppointmentsForDay, getContact, type GHLAppointment } from '../lib/ghl'
 import { PROFESIONALES } from '../types'
+import { supabase } from '../lib/supabase'
 
 const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
   confirmed: { label: 'Confirmada', cls: 'bg-blue-100 text-blue-700' },
@@ -14,9 +14,17 @@ const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
   cancelled: { label: 'Cancelada', cls: 'bg-gray-100 text-gray-500' },
 }
 
-interface CitaEnriquecida extends GHLAppointment {
-  clienteNombre?: string
-  clienteTelefono?: string
+interface CitaEnriquecida {
+  id: string
+  start_time: string
+  end_time: string
+  titulo: string
+  cliente_nombre: string
+  cliente_telefono?: string
+  contact_id: string
+  profesional_id: string
+  profesional_nombre: string
+  status: string
 }
 
 export default function Agenda() {
@@ -32,18 +40,14 @@ export default function Agenda() {
   async function load() {
     setLoading(true)
     try {
-      const raw = await getAppointmentsForDay(fecha)
-      const enriquecidas = await Promise.all(
-        raw.map(async (c) => {
-          try {
-            const contact = await getContact(c.contactId)
-            return { ...c, clienteNombre: contact?.name || c.title, clienteTelefono: contact?.phone }
-          } catch {
-            return { ...c, clienteNombre: c.title }
-          }
-        })
-      )
-      setCitas(enriquecidas.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()))
+      const fechaStr = format(fecha, 'yyyy-MM-dd')
+      const { data } = await supabase
+        .from('citas')
+        .select('*')
+        .eq('fecha', fechaStr)
+        .neq('status', 'cancelled')
+        .order('start_time', { ascending: true })
+      setCitas(data || [])
     } catch (e) {
       console.error(e)
     }
@@ -52,10 +56,10 @@ export default function Agenda() {
 
   const citasPorProfesional = PROFESIONALES.map(p => ({
     profesional: p,
-    citas: citas.filter(c => c.assignedUserId === p.id && c.appointmentStatus !== 'cancelled'),
+    citas: citas.filter(c => c.profesional_id === p.id),
   }))
 
-  const totalDia = citas.filter(c => c.appointmentStatus !== 'cancelled').length
+  const totalDia = citas.length
 
   return (
     <div className="p-4 max-w-2xl mx-auto">
@@ -110,7 +114,7 @@ export default function Agenda() {
               </div>
               <div className="space-y-2">
                 {cs.map(cita => {
-                  const st = STATUS_LABEL[cita.appointmentStatus] || { label: cita.appointmentStatus, cls: 'bg-gray-100 text-gray-600' }
+                  const st = STATUS_LABEL[cita.status] || { label: cita.status, cls: 'bg-gray-100 text-gray-600' }
                   return (
                     <div
                       key={cita.id}
@@ -121,14 +125,14 @@ export default function Agenda() {
                           <div className="flex items-center gap-2 mb-1">
                             <Clock size={13} className="text-[#8a7a6a]" />
                             <span className="text-sm font-medium">
-                              {format(new Date(cita.startTime), 'HH:mm')} – {format(new Date(cita.endTime), 'HH:mm')}
+                              {format(new Date(cita.start_time), 'HH:mm')} – {format(new Date(cita.end_time), 'HH:mm')}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
                             <User size={13} className="text-[#8a7a6a]" />
-                            <span className="text-sm">{cita.clienteNombre}</span>
+                            <span className="text-sm">{cita.cliente_nombre}</span>
                           </div>
-                          <p className="text-xs text-[#8a7a6a] mt-1 ml-5">{cita.title}</p>
+                          <p className="text-xs text-[#8a7a6a] mt-1 ml-5">{cita.titulo}</p>
                         </div>
                         <span className={`text-xs px-2 py-1 rounded-full ${st.cls}`}>{st.label}</span>
                       </div>
@@ -137,11 +141,11 @@ export default function Agenda() {
                           onClick={() => navigate('/venta', {
                             state: {
                               appointmentId: cita.id,
-                              contactId: cita.contactId,
-                              clienteNombre: cita.clienteNombre,
-                              clienteTelefono: cita.clienteTelefono,
-                              profesionalId: cita.assignedUserId,
-                              servicioNombre: cita.title,
+                              contactId: cita.contact_id,
+                              clienteNombre: cita.cliente_nombre,
+                              clienteTelefono: cita.cliente_telefono,
+                              profesionalId: cita.profesional_id,
+                              servicioNombre: cita.titulo,
                             }
                           })}
                           className="flex-1 flex items-center justify-center gap-1 py-2 bg-[#C9A84C] text-white rounded-xl text-xs font-medium hover:bg-[#b8963e] transition-colors"
