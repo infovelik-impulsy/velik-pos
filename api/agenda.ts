@@ -26,11 +26,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { date } = req.query
   if (!date) return res.status(400).json({ error: 'date required' })
 
-  const d = new Date(String(date))
-  d.setHours(0, 0, 0, 0)
-  const start = String(d.getTime())
-  d.setHours(23, 59, 59, 999)
-  const end = String(d.getTime())
+  // Colombia = UTC-5: midnight COT = 05:00 UTC, 23:59:59 COT = next day 04:59:59 UTC
+  const [y, m, dd2] = String(date).split('-').map(Number)
+  const start = String(Date.UTC(y, m - 1, dd2, 5, 0, 0, 0))
+  const end = String(Date.UTC(y, m - 1, dd2 + 1, 4, 59, 59, 999))
 
   const results = await Promise.all(
     PROFESIONALES.map(p => fetchByUser(p.id, start, end))
@@ -41,5 +40,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const active = unique.filter(e => !e.deleted && e.appointmentStatus !== 'cancelled')
   active.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
 
+  console.log(`Agenda ${date}: start=${start} end=${end} total=${all.length} active=${active.length}`)
   res.json({ events: active })
 }
