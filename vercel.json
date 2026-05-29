@@ -1,1 +1,6 @@
-{ "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }] }
+{
+  "rewrites": [
+    { "source": "/api/ghl/:path*", "destination": "/api/ghl" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ]
+}

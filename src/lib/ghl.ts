@@ -1,12 +1,5 @@
-const GHL_KEY = import.meta.env.VITE_GHL_API_KEY
 const LOC = import.meta.env.VITE_GHL_LOCATION_ID
-const BASE = 'https://services.leadconnectorhq.com'
-
-const headers = {
-  Authorization: `Bearer ${GHL_KEY}`,
-  Version: '2021-07-28',
-  'Content-Type': 'application/json',
-}
+const PROXY = '/api/ghl'
 
 export interface GHLAppointment {
   id: string
@@ -16,7 +9,6 @@ export interface GHLAppointment {
   appointmentStatus: string
   contactId: string
   assignedUserId: string
-  contact?: { name: string; phone: string; email: string }
 }
 
 export async function getAppointmentsForDay(date: Date): Promise<GHLAppointment[]> {
@@ -26,31 +18,34 @@ export async function getAppointmentsForDay(date: Date): Promise<GHLAppointment[
   end.setHours(23, 59, 59, 999)
 
   const params = new URLSearchParams({
+    path: 'calendars/events',
     locationId: LOC,
     startTime: start.toISOString(),
     endTime: end.toISOString(),
   })
 
-  const r = await fetch(`${BASE}/calendars/events?${params}`, { headers })
+  const r = await fetch(`${PROXY}?${params}`)
   const data = await r.json()
   return data.events || []
 }
 
 export async function getContact(contactId: string) {
-  const r = await fetch(`${BASE}/contacts/${contactId}`, { headers })
+  const params = new URLSearchParams({ path: `contacts/${contactId}` })
+  const r = await fetch(`${PROXY}?${params}`)
   const data = await r.json()
   return data.contact || null
 }
 
 export async function searchContacts(query: string) {
-  const params = new URLSearchParams({ locationId: LOC, query })
-  const r = await fetch(`${BASE}/contacts/?${params}`, { headers })
+  const params = new URLSearchParams({ path: 'contacts/', locationId: LOC, query })
+  const r = await fetch(`${PROXY}?${params}`)
   const data = await r.json()
   return data.contacts || []
 }
 
 export async function getContactAppointments(contactId: string) {
-  const r = await fetch(`${BASE}/contacts/${contactId}/appointments`, { headers })
+  const params = new URLSearchParams({ path: `contacts/${contactId}/appointments` })
+  const r = await fetch(`${PROXY}?${params}`)
   const data = await r.json()
   return data.events || []
 }
