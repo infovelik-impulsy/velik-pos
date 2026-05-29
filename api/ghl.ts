@@ -17,12 +17,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   console.log('GHL proxy →', url)
   console.log('Key present:', !!GHL_KEY, '| LOC:', LOC)
 
+  const version = pathStr.startsWith('calendars') ? '2021-04-15' : '2021-07-28'
+
   try {
     const r = await fetch(url, {
       method: req.method,
       headers: {
         Authorization: `Bearer ${GHL_KEY}`,
-        Version: '2021-07-28',
+        Version: version,
         'Content-Type': 'application/json',
       },
       body: req.method !== 'GET' ? JSON.stringify(req.body) : undefined,
