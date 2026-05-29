@@ -24,6 +24,7 @@ interface CitaEnriquecida {
   contact_id: string
   profesional_id: string
   profesional_nombre: string
+  precio?: string
   status: string
 }
 
@@ -132,7 +133,10 @@ export default function Agenda() {
                             <User size={13} className="text-[#8a7a6a]" />
                             <span className="text-sm">{cita.cliente_nombre}</span>
                           </div>
-                          <p className="text-xs text-[#8a7a6a] mt-1 ml-5">{cita.titulo}</p>
+                          <div className="flex items-center gap-3 mt-1 ml-5">
+                            <p className="text-xs text-[#8a7a6a]">{cita.titulo}</p>
+                            {cita.precio && <span className="text-xs font-semibold text-[#C9A84C]">{cita.precio}</span>}
+                          </div>
                         </div>
                         <span className={`text-xs px-2 py-1 rounded-full ${st.cls}`}>{st.label}</span>
                       </div>
