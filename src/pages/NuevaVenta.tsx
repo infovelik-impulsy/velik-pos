@@ -100,7 +100,7 @@ export default function NuevaVenta() {
   }
 
   return (
-    <div className="p-4 max-w-lg mx-auto pb-8">
+    <div className="p-4 max-w-lg mx-auto pb-24">
       <h2 className="font-serif text-2xl font-light mb-6">Nueva Venta</h2>
 
       {/* Cliente */}

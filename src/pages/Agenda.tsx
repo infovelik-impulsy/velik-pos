@@ -68,7 +68,7 @@ export default function Agenda() {
   const totalDia = citas.length
 
   return (
-    <div className="p-4 max-w-2xl mx-auto">
+    <div className="p-4 max-w-2xl mx-auto pb-24">
       {/* Date nav */}
       <div className="flex items-center justify-between mb-4">
         <button onClick={() => setFecha(d => subDays(d, 1))} className="p-2 rounded-xl hover:bg-white">

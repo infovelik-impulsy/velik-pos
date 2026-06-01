@@ -6,6 +6,12 @@ body {
   background-color: #f5f4f0;
   color: #1a1a1a;
   margin: 0;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Prevent iOS auto-zoom on inputs (requires font-size >= 16px) */
+input, textarea, select {
+  font-size: 16px !important;
 }
 
 #root {

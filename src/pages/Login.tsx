@@ -38,7 +38,7 @@ export default function Login({ onLogin }: Props) {
         <p className="text-xs tracking-[0.3em] text-[#8a7a6a] uppercase mt-1">Beauty House · POS</p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm p-8 w-80">
+      <div className="bg-white rounded-2xl shadow-sm p-8 w-full max-w-xs mx-4">
         <p className="text-center text-sm text-[#8a7a6a] mb-6">Ingresa tu PIN</p>
 
         <div className="flex justify-center gap-3 mb-8">

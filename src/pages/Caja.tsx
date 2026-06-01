@@ -49,7 +49,7 @@ export default function Caja() {
   if (loading) return <div className="text-center py-12 text-[#8a7a6a]">Cargando...</div>
 
   return (
-    <div className="p-4 max-w-lg mx-auto pb-8">
+    <div className="p-4 max-w-lg mx-auto pb-24">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="font-serif text-2xl font-light">Caja del día</h2>
