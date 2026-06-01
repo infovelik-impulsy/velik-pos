@@ -6,7 +6,7 @@ import Agenda from './pages/Agenda'
 import NuevaVenta from './pages/NuevaVenta'
 import Caja from './pages/Caja'
 import Cierre from './pages/Cierre'
-import Clientes from './pages/Clientes'
+import Resumen from './pages/Resumen'
 
 export default function App() {
   const [user, setUser] = useState<{ id: string; nombre: string } | null>(null)
@@ -23,7 +23,7 @@ export default function App() {
           <Route path="/venta" element={<NuevaVenta />} />
           <Route path="/caja" element={<Caja />} />
           <Route path="/cierre" element={<Cierre />} />
-          <Route path="/clientes" element={<Clientes />} />
+          <Route path="/resumen" element={<Resumen />} />
         </Routes>
       </Layout>
     </BrowserRouter>
