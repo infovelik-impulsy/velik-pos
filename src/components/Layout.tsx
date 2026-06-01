@@ -33,12 +33,12 @@ export default function Layout({ children, userName, onLogout }: Props) {
       </header>
 
       {/* Content */}
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-auto pb-20">
         {children}
       </main>
 
       {/* Bottom nav */}
-      <nav className="bg-white border-t border-gray-100 flex">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex z-50 safe-area-inset-bottom">
         {nav.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
