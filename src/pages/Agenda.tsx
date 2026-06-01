@@ -80,7 +80,7 @@ export default function Agenda() {
 
       {/* Quick date chips */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
-        {[-1, 0, 1, 2, 3].map(offset => {
+        {[0, 1, 2, 3, 4, 5, 6].map(offset => {
           const d = addDays(new Date(), offset)
           const isActive = format(d, 'yyyy-MM-dd') === format(fecha, 'yyyy-MM-dd')
           return (
