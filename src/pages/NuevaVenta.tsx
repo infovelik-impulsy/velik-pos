@@ -11,6 +11,12 @@ interface LocationState {
   clienteTelefono?: string
   profesionalId?: string
   servicioNombre?: string
+  precioCita?: string
+}
+
+function parsePrecio(p?: string): number {
+  if (!p) return 0
+  return Number(p.replace(/[$.\s]/g, '')) || 0
 }
 
 export default function NuevaVenta() {
@@ -21,7 +27,9 @@ export default function NuevaVenta() {
   const [clienteTelefono, setClienteTelefono] = useState(state?.clienteTelefono || '')
   const [profesionalId, setProfesionalId] = useState(state?.profesionalId || '')
   const [servicios, setServicios] = useState<ServicioVendido[]>(
-    state?.servicioNombre ? [{ nombre: state.servicioNombre, precio: 0 }] : [{ nombre: '', precio: 0 }]
+    state?.servicioNombre
+      ? [{ nombre: state.servicioNombre, precio: parsePrecio(state.precioCita) }]
+      : [{ nombre: '', precio: 0 }]
   )
   const [metodoPago, setMetodoPago] = useState<'efectivo' | 'transferencia' | 'tarjeta' | 'mixto'>('efectivo')
   const [pagadoEfectivo, setPagadoEfectivo] = useState(0)
@@ -73,6 +81,9 @@ export default function NuevaVenta() {
 
     setGuardando(false)
     if (!error) {
+      if (state?.appointmentId) {
+        await supabase.from('citas').update({ status: 'showed' }).eq('id', state.appointmentId)
+      }
       setExito(true)
       setTimeout(() => navigate('/'), 1500)
     }

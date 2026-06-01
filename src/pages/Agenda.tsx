@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { format, addDays, subDays } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight, Clock, User, CheckCircle, PlusCircle } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Clock, User, CheckCircle, PlusCircle, XCircle } from 'lucide-react'
 import { PROFESIONALES } from '../types'
 import { supabase } from '../lib/supabase'
 
@@ -37,6 +37,11 @@ export default function Agenda() {
   useEffect(() => {
     load()
   }, [fecha])
+
+  async function marcarNoShow(id: string) {
+    await supabase.from('citas').update({ status: 'noshow' }).eq('id', id)
+    load()
+  }
 
   async function load() {
     setLoading(true)
@@ -140,24 +145,42 @@ export default function Agenda() {
                         </div>
                         <span className={`text-xs px-2 py-1 rounded-full ${st.cls}`}>{st.label}</span>
                       </div>
-                      <div className="mt-3 flex gap-2">
-                        <button
-                          onClick={() => navigate('/venta', {
-                            state: {
-                              appointmentId: cita.id,
-                              contactId: cita.contact_id,
-                              clienteNombre: cita.cliente_nombre,
-                              clienteTelefono: cita.cliente_telefono,
-                              profesionalId: cita.profesional_id,
-                              servicioNombre: cita.titulo,
-                            }
-                          })}
-                          className="flex-1 flex items-center justify-center gap-1 py-2 bg-[#C9A84C] text-white rounded-xl text-xs font-medium hover:bg-[#b8963e] transition-colors"
-                        >
-                          <CheckCircle size={14} />
-                          Registrar servicio
-                        </button>
-                      </div>
+                      {cita.status === 'showed' ? (
+                        <div className="mt-3 flex items-center justify-center gap-1 py-2 bg-green-50 rounded-xl text-xs font-medium text-green-600">
+                          <CheckCircle size={14} /> Servicio registrado
+                        </div>
+                      ) : cita.status === 'noshow' ? (
+                        <div className="mt-3 flex items-center justify-center gap-1 py-2 bg-red-50 rounded-xl text-xs font-medium text-red-400">
+                          <XCircle size={14} /> No asistió
+                        </div>
+                      ) : (
+                        <div className="mt-3 flex gap-2">
+                          <button
+                            onClick={() => navigate('/venta', {
+                              state: {
+                                appointmentId: cita.id,
+                                contactId: cita.contact_id,
+                                clienteNombre: cita.cliente_nombre,
+                                clienteTelefono: cita.cliente_telefono,
+                                profesionalId: cita.profesional_id,
+                                servicioNombre: cita.titulo,
+                                precioCita: cita.precio,
+                              }
+                            })}
+                            className="flex-1 flex items-center justify-center gap-1 py-2 bg-[#C9A84C] text-white rounded-xl text-xs font-medium hover:bg-[#b8963e] transition-colors"
+                          >
+                            <CheckCircle size={14} />
+                            Registrar servicio
+                          </button>
+                          <button
+                            onClick={() => marcarNoShow(cita.id)}
+                            className="flex items-center justify-center gap-1 px-3 py-2 bg-red-50 text-red-400 rounded-xl text-xs font-medium hover:bg-red-100 transition-colors"
+                          >
+                            <XCircle size={14} />
+                            No asistió
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )
                 })}
