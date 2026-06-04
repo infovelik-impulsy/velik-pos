@@ -52,8 +52,9 @@ export interface Gasto {
 export const METODOS_PAGO = [
   { value: 'efectivo', label: 'Efectivo' },
   { value: 'transferencia', label: 'Transferencia' },
-  { value: 'tarjeta', label: 'Tarjeta' },
+  { value: 'tarjeta', label: 'Tarjeta Déb/Créd' },
   { value: 'mixto', label: 'Mixto' },
+  { value: 'de_la_casa', label: 'De la casa' },
 ] as const
 
 export const USUARIOS = [

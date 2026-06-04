@@ -31,7 +31,7 @@ export default function NuevaVenta() {
       ? [{ nombre: state.servicioNombre, precio: parsePrecio(state.precioCita) }]
       : [{ nombre: '', precio: 0 }]
   )
-  const [metodoPago, setMetodoPago] = useState<'efectivo' | 'transferencia' | 'tarjeta' | 'mixto'>('efectivo')
+  const [metodoPago, setMetodoPago] = useState<'efectivo' | 'transferencia' | 'tarjeta' | 'mixto' | 'de_la_casa'>('efectivo')
   const [pagadoEfectivo, setPagadoEfectivo] = useState(0)
   const [notas, setNotas] = useState('')
   const [guardando, setGuardando] = useState(false)
@@ -61,6 +61,7 @@ export default function NuevaVenta() {
 
     const efectivo = metodoPago === 'efectivo' ? total : metodoPago === 'mixto' ? pagadoEfectivo : 0
     const digital = metodoPago === 'transferencia' || metodoPago === 'tarjeta' ? total : metodoPago === 'mixto' ? pagadoDigital : 0
+    // de_la_casa: cliente paga $0, Velik absorbe el costo
 
     const { error } = await supabase.from('ventas').insert({
       appointment_id: state?.appointmentId,
@@ -186,7 +187,7 @@ export default function NuevaVenta() {
       <section className="bg-white rounded-2xl p-4 mb-4">
         <h3 className="text-xs font-medium uppercase tracking-widest text-[#8a7a6a] mb-3">Método de pago *</h3>
         <div className="grid grid-cols-2 gap-2">
-          {METODOS_PAGO.map(m => (
+          {METODOS_PAGO.filter(m => m.value !== 'de_la_casa').map(m => (
             <button
               key={m.value}
               onClick={() => setMetodoPago(m.value as typeof metodoPago)}
@@ -200,6 +201,16 @@ export default function NuevaVenta() {
             </button>
           ))}
         </div>
+        <button
+          onClick={() => setMetodoPago('de_la_casa')}
+          className={`mt-2 w-full py-2.5 rounded-xl text-sm font-medium transition-all ${
+            metodoPago === 'de_la_casa'
+              ? 'bg-purple-500 text-white'
+              : 'bg-purple-50 text-purple-600 hover:bg-purple-100'
+          }`}
+        >
+          🏠 De la casa — Velik asume el costo
+        </button>
         {metodoPago === 'mixto' && (
           <div className="mt-3 space-y-2">
             <div className="flex items-center gap-2">
@@ -236,17 +247,31 @@ export default function NuevaVenta() {
 
       {/* Comisiones preview */}
       {total > 0 && (
-        <div className="bg-[#f9f6ee] rounded-2xl p-4 mb-6 text-sm">
-          <p className="text-xs font-medium uppercase tracking-widest text-[#8a7a6a] mb-2">Distribución 50/50</p>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Profesional</span>
-            <span className="font-medium">${(total * 0.5).toLocaleString('es-CO')}</span>
+        metodoPago === 'de_la_casa' ? (
+          <div className="bg-purple-50 rounded-2xl p-4 mb-6 text-sm border border-purple-100">
+            <p className="text-xs font-medium uppercase tracking-widest text-purple-400 mb-2">De la casa</p>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Profesional (a pagar)</span>
+              <span className="font-medium">${(total * 0.5).toLocaleString('es-CO')}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Velik asume</span>
+              <span className="font-medium text-purple-600">-${total.toLocaleString('es-CO')}</span>
+            </div>
           </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Velik</span>
-            <span className="font-medium">${(total * 0.5).toLocaleString('es-CO')}</span>
+        ) : (
+          <div className="bg-[#f9f6ee] rounded-2xl p-4 mb-6 text-sm">
+            <p className="text-xs font-medium uppercase tracking-widest text-[#8a7a6a] mb-2">Distribución 50/50</p>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Profesional</span>
+              <span className="font-medium">${(total * 0.5).toLocaleString('es-CO')}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Velik</span>
+              <span className="font-medium">${(total * 0.5).toLocaleString('es-CO')}</span>
+            </div>
           </div>
-        </div>
+        )
       )}
 
       <button
