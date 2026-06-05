@@ -21,7 +21,7 @@ export async function exportToExcel(data: ExportData, fileName: string) {
   const workbook = XLSX.utils.book_new()
 
   // Sheet 1: Summary
-  const summaryData = [
+  const summaryData: any[] = [
     ['RESUMEN DE FACTURACIÓN'],
     [],
     ['Período', `${data.dateRange.desde} a ${data.dateRange.hasta}`],
@@ -35,7 +35,7 @@ export async function exportToExcel(data: ExportData, fileName: string) {
   XLSX.utils.book_append_sheet(workbook, summarySheet, 'Resumen')
 
   // Sheet 2: Daily breakdown
-  const dailyData = [['Fecha', 'Total', 'Efectivo', 'Digital', 'Transacciones']]
+  const dailyData: any[] = [['Fecha', 'Total', 'Efectivo', 'Digital', 'Transacciones']]
   data.dailySales.forEach(day => {
     dailyData.push([day.fecha, day.total, day.efectivo, day.digital, day.count])
   })
@@ -43,7 +43,7 @@ export async function exportToExcel(data: ExportData, fileName: string) {
   XLSX.utils.book_append_sheet(workbook, dailySheet, 'Diario')
 
   // Sheet 3: By professional
-  const profData = [['Profesional', 'Total Ventas', 'Comisión', 'Servicios']]
+  const profData: any[] = [['Profesional', 'Total Ventas', 'Comisión', 'Servicios']]
   data.professionals.forEach(prof => {
     profData.push([prof.nombre, prof.total, prof.comision, prof.servicios_count])
   })
@@ -51,7 +51,7 @@ export async function exportToExcel(data: ExportData, fileName: string) {
   XLSX.utils.book_append_sheet(workbook, profSheet, 'Profesionales')
 
   // Sheet 4: Top services
-  const servData = [['Servicio', 'Cantidad', 'Ingresos', '%']]
+  const servData: any[] = [['Servicio', 'Cantidad', 'Ingresos', '%']]
   const totalRevenue = data.topServices.reduce((sum, s) => sum + s.revenue, 0)
   data.topServices.forEach(serv => {
     const percentage = totalRevenue > 0 ? ((serv.revenue / totalRevenue) * 100).toFixed(1) : '0'
@@ -61,7 +61,7 @@ export async function exportToExcel(data: ExportData, fileName: string) {
   XLSX.utils.book_append_sheet(workbook, servSheet, 'Servicios')
 
   // Sheet 5: Payment methods
-  const payData = [
+  const payData: any[] = [
     ['Método de Pago', 'Total', 'Transacciones', '%'],
     ['Efectivo', data.paymentBreakdown.efectivo, '', ''],
     ['Transferencia', data.paymentBreakdown.transferencia, '', ''],

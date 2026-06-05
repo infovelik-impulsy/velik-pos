@@ -1,4 +1,4 @@
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import type { PaymentBreakdown } from '../../lib/billing-queries'
 
 interface PaymentMethodBreakdownProps {
@@ -66,7 +66,7 @@ export default function PaymentMethodBreakdown({
               cx="50%"
               cy="50%"
               labelLine={false}
-              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+              label={({ name, percent = 0 }) => `${name} ${(percent * 100).toFixed(0)}%`}
               outerRadius={80}
               fill="#8884d8"
               dataKey="value"
@@ -76,12 +76,12 @@ export default function PaymentMethodBreakdown({
               ))}
             </Pie>
             <Tooltip
-              formatter={(value: number) =>
+              formatter={(value: any) =>
                 new Intl.NumberFormat('es-CO', {
                   style: 'currency',
                   currency: 'COP',
                   minimumFractionDigits: 0,
-                }).format(value)
+                }).format(Number(value) || 0)
               }
             />
           </PieChart>
