@@ -83,7 +83,10 @@ export default function NuevaVenta() {
     setGuardando(false)
     if (!error) {
       if (state?.appointmentId) {
-        await supabase.from('citas').update({ status: 'showed' }).eq('id', state.appointmentId)
+        await supabase.from('citas').update({
+          status: 'showed',
+          precio: total
+        }).eq('id', state.appointmentId)
       }
       setExito(true)
       setTimeout(() => navigate('/'), 1500)
