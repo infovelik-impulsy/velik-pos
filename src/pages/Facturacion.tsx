@@ -41,29 +41,30 @@ export default function Facturacion() {
 
   return (
     <div className="p-4 max-w-6xl mx-auto pb-24">
-      <ExportButtons
-        dateRange={dateRange}
-        metrics={data?.metrics || {
-          totalIncome: 0,
-          totalComisiones: 0,
-          transactionCount: 0,
-          averageTransaction: 0,
-        }}
-        dailySales={data?.dailySales || []}
-        professionals={data?.professionals || []}
-        topServices={data?.topServices || []}
-        paymentBreakdown={data?.paymentBreakdown || {
-          efectivo: 0,
-          transferencia: 0,
-          tarjeta: 0,
-          mixto: 0,
-          total_transacciones: 0,
-          total_dinero: 0,
-        }}
-      />
-
-      <div id="dashboard-content" className="pt-16">
-        <h2 className="font-serif text-2xl font-light mb-6">📊 Facturación</h2>
+      <div id="dashboard-content">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="font-serif text-2xl font-light">📊 Facturación</h2>
+          <ExportButtons
+            dateRange={dateRange}
+            metrics={data?.metrics || {
+              totalIncome: 0,
+              totalComisiones: 0,
+              transactionCount: 0,
+              averageTransaction: 0,
+            }}
+            dailySales={data?.dailySales || []}
+            professionals={data?.professionals || []}
+            topServices={data?.topServices || []}
+            paymentBreakdown={data?.paymentBreakdown || {
+              efectivo: 0,
+              transferencia: 0,
+              tarjeta: 0,
+              mixto: 0,
+              total_transacciones: 0,
+              total_dinero: 0,
+            }}
+          />
+        </div>
 
         <DateRangeFilter onDateChange={handleDateChange} />
 

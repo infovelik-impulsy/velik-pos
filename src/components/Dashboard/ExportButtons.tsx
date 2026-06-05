@@ -62,22 +62,22 @@ export default function ExportButtons({
   }
 
   return (
-    <div className="fixed top-4 right-4 z-40 flex gap-2">
+    <div className="flex gap-2">
       <button
         onClick={handleExportExcel}
         disabled={exporting !== null}
-        className="flex items-center gap-2 px-4 py-2.5 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 disabled:opacity-50 transition-all active:scale-[0.98]"
+        className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg text-xs font-medium hover:bg-green-600 disabled:opacity-50 transition-all active:scale-[0.98]"
       >
-        <FileSpreadsheet size={16} />
+        <FileSpreadsheet size={14} />
         {exporting === 'excel' ? 'Descargando...' : 'Excel'}
       </button>
 
       <button
         onClick={handleExportPDF}
         disabled={exporting !== null}
-        className="flex items-center gap-2 px-4 py-2.5 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 disabled:opacity-50 transition-all active:scale-[0.98]"
+        className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 disabled:opacity-50 transition-all active:scale-[0.98]"
       >
-        <FileText size={16} />
+        <FileText size={14} />
         {exporting === 'pdf' ? 'Descargando...' : 'PDF'}
       </button>
     </div>
