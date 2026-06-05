@@ -7,6 +7,7 @@ import NuevaVenta from './pages/NuevaVenta'
 import Caja from './pages/Caja'
 import Cierre from './pages/Cierre'
 import Resumen from './pages/Resumen'
+import Facturacion from './pages/Facturacion'
 
 export default function App() {
   const [user, setUser] = useState<{ id: string; nombre: string } | null>(null)
@@ -22,6 +23,7 @@ export default function App() {
           <Route path="/" element={<Agenda />} />
           <Route path="/venta" element={<NuevaVenta />} />
           <Route path="/caja" element={<Caja />} />
+          <Route path="/facturacion" element={<Facturacion />} />
           <Route path="/cierre" element={<Cierre />} />
           <Route path="/resumen" element={<Resumen />} />
         </Routes>
