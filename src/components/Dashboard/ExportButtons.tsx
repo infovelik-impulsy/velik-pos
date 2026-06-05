@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Download, FileSpreadsheet, FileText } from 'lucide-react'
+import { FileSpreadsheet, FileText } from 'lucide-react'
 import { exportToExcel, exportToPDF } from '../../lib/export-utils'
 import type { DailySalesData, ProfessionalMetrics, ServiceMetric, PaymentBreakdown } from '../../lib/billing-queries'
 

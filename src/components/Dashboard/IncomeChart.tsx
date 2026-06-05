@@ -39,12 +39,12 @@ export default function IncomeChart({ data, loading }: IncomeChartProps) {
             <YAxis stroke="#8a7a6a" />
             <Tooltip
               contentStyle={{ backgroundColor: '#fff', borderColor: '#C9A84C' }}
-              formatter={(value: number) =>
+              formatter={(value: any) =>
                 new Intl.NumberFormat('es-CO', {
                   style: 'currency',
                   currency: 'COP',
                   minimumFractionDigits: 0,
-                }).format(value)
+                }).format(Number(value) || 0)
               }
             />
             <Legend />
@@ -64,12 +64,12 @@ export default function IncomeChart({ data, loading }: IncomeChartProps) {
             <YAxis stroke="#8a7a6a" />
             <Tooltip
               contentStyle={{ backgroundColor: '#fff', borderColor: '#C9A84C' }}
-              formatter={(value: number) =>
+              formatter={(value: any) =>
                 new Intl.NumberFormat('es-CO', {
                   style: 'currency',
                   currency: 'COP',
                   minimumFractionDigits: 0,
-                }).format(value)
+                }).format(Number(value) || 0)
               }
             />
             <Legend />
