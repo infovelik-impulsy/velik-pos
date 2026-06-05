@@ -81,16 +81,25 @@ export default function NuevaVenta() {
     })
 
     setGuardando(false)
-    if (!error) {
-      if (state?.appointmentId) {
-        await supabase.from('citas').update({
-          status: 'showed',
-          precio: total
-        }).eq('id', state.appointmentId)
-      }
-      setExito(true)
-      setTimeout(() => navigate('/'), 1500)
+    if (error) {
+      console.error('Error guardando venta:', error)
+      alert('Error al guardar: ' + error.message)
+      return
     }
+
+    if (state?.appointmentId) {
+      const { error: errorCita } = await supabase.from('citas').update({
+        status: 'showed',
+        precio: total
+      }).eq('id', state.appointmentId)
+
+      if (errorCita) {
+        console.error('Error actualizando cita:', errorCita)
+      }
+    }
+
+    setExito(true)
+    setTimeout(() => navigate('/'), 1500)
   }
 
   if (exito) {
