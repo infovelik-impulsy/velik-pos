@@ -4,10 +4,12 @@ import { supabase } from '../lib/supabase'
 import { PROFESIONALES } from '../types'
 import type { Venta, Gasto } from '../types'
 
-type Periodo = 'hoy' | 'semana' | 'mes'
+type Periodo = 'hoy' | 'semana' | 'mes' | 'custom'
 
 export default function Cierre() {
   const [periodo, setPeriodo] = useState<Periodo>('hoy')
+  const [customDesde, setCustomDesde] = useState(format(new Date(), 'yyyy-MM-dd'))
+  const [customHasta, setCustomHasta] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [ventas, setVentas] = useState<Venta[]>([])
   const [gastos, setGastos] = useState<Gasto[]>([])
   const [loading, setLoading] = useState(true)
@@ -15,6 +17,9 @@ export default function Cierre() {
   useEffect(() => { load() }, [periodo])
 
   function getRange() {
+    if (periodo === 'custom') {
+      return { desde: customDesde, hasta: customHasta }
+    }
     const now = new Date()
     if (periodo === 'hoy') {
       const d = format(now, 'yyyy-MM-dd')
@@ -66,18 +71,49 @@ export default function Cierre() {
       <h2 className="font-serif text-2xl font-light mb-4">Cierre & Reportes</h2>
 
       {/* Periodo selector */}
-      <div className="flex gap-2 mb-6">
-        {(['hoy', 'semana', 'mes'] as Periodo[]).map(p => (
-          <button
-            key={p}
-            onClick={() => setPeriodo(p)}
-            className={`flex-1 py-2.5 rounded-xl text-sm font-medium capitalize transition-all ${
-              periodo === p ? 'bg-[#C9A84C] text-white' : 'bg-white text-gray-600 hover:bg-gray-50'
-            }`}
-          >
-            {p === 'hoy' ? 'Hoy' : p === 'semana' ? 'Semana' : 'Mes'}
-          </button>
-        ))}
+      <div className="mb-6">
+        <div className="flex gap-2 mb-4">
+          {(['hoy', 'semana', 'mes', 'custom'] as Periodo[]).map(p => (
+            <button
+              key={p}
+              onClick={() => setPeriodo(p)}
+              className={`flex-1 py-2.5 rounded-xl text-sm font-medium capitalize transition-all ${
+                periodo === p ? 'bg-[#C9A84C] text-white' : 'bg-white text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              {p === 'hoy' ? 'Hoy' : p === 'semana' ? 'Semana' : p === 'mes' ? 'Mes' : 'Personalizado'}
+            </button>
+          ))}
+        </div>
+
+        {periodo === 'custom' && (
+          <div className="bg-white rounded-xl p-4 flex gap-2">
+            <div className="flex-1">
+              <label className="text-xs text-gray-500 block mb-1">Desde</label>
+              <input
+                type="date"
+                value={customDesde}
+                onChange={(e) => {
+                  setCustomDesde(e.target.value)
+                  load()
+                }}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="text-xs text-gray-500 block mb-1">Hasta</label>
+              <input
+                type="date"
+                value={customHasta}
+                onChange={(e) => {
+                  setCustomHasta(e.target.value)
+                  load()
+                }}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {loading ? (
