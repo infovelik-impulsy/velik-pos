@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { ChevronDown } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 interface Service {
@@ -12,14 +11,12 @@ interface Service {
 
 interface ServiceSelectorProps {
   onSelect: (service: Service) => void
-  selectedName?: string
 }
 
-export default function ServiceSelector({ onSelect, selectedName }: ServiceSelectorProps) {
+export default function ServiceSelector({ onSelect }: ServiceSelectorProps) {
   const [services, setServices] = useState<Service[]>([])
   const [categories, setCategories] = useState<string[]>([])
   const [selectedCategory, setSelectedCategory] = useState('')
-  const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {

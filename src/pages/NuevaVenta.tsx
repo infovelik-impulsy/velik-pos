@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Plus, Trash2, CheckCircle } from 'lucide-react'
+import { Trash2, CheckCircle } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { PROFESIONALES, METODOS_PAGO, type ServicioVendido } from '../types'
 import ContactSearch from '../components/ContactSearch'
@@ -42,16 +42,8 @@ export default function NuevaVenta() {
   const total = servicios.reduce((s, sv) => s + (sv.precio || 0), 0)
   const pagadoDigital = metodoPago === 'mixto' ? total - pagadoEfectivo : 0
 
-  function addServicio() {
-    setServicios(s => [...s, { nombre: '', precio: 0 }])
-  }
-
   function removeServicio(i: number) {
     setServicios(s => s.filter((_, idx) => idx !== i))
-  }
-
-  function updateServicio(i: number, field: keyof ServicioVendido, value: string | number) {
-    setServicios(s => s.map((sv, idx) => idx === i ? { ...sv, [field]: value } : sv))
   }
 
   async function guardar() {
