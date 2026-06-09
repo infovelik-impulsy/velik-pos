@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { Plus, Trash2, CheckCircle } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { PROFESIONALES, METODOS_PAGO, type ServicioVendido } from '../types'
+import ContactSearch from '../components/ContactSearch'
+import ServiceSelector from '../components/ServiceSelector'
 
 interface LocationState {
   appointmentId?: string
@@ -118,18 +120,13 @@ export default function NuevaVenta() {
 
       {/* Cliente */}
       <section className="bg-white rounded-2xl p-4 mb-4 space-y-3">
-        <h3 className="text-xs font-medium uppercase tracking-widest text-[#8a7a6a]">Cliente</h3>
-        <input
-          value={clienteNombre}
-          onChange={e => setClienteNombre(e.target.value)}
-          placeholder="Nombre del cliente *"
-          className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#C9A84C]"
-        />
-        <input
-          value={clienteTelefono}
-          onChange={e => setClienteTelefono(e.target.value)}
-          placeholder="Teléfono"
-          className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#C9A84C]"
+        <h3 className="text-xs font-medium uppercase tracking-widest text-[#8a7a6a]">Cliente *</h3>
+        <ContactSearch
+          selectedName={clienteNombre}
+          onSelect={(contact) => {
+            setClienteNombre(`${contact.nombres} ${contact.apellidos || ''}`.trim())
+            setClienteTelefono(contact.telefono)
+          }}
         />
       </section>
 
@@ -154,32 +151,15 @@ export default function NuevaVenta() {
         </div>
       </section>
 
-      {/* Servicios */}
+      {/* Servicios Seleccionados */}
       <section className="bg-white rounded-2xl p-4 mb-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs font-medium uppercase tracking-widest text-[#8a7a6a]">Servicios *</h3>
-          <button onClick={addServicio} className="flex items-center gap-1 text-xs text-[#C9A84C] font-medium">
-            <Plus size={14} /> Agregar
-          </button>
-        </div>
-        <div className="space-y-3">
+        <h3 className="text-xs font-medium uppercase tracking-widest text-[#8a7a6a] mb-3">Servicios Seleccionados *</h3>
+        <div className="space-y-2 mb-4">
           {servicios.map((sv, i) => (
-            <div key={i} className="flex gap-2 items-center">
-              <input
-                value={sv.nombre}
-                onChange={e => updateServicio(i, 'nombre', e.target.value)}
-                placeholder="Nombre del servicio"
-                className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#C9A84C]"
-              />
-              <div className="relative w-28">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
-                <input
-                  type="number"
-                  value={sv.precio || ''}
-                  onChange={e => updateServicio(i, 'precio', Number(e.target.value))}
-                  placeholder="0"
-                  className="w-full border border-gray-200 rounded-xl pl-6 pr-3 py-2.5 text-sm focus:outline-none focus:border-[#C9A84C]"
-                />
+            <div key={i} className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+              <div>
+                <p className="font-medium text-sm">{sv.nombre}</p>
+                <p className="text-xs text-gray-500">${sv.precio.toLocaleString('es-CO')}</p>
               </div>
               {servicios.length > 1 && (
                 <button onClick={() => removeServicio(i)} className="text-red-300 hover:text-red-500">
@@ -189,6 +169,16 @@ export default function NuevaVenta() {
             </div>
           ))}
         </div>
+
+        <div className="border-t border-gray-100 pt-4">
+          <p className="text-xs text-[#8a7a6a] uppercase tracking-widest font-medium mb-3">Elegir Servicio</p>
+          <ServiceSelector
+            onSelect={(service) => {
+              setServicios([...servicios, { nombre: service.nombre, precio: service.precio }])
+            }}
+          />
+        </div>
+
         <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center">
           <span className="text-sm text-[#8a7a6a]">Total</span>
           <span className="text-xl font-semibold text-[#C9A84C]">${total.toLocaleString('es-CO')}</span>
