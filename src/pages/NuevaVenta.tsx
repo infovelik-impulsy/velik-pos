@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Trash2, CheckCircle } from 'lucide-react'
+import { X, CheckCircle } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { PROFESIONALES, METODOS_PAGO, type ServicioVendido } from '../types'
 import ContactSearch from '../components/ContactSearch'
@@ -148,16 +148,18 @@ export default function NuevaVenta() {
         <h3 className="text-xs font-medium uppercase tracking-widest text-[#8a7a6a] mb-3">Servicios Seleccionados *</h3>
         <div className="space-y-2 mb-4">
           {servicios.map((sv, i) => (
-            <div key={i} className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-              <div>
+            <div key={i} className="flex justify-between items-center p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors group">
+              <div className="flex-1">
                 <p className="font-medium text-sm">{sv.nombre}</p>
                 <p className="text-xs text-gray-500">${sv.precio.toLocaleString('es-CO')}</p>
               </div>
-              {servicios.length > 1 && (
-                <button onClick={() => removeServicio(i)} className="text-red-300 hover:text-red-500">
-                  <Trash2 size={16} />
-                </button>
-              )}
+              <button
+                onClick={() => removeServicio(i)}
+                className="ml-3 p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                title="Eliminar servicio"
+              >
+                <X size={18} />
+              </button>
             </div>
           ))}
         </div>
