@@ -44,7 +44,6 @@ export default function ServiceSelector({ onSelect }: ServiceSelectorProps) {
 
   const handleSelect = (service: Service) => {
     onSelect(service)
-    setIsOpen(false)
   }
 
   return (
