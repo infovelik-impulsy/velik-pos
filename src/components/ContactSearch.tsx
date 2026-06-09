@@ -83,18 +83,28 @@ export default function ContactSearch({ onSelect, selectedName }: ContactSearchP
 
       {isOpen && results.length > 0 && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50">
-          <div className="max-h-60 overflow-y-auto">
+          <div className="max-h-64 overflow-y-auto">
             {results.map((contact) => (
               <button
                 key={contact.id}
                 onClick={() => handleSelect(contact)}
-                className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-0 transition-colors"
+                className="w-full px-4 py-3 text-left hover:bg-[#f9f6ee] border-b border-gray-100 last:border-0 transition-colors flex justify-between items-start"
               >
-                <div className="font-medium text-sm">
-                  {contact.nombres} {contact.apellidos || ''}
+                <div className="flex-1">
+                  <div className="font-semibold text-sm text-[#1a1a1a]">
+                    {contact.nombres} {contact.apellidos || ''}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    📱 {contact.telefono}
+                  </div>
+                  {contact.email && (
+                    <div className="text-xs text-gray-400 mt-0.5">
+                      {contact.email}
+                    </div>
+                  )}
                 </div>
-                <div className="text-xs text-gray-500">
-                  {contact.telefono}
+                <div className="text-xs bg-[#C9A84C] text-white px-2 py-1 rounded ml-2">
+                  Seleccionar
                 </div>
               </button>
             ))}

@@ -1,5 +1,5 @@
-const { createClient } = require('@supabase/supabase-js');
-const fs = require('fs');
+import { createClient } from '@supabase/supabase-js';
+import fs from 'fs';
 
 const supabase = createClient(
   'https://aqoztzznsxhvczkanorr.supabase.co',
@@ -9,7 +9,7 @@ const supabase = createClient(
 async function loadContactos() {
   console.log('📞 Cargando contactos...\n');
 
-  const csvPath = 'C:\\Users\\scmej\\Downloads\\velik beauty house\\clientes_312993_1781025012.csv';
+  const csvPath = 'C:\\Users\\scmej\\Downloads\\clientes_312993_1781025012.csv';
 
   try {
     const csv = fs.readFileSync(csvPath, 'latin1');
@@ -77,7 +77,7 @@ async function loadContactos() {
 async function loadServicios() {
   console.log('🛍️ Cargando servicios...\n');
 
-  const csvPath = 'C:\\Users\\scmej\\Downloads\\velik beauty house\\services_report_312993_1781025712.csv';
+  const csvPath = 'C:\\Users\\scmej\\Downloads\\services_report_312993_1781025712.csv';
 
   try {
     const csv = fs.readFileSync(csvPath, 'latin1');
