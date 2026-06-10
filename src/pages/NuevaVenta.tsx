@@ -28,6 +28,8 @@ export default function NuevaVenta() {
   const [clienteNombre, setClienteNombre] = useState(state?.clienteNombre || '')
   const [clienteTelefono, setClienteTelefono] = useState(state?.clienteTelefono || '')
   const [profesionalId, setProfesionalId] = useState(state?.profesionalId || '')
+  const [fechaCita, setFechaCita] = useState('')
+  const [horaCita, setHoraCita] = useState('')
   const [servicios, setServicios] = useState<ServicioVendido[]>(
     state?.servicioNombre
       ? [{ nombre: state.servicioNombre, precio: parsePrecio(state.precioCita) }]
@@ -46,8 +48,31 @@ export default function NuevaVenta() {
     setServicios(s => s.filter((_, idx) => idx !== i))
   }
 
+  async function enviarConfirmacionGHL() {
+    try {
+      const serviciosTexto = servicios.map(s => `${s.nombre} - $${s.precio.toLocaleString('es-CO')}`).join('\n')
+      const mensaje = `🎉 ¡Cita Confirmada!\n\nTu servicio está programado para:\n📅 ${fechaCita} a las ${horaCita}\n\n${serviciosTexto}\n\n💰 Total: $${total.toLocaleString('es-CO')}\n\nGracias por confiar en Velik Beauty House ✨`
+
+      await fetch('https://api.leadconnectorhq.com/conversations/messages', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer pit-022a5206-1196-4066-8957-50cf5634da09',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contactId: state?.contactId,
+          conversationId: clienteTelefono,
+          message: mensaje,
+          type: 'SMS'
+        })
+      })
+    } catch (err) {
+      console.error('Error enviando SMS a GHL:', err)
+    }
+  }
+
   async function guardar() {
-    if (!clienteNombre || !profesionalId || servicios.some(s => !s.nombre || !s.precio)) return
+    if (!clienteNombre || !profesionalId || !fechaCita || !horaCita || servicios.some(s => !s.nombre || !s.precio)) return
     setGuardando(true)
 
     const prof = PROFESIONALES.find(p => p.id === profesionalId)
@@ -64,6 +89,8 @@ export default function NuevaVenta() {
       cliente_telefono: clienteTelefono,
       profesional_id: profesionalId,
       profesional_nombre: prof?.nombre || '',
+      fecha_cita: fechaCita,
+      hora_cita: horaCita,
       servicios,
       total,
       metodo_pago: metodoPago,
@@ -73,6 +100,10 @@ export default function NuevaVenta() {
       comision_velik: comision,
       notas,
     })
+
+    if (!error) {
+      await enviarConfirmacionGHL()
+    }
 
     setGuardando(false)
     if (error) {
@@ -140,6 +171,25 @@ export default function NuevaVenta() {
               {p.nombre.split(' ')[0]}
             </button>
           ))}
+        </div>
+      </section>
+
+      {/* Fecha y Hora */}
+      <section className="bg-white rounded-2xl p-4 mb-4 space-y-3">
+        <h3 className="text-xs font-medium uppercase tracking-widest text-[#8a7a6a]">Fecha y Hora *</h3>
+        <div className="grid grid-cols-2 gap-3">
+          <input
+            type="date"
+            value={fechaCita}
+            onChange={(e) => setFechaCita(e.target.value)}
+            className="p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-[#C9A84C]"
+          />
+          <input
+            type="time"
+            value={horaCita}
+            onChange={(e) => setHoraCita(e.target.value)}
+            className="p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-[#C9A84C]"
+          />
         </div>
       </section>
 
