@@ -48,26 +48,31 @@ export default function NuevaVenta() {
     setServicios(s => s.filter((_, idx) => idx !== i))
   }
 
-  async function enviarConfirmacionGHL() {
+  async function crearContactoEnGHL() {
     try {
-      const serviciosTexto = servicios.map(s => `${s.nombre} - $${s.precio.toLocaleString('es-CO')}`).join('\n')
-      const mensaje = `🎉 ¡Cita Confirmada!\n\nTu servicio está programado para:\n📅 ${fechaCita} a las ${horaCita}\n\n${serviciosTexto}\n\n💰 Total: $${total.toLocaleString('es-CO')}\n\nGracias por confiar en Velik Beauty House ✨`
+      const serviciosTexto = servicios.map(s => `${s.nombre} ($${s.precio.toLocaleString('es-CO')})`).join(', ')
 
-      await fetch('https://api.leadconnectorhq.com/conversations/messages', {
+      // Crear/actualizar contacto en GHL con info de la cita
+      await fetch('https://api.leadconnectorhq.com/contacts/upsert', {
         method: 'POST',
         headers: {
           'Authorization': 'Bearer pit-022a5206-1196-4066-8957-50cf5634da09',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          contactId: state?.contactId,
-          conversationId: clienteTelefono,
-          message: mensaje,
-          type: 'SMS'
+          name: clienteNombre,
+          phone: clienteTelefono,
+          source: 'POS - Velik Beauty',
+          customFields: {
+            'fecha_cita': fechaCita,
+            'hora_cita': horaCita,
+            'servicios': serviciosTexto,
+            'total': `$${total.toLocaleString('es-CO')}`
+          }
         })
       })
     } catch (err) {
-      console.error('Error enviando SMS a GHL:', err)
+      console.error('Error creando contacto en GHL:', err)
     }
   }
 
@@ -102,7 +107,7 @@ export default function NuevaVenta() {
     })
 
     if (!error) {
-      await enviarConfirmacionGHL()
+      await crearContactoEnGHL()
     }
 
     setGuardando(false)
