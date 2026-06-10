@@ -5,6 +5,7 @@ import { es } from 'date-fns/locale'
 import { ChevronLeft, ChevronRight, Clock, User, CheckCircle, PlusCircle, XCircle } from 'lucide-react'
 import { PROFESIONALES } from '../types'
 import { supabase } from '../lib/supabase'
+import { updateAppointmentStatus } from '../lib/ghl'
 
 const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
   confirmed: { label: 'Confirmada', cls: 'bg-blue-100 text-blue-700' },
@@ -40,6 +41,7 @@ export default function Agenda() {
 
   async function marcarNoShow(id: string) {
     await supabase.from('citas').update({ status: 'noshow' }).eq('id', id)
+    updateAppointmentStatus(id, 'noshow')
     load()
   }
 

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { X, CheckCircle } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { updateAppointmentStatus } from '../lib/ghl'
 import { PROFESIONALES, METODOS_PAGO, type ServicioVendido } from '../types'
 import ContactSearch from '../components/ContactSearch'
 import ServiceSelector from '../components/ServiceSelector'
@@ -126,6 +127,8 @@ export default function NuevaVenta() {
       if (errorCita) {
         console.error('Error actualizando cita:', errorCita)
       }
+
+      updateAppointmentStatus(state.appointmentId, 'showed')
     }
 
     setExito(true)

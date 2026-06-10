@@ -34,6 +34,18 @@ export async function searchContacts(query: string) {
   return data.contacts || []
 }
 
+export async function updateAppointmentStatus(appointmentId: string, status: 'showed' | 'noshow' | 'cancelled') {
+  try {
+    await fetch('https://santiagon8nmejia.dominadoresia.com/webhook/velik-cita-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ appointmentId, status }),
+    })
+  } catch (e) {
+    console.error('Error actualizando estado en GHL:', e)
+  }
+}
+
 export async function getContactAppointments(contactId: string) {
   const params = new URLSearchParams({ path: `contacts/${contactId}/appointments` })
   const r = await fetch(`${PROXY}?${params}`)
