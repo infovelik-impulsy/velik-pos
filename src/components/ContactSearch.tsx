@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Search, X } from 'lucide-react'
+import { Search, X, UserPlus, Loader2 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 interface Contact {
@@ -20,6 +20,15 @@ export default function ContactSearch({ onSelect, selectedName }: ContactSearchP
   const [results, setResults] = useState<Contact[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+
+  // Crear nuevo contacto
+  const [creating, setCreating] = useState(false)
+  const [nuevoNombres, setNuevoNombres] = useState('')
+  const [nuevoApellidos, setNuevoApellidos] = useState('')
+  const [nuevoTelefono, setNuevoTelefono] = useState('')
+  const [nuevoEmail, setNuevoEmail] = useState('')
+  const [guardando, setGuardando] = useState(false)
+  const [errorCrear, setErrorCrear] = useState('')
 
   useEffect(() => {
     if (search.length < 2) {
@@ -55,6 +64,126 @@ export default function ContactSearch({ onSelect, selectedName }: ContactSearchP
   const handleClear = () => {
     setSearch('')
     setResults([])
+    setCreating(false)
+  }
+
+  function abrirCrear() {
+    // Pre-llenar el nombre con lo que escribió en la búsqueda
+    const partes = search.trim().split(/\s+/)
+    setNuevoNombres(partes[0] || '')
+    setNuevoApellidos(partes.slice(1).join(' '))
+    setNuevoTelefono('')
+    setNuevoEmail('')
+    setErrorCrear('')
+    setCreating(true)
+    setIsOpen(false)
+  }
+
+  async function crearContacto() {
+    const tel = nuevoTelefono.replace(/\D/g, '')
+    if (!nuevoNombres.trim() || tel.length < 10) {
+      setErrorCrear('Nombre y teléfono (10 dígitos) son obligatorios')
+      return
+    }
+    setGuardando(true)
+    setErrorCrear('')
+
+    const telefono = nuevoTelefono.startsWith('+') ? nuevoTelefono : '+57' + tel
+
+    // 1. Guardar en Supabase
+    const { data, error } = await supabase
+      .from('contactos')
+      .insert({
+        nombres: nuevoNombres.trim(),
+        apellidos: nuevoApellidos.trim() || null,
+        telefono,
+        email: nuevoEmail.trim() || null,
+      })
+      .select()
+      .single()
+
+    if (error) {
+      setErrorCrear('Error al guardar: ' + error.message)
+      setGuardando(false)
+      return
+    }
+
+    // 2. Crear/actualizar en GHL (no bloquea si falla)
+    try {
+      await fetch('https://api.leadconnectorhq.com/contacts/upsert', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer pit-022a5206-1196-4066-8957-50cf5634da09',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName: nuevoNombres.trim(),
+          lastName: nuevoApellidos.trim(),
+          phone: telefono,
+          ...(nuevoEmail.trim() ? { email: nuevoEmail.trim() } : {}),
+          source: 'POS - Velik Beauty',
+        }),
+      })
+    } catch (err) {
+      console.error('Error creando contacto en GHL:', err)
+    }
+
+    const nuevo = data as Contact
+    setGuardando(false)
+    setCreating(false)
+    handleSelect(nuevo)
+  }
+
+  if (creating) {
+    return (
+      <div className="border border-[#C9A84C]/40 bg-[#faf6ee] rounded-xl p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#8a7a6a] flex items-center gap-1">
+            <UserPlus size={14} /> Nuevo contacto
+          </p>
+          <button onClick={() => setCreating(false)} className="text-gray-400 hover:text-gray-600">
+            <X size={16} />
+          </button>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <input
+            value={nuevoNombres}
+            onChange={e => setNuevoNombres(e.target.value)}
+            placeholder="Nombres *"
+            className="px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#C9A84C] bg-white"
+          />
+          <input
+            value={nuevoApellidos}
+            onChange={e => setNuevoApellidos(e.target.value)}
+            placeholder="Apellidos"
+            className="px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#C9A84C] bg-white"
+          />
+        </div>
+        <input
+          value={nuevoTelefono}
+          onChange={e => setNuevoTelefono(e.target.value)}
+          placeholder="Teléfono * (ej: 3001234567)"
+          inputMode="tel"
+          className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#C9A84C] bg-white"
+        />
+        <input
+          value={nuevoEmail}
+          onChange={e => setNuevoEmail(e.target.value)}
+          placeholder="Email (opcional)"
+          inputMode="email"
+          className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#C9A84C] bg-white"
+        />
+        {errorCrear && <p className="text-xs text-red-500">{errorCrear}</p>}
+        <button
+          onClick={crearContacto}
+          disabled={guardando}
+          className="w-full py-2.5 bg-[#C9A84C] text-white rounded-xl text-sm font-medium hover:bg-[#b8963e] transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+        >
+          {guardando ? <Loader2 size={15} className="animate-spin" /> : <UserPlus size={15} />}
+          {guardando ? 'Guardando...' : 'Crear y seleccionar'}
+        </button>
+      </div>
+    )
   }
 
   return (
@@ -79,9 +208,16 @@ export default function ContactSearch({ onSelect, selectedName }: ContactSearchP
             </button>
           )}
         </div>
+        <button
+          onClick={abrirCrear}
+          title="Crear nuevo contacto"
+          className="shrink-0 p-2.5 bg-[#1a1a1a] text-white rounded-xl hover:bg-black transition-colors"
+        >
+          <UserPlus size={18} />
+        </button>
       </div>
 
-      {isOpen && results.length > 0 && (
+      {isOpen && (results.length > 0 || !loading) && search.length >= 2 && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50">
           <div className="max-h-64 overflow-y-auto">
             {results.map((contact) => (
@@ -108,6 +244,13 @@ export default function ContactSearch({ onSelect, selectedName }: ContactSearchP
                 </div>
               </button>
             ))}
+            <button
+              onClick={abrirCrear}
+              className="w-full px-4 py-3 text-left hover:bg-[#f9f6ee] transition-colors flex items-center gap-2 text-sm font-medium text-[#C9A84C]"
+            >
+              <UserPlus size={16} />
+              {results.length === 0 ? `Crear contacto "${search}"` : 'Crear nuevo contacto'}
+            </button>
           </div>
         </div>
       )}
