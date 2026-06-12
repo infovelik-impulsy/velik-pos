@@ -73,7 +73,6 @@ export default function Login({ onLogin }: Props) {
         </div>
       </div>
 
-      <p className="mt-6 text-xs text-[#aaa]">Carolina: 2222 · Laura: 3333 · Admin: 1234</p>
     </div>
   )
 }

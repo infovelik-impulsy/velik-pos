@@ -60,6 +60,4 @@ export const METODOS_PAGO = [
 
 export const USUARIOS = [
   { id: 'luz', nombre: 'Luz Aida (Admin)', pin: '1234' },
-  { id: 'carolina', nombre: 'Carolina Paz', pin: '2222' },
-  { id: 'laura', nombre: 'Laura Vanessa', pin: '3333' },
 ]
