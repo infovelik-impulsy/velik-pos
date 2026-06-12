@@ -85,6 +85,14 @@ export default function Agenda() {
         </button>
       </div>
 
+      {/* Nueva cita button */}
+      <button
+        onClick={() => navigate('/nueva-cita')}
+        className="w-full mb-4 py-3 bg-[#1a1a1a] text-white rounded-2xl text-sm font-medium hover:bg-black transition-colors flex items-center justify-center gap-2"
+      >
+        <PlusCircle size={16} /> Nueva cita
+      </button>
+
       {/* Quick date chips */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
         {[0, 1, 2, 3, 4, 5, 6].map(offset => {

@@ -4,6 +4,7 @@ import Login from './pages/Login'
 import Layout from './components/Layout'
 import Agenda from './pages/Agenda'
 import NuevaVenta from './pages/NuevaVenta'
+import NuevaCita from './pages/NuevaCita'
 import Caja from './pages/Caja'
 import Cierre from './pages/Cierre'
 import Resumen from './pages/Resumen'
@@ -22,6 +23,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Agenda />} />
           <Route path="/venta" element={<NuevaVenta />} />
+          <Route path="/nueva-cita" element={<NuevaCita />} />
           <Route path="/caja" element={<Caja />} />
           <Route path="/facturacion" element={<Facturacion />} />
           <Route path="/cierre" element={<Cierre />} />
