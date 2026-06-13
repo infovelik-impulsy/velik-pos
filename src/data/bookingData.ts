@@ -60,8 +60,8 @@ export const SERVICIOS: Record<string, Servicio[]> = {
     { nombre: "Pies Semipermanente",            calendarId: "szaDqVWMTKAFCVcYjgTh", duracion: 60, precio: "$60.000", profesionales: NAILS },
     { nombre: "Pedicura Tradicional + Pedi Spa",calendarId: "MPv75km6l8sal1NKHqtV", duracion: 60, precio: "$60.000", profesionales: NAILS },
     { nombre: "Pedicura Semi + Pedi Spa",       calendarId: "1OpkJJuQoNlATF5hd9Zi", duracion: 70, precio: "$70.000", profesionales: NAILS },
-    { nombre: "Pies Evolution",                 calendarId: "tKn5Hy3A7pKqg7nhVpgC", duracion: 40, precio: "$40.000", profesionales: NAILS },
-    { nombre: "Tradicional Pies",               calendarId: "XbxF4HF4VH3KNB16sNBU", duracion: 45, precio: "$45.000", profesionales: NAILS },
+    { nombre: "Pies Evolution",                 calendarId: "tKn5Hy3A7pKqg7nhVpgC", duracion: 45, precio: "$40.000", profesionales: NAILS },
+    { nombre: "Tradicional Pies",               calendarId: "XbxF4HF4VH3KNB16sNBU", duracion: 40, precio: "$45.000", profesionales: NAILS },
     { nombre: "Retiro Semipermanente Pies",     calendarId: "FJDuHD0L2DqBLPUeYsqM", duracion: 20, precio: "$20.000", profesionales: NAILS },
     { nombre: "Solo Limpieza Pies",             calendarId: "rcuBG3bPRNwG11VFqgH2", duracion: 30, precio: "$30.000", profesionales: NAILS },
   ],
@@ -81,6 +81,7 @@ export const SERVICIOS: Record<string, Servicio[]> = {
 
   // ─── CABELLO ── Carolina y Laura ─────────────────────────────────────────────
   "Cabello": [
+    { nombre: "Valoración de Cabello",                      calendarId: "yePA3PPHJC9Fdu6A6WMt", duracion: 30,  precio: "$30.000",  profesionales: [CP] },
     { nombre: "Alisado Natural Argán y Coco (Corto)",       calendarId: "tYgB9RKWsWnAY6yzHbzo", duracion: 300, precio: "$300.000", profesionales: HAIR },
     { nombre: "Alisado Natural Argán y Coco (Medio)",       calendarId: "YsyBC5BKtrnN8YQYRDBm", duracion: 300, precio: "$300.000", profesionales: HAIR },
     { nombre: "Alisado Natural Argán y/o Coco Largo",       calendarId: "aO1pbT4UQDyqLJwXnPqX", duracion: 300, precio: "$300.000", profesionales: HAIR },
