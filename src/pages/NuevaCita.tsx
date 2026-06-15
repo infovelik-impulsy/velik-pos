@@ -14,6 +14,7 @@ export default function NuevaCita() {
   const [slot, setSlot] = useState<Slot | null>(null)
   const [nombre, setNombre] = useState('')
   const [telefono, setTelefono] = useState('')
+  const [precioManual, setPrecioManual] = useState('')
   const [guardando, setGuardando] = useState(false)
   const [exito, setExito] = useState(false)
   const [error, setError] = useState('')
@@ -39,7 +40,7 @@ export default function NuevaCita() {
           email: '',
           servicio: servicio.nombre,
           duracion: servicio.duracion,
-          precio: servicio.precio || '',
+          precio: servicio.precioEditable ? (precioManual ? `$${parseInt(precioManual.replace(/\D/g,'')).toLocaleString('es-CO')}` : '') : (servicio.precio || ''),
           userId: profesional.userId,
         }),
       })
@@ -126,9 +127,25 @@ export default function NuevaCita() {
         </Seccion>
       )}
 
-      {/* 5. Datos clienta */}
+      {/* 5. Precio (solo para servicios de color) */}
+      {servicio?.precioEditable && slot && (
+        <Seccion titulo="5. Precio del servicio">
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl mb-3">
+            <p className="text-xs text-amber-700">El precio de este servicio se define según la valoración. Ingresa el valor acordado.</p>
+          </div>
+          <input
+            value={precioManual}
+            onChange={e => setPrecioManual(e.target.value.replace(/\D/g, ''))}
+            placeholder={`Precio base: ${servicio.precio}`}
+            inputMode="numeric"
+            className="w-full px-4 py-3 rounded-xl border border-amber-300 text-sm focus:outline-none focus:border-[#C9A84C]"
+          />
+        </Seccion>
+      )}
+
+      {/* 6. Datos clienta */}
       {slot && (
-        <Seccion titulo="5. Datos de la clienta">
+        <Seccion titulo={servicio?.precioEditable ? "6. Datos de la clienta" : "5. Datos de la clienta"}>
           <div className="space-y-3">
             <input
               value={nombre}

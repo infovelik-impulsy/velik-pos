@@ -205,21 +205,42 @@ export default function NuevaVenta() {
       <section className="bg-white rounded-2xl p-4 mb-4">
         <h3 className="text-xs font-medium uppercase tracking-widest text-[#8a7a6a] mb-3">Servicios Seleccionados *</h3>
         <div className="space-y-2 mb-4">
-          {servicios.map((sv, i) => (
-            <div key={i} className="flex justify-between items-center p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors group">
-              <div className="flex-1">
-                <p className="font-medium text-sm">{sv.nombre}</p>
-                <p className="text-xs text-gray-500">${sv.precio.toLocaleString('es-CO')}</p>
+          {servicios.map((sv, i) => {
+            const esColor = /color/i.test(sv.nombre)
+            return (
+              <div key={i} className="flex justify-between items-center p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors group">
+                <div className="flex-1">
+                  <p className="font-medium text-sm">{sv.nombre}</p>
+                  {esColor ? (
+                    <div className="flex items-center gap-1 mt-1">
+                      <span className="text-xs text-amber-600">$</span>
+                      <input
+                        type="number"
+                        value={sv.precio || ''}
+                        onChange={e => {
+                          const updated = [...servicios]
+                          updated[i] = { ...updated[i], precio: parseInt(e.target.value) || 0 }
+                          setServicios(updated)
+                        }}
+                        placeholder="Precio según valoración"
+                        className="text-xs border border-amber-300 rounded px-2 py-0.5 w-40 focus:outline-none focus:border-[#C9A84C]"
+                        inputMode="numeric"
+                      />
+                    </div>
+                  ) : (
+                    <p className="text-xs text-gray-500">${sv.precio.toLocaleString('es-CO')}</p>
+                  )}
+                </div>
+                <button
+                  onClick={() => removeServicio(i)}
+                  className="ml-3 p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                  title="Eliminar servicio"
+                >
+                  <X size={18} />
+                </button>
               </div>
-              <button
-                onClick={() => removeServicio(i)}
-                className="ml-3 p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
-                title="Eliminar servicio"
-              >
-                <X size={18} />
-              </button>
-            </div>
-          ))}
+            )
+          })}
         </div>
 
         <div className="border-t border-gray-100 pt-4">
