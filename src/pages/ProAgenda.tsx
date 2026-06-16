@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { PROFESIONALES, SERVICIOS, CREAR_URL } from '../data/bookingData'
+import { SERVICIOS, CREAR_URL } from '../data/bookingData'
 import { LogOut, Plus, Lock, ChevronLeft, ChevronRight, Clock, User, X, CheckCircle, Loader2, Calendar } from 'lucide-react'
 
 interface Cita {
