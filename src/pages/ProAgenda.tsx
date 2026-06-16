@@ -33,6 +33,8 @@ function fechaLocal(date: Date) {
 }
 
 const VAPID_PUBLIC = 'BCEePlXRzxGGdMBwAIxLtL6NcWaX1j6kLi9MIa9963VqwB9A57ZZ6MTt6kyyPVUxwRAU4prFTZqMZBYRHr3nh4s'
+const GHL_TOKEN = 'pit-022a5206-1196-4066-8957-50cf5634da09'
+const GHL_LOC   = '0zeAaf3V1WrlkbyD4tJo'
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4)
@@ -460,7 +462,28 @@ function ModalBloquear({ profesionalId, profesionalNombre, fechaInicial, onClose
       const startISO = `${fecha}T${horaInicio}:00-05:00`
       const endISO   = `${fecha}T${horaFin}:00-05:00`
 
-      // Guardar en Supabase para que aparezca en el panel
+      // 1. Bloquear en GHL para que aparezca en el calendario
+      const ghlRes = await fetch('https://services.leadconnectorhq.com/calendars/events/block-slots', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${GHL_TOKEN}`,
+          'Version': '2021-04-15',
+        },
+        body: JSON.stringify({
+          locationId: GHL_LOC,
+          startTime: startISO,
+          endTime: endISO,
+          title: `Bloqueado - ${motivo}`,
+          assignedUserId: profesionalId,
+        }),
+      })
+      if (!ghlRes.ok) {
+        const ghlData = await ghlRes.json().catch(() => ({}))
+        throw new Error(ghlData?.message || `GHL error ${ghlRes.status}`)
+      }
+
+      // 2. Guardar en Supabase para que aparezca en el panel
       const { error: sbErr } = await supabase.from('citas').insert({
         id: crypto.randomUUID(),
         fecha,
