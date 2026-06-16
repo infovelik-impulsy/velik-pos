@@ -59,7 +59,7 @@ export const METODOS_PAGO = [
 ] as const
 
 export const USUARIOS = [
-  { id: 'admin', nombre: 'Admin', pin: '1234', rol: 'admin' },
+  { id: 'UzLj5T8ZOrJ8reSig5os', nombre: 'Luz Aida (Admin)', pin: '1234', rol: 'admin' },
   { id: 'Bn1QrO4ITpYI7wSohG9r', nombre: 'Carolina Paz',     pin: '1111', rol: 'profesional' },
   { id: 'DEeqUttYKgjjsfNaS1XY', nombre: 'Laura Vanessa',    pin: '2222', rol: 'profesional' },
   { id: 'UzLj5T8ZOrJ8reSig5os', nombre: 'Luz Aida',         pin: '3333', rol: 'profesional' },
