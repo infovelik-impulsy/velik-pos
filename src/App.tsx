@@ -9,12 +9,23 @@ import Caja from './pages/Caja'
 import Cierre from './pages/Cierre'
 import Resumen from './pages/Resumen'
 import Facturacion from './pages/Facturacion'
+import ProAgenda from './pages/ProAgenda'
 
 export default function App() {
-  const [user, setUser] = useState<{ id: string; nombre: string } | null>(null)
+  const [user, setUser] = useState<{ id: string; nombre: string; rol: string } | null>(null)
 
   if (!user) {
-    return <Login onLogin={(id, nombre) => setUser({ id, nombre })} />
+    return <Login onLogin={(id, nombre, rol) => setUser({ id, nombre, rol })} />
+  }
+
+  if (user.rol === 'profesional') {
+    return (
+      <BrowserRouter>
+        <Routes>
+          <Route path="*" element={<ProAgenda profesionalId={user.id} nombre={user.nombre} onLogout={() => setUser(null)} />} />
+        </Routes>
+      </BrowserRouter>
+    )
   }
 
   return (

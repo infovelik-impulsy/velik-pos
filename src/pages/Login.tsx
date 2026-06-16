@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { USUARIOS } from '../types'
 
 interface Props {
-  onLogin: (userId: string, nombre: string) => void
+  onLogin: (userId: string, nombre: string, rol: string) => void
 }
 
 export default function Login({ onLogin }: Props) {
@@ -16,7 +16,7 @@ export default function Login({ onLogin }: Props) {
     if (next.length === 4) {
       const user = USUARIOS.find(u => u.pin === next)
       if (user) {
-        onLogin(user.id, user.nombre)
+        onLogin(user.id, user.nombre, user.rol)
       } else {
         setError('PIN incorrecto')
         setTimeout(() => { setPin(''); setError('') }, 800)
