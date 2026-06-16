@@ -32,14 +32,49 @@ function fechaLocal(date: Date) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 }
 
+const VAPID_PUBLIC = 'BCEePlXRzxGGdMBwAIxLtL6NcWaX1j6kLi9MIa9963VqwB9A57ZZ6MTt6kyyPVUxwRAU4prFTZqMZBYRHr3nh4s'
+
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4)
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const rawData = window.atob(base64)
+  return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)))
+}
+
 export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
   const [fechaSeleccionada, setFechaSeleccionada] = useState(fechaLocal(new Date()))
   const [citas, setCitas] = useState<Cita[]>([])
   const [loading, setLoading] = useState(false)
   const [modal, setModal] = useState<'nueva_cita' | 'bloquear' | null>(null)
-
+  const [pushActivo, setPushActivo] = useState(false)
 
   useEffect(() => { cargarCitas() }, [fechaSeleccionada])
+  useEffect(() => { registrarPush() }, [profesionalId])
+
+  async function registrarPush() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
+    try {
+      const reg = await navigator.serviceWorker.register('/sw.js')
+      const perm = await Notification.requestPermission()
+      if (perm !== 'granted') return
+
+      const existing = await reg.pushManager.getSubscription()
+      const sub = existing || await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC)
+      })
+
+      // Save subscription to Supabase
+      await supabase.from('push_subscriptions').upsert({
+        profesional_id: profesionalId,
+        subscription: sub.toJSON(),
+      }, { onConflict: 'profesional_id,subscription' })
+
+      setPushActivo(true)
+    } catch (e) {
+      console.warn('Push no disponible:', e)
+    }
+  }
 
   async function cargarCitas() {
     setLoading(true)
@@ -95,9 +130,12 @@ export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
           <h1 className="font-serif text-xl font-light tracking-widest text-[#1a1a1a]">VELIK</h1>
           <p className="text-xs text-[#8a7a6a] mt-0.5">{nombre}</p>
         </div>
-        <button onClick={onLogout} className="p-2 rounded-xl hover:bg-gray-100 text-[#8a7a6a]">
-          <LogOut size={18} />
-        </button>
+        <div className="flex items-center gap-2">
+          {pushActivo && <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">🔔 Notif. activas</span>}
+          <button onClick={onLogout} className="p-2 rounded-xl hover:bg-gray-100 text-[#8a7a6a]">
+            <LogOut size={18} />
+          </button>
+        </div>
       </div>
 
       {/* Semana rápida */}
@@ -424,6 +462,7 @@ function ModalBloquear({ profesionalId, profesionalNombre, fechaInicial, onClose
 
       // Guardar en Supabase para que aparezca en el panel
       const { error: sbErr } = await supabase.from('citas').insert({
+        id: crypto.randomUUID(),
         fecha,
         start_time: startISO,
         end_time: endISO,
