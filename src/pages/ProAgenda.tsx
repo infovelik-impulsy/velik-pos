@@ -38,7 +38,6 @@ export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
   const [loading, setLoading] = useState(false)
   const [modal, setModal] = useState<'nueva_cita' | 'bloquear' | null>(null)
 
-  const profesional = PROFESIONALES.find(p => p.userId === profesionalId)
 
   useEffect(() => { cargarCitas() }, [fechaSeleccionada])
 
@@ -203,8 +202,6 @@ export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
       {modal === 'nueva_cita' && (
         <ModalNuevaCita
           profesionalId={profesionalId}
-          profesionalNombre={nombre}
-          fechaInicial={fechaSeleccionada}
           onClose={() => setModal(null)}
           onCreada={() => { setModal(null); cargarCitas() }}
         />
@@ -226,8 +223,8 @@ export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
 
 // ─── Modal Nueva Cita ────────────────────────────────────────────────────────
 
-function ModalNuevaCita({ profesionalId, profesionalNombre, fechaInicial, onClose, onCreada }: {
-  profesionalId: string; profesionalNombre: string; fechaInicial: string
+function ModalNuevaCita({ profesionalId, onClose, onCreada }: {
+  profesionalId: string
   onClose: () => void; onCreada: () => void
 }) {
   const [categoria, setCategoria] = useState('')
@@ -244,7 +241,6 @@ function ModalNuevaCita({ profesionalId, profesionalNombre, fechaInicial, onClos
 
   const { SLOTS_URL } = { SLOTS_URL: 'https://santiagon8nmejia.dominadoresia.com/webhook/booking/slots' }
 
-  const misProfesional = PROFESIONALES.find(p => p.userId === profesionalId)
   const CATS = Object.keys(SERVICIOS).filter(cat =>
     SERVICIOS[cat].some(s => !s.profesionales || s.profesionales.includes(profesionalId))
   )
