@@ -208,7 +208,7 @@ export default function NuevaVenta() {
           {servicios.map((sv, i) => {
             const esColor = /color/i.test(sv.nombre)
             return (
-              <div key={i} className="flex justify-between items-center p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors group">
+              <div key={i} className="flex justify-between items-center p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
                 <div className="flex-1">
                   <p className="font-medium text-sm">{sv.nombre}</p>
                   {esColor ? (
@@ -233,7 +233,7 @@ export default function NuevaVenta() {
                 </div>
                 <button
                   onClick={() => removeServicio(i)}
-                  className="ml-3 p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                  className="ml-3 p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                   title="Eliminar servicio"
                 >
                   <X size={18} />
