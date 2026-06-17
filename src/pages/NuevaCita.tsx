@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, Clock, CheckCircle, Loader2 } from 'lucide-react'
 import { CATEGORIAS, SERVICIOS, PROFESIONALES, SLOTS_URL, CREAR_URL } from '../data/bookingData'
 import type { Servicio, Profesional } from '../data/bookingData'
+import ContactSearch from '../components/ContactSearch'
 
 interface Slot { label: string; date: string; slot: string }
 
@@ -146,21 +147,13 @@ export default function NuevaCita() {
       {/* 6. Datos clienta */}
       {slot && (
         <Seccion titulo={servicio?.precioEditable ? "6. Datos de la clienta" : "5. Datos de la clienta"}>
-          <div className="space-y-3">
-            <input
-              value={nombre}
-              onChange={e => setNombre(e.target.value)}
-              placeholder="Nombre y apellido"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#C9A84C]"
-            />
-            <input
-              value={telefono}
-              onChange={e => setTelefono(e.target.value)}
-              placeholder="Teléfono (ej: 3001234567)"
-              inputMode="tel"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#C9A84C]"
-            />
-          </div>
+          <ContactSearch
+            selectedName={nombre}
+            onSelect={c => {
+              setNombre(`${c.nombres} ${c.apellidos || ''}`.trim())
+              setTelefono(c.telefono || '')
+            }}
+          />
         </Seccion>
       )}
 
