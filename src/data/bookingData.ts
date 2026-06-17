@@ -33,7 +33,7 @@ export const SERVICIOS: Record<string, Servicio[]> = {
   // ─── MANICURE ── Carolina, Laura y Geraldine ─────────────────────────────────
   "Manicure": [
     { nombre: "Manos Semipermanente",               calendarId: "EDiqwAb54xY6nID5yzB8", duracion: 60,  precio: "$60.000",  profesionales: NAILS },
-    { nombre: "Manos Tradicional",                  calendarId: "ItIbYfgFYYvZYQ6Oje0B", duracion: 45,  precio: "$45.000",  profesionales: NAILS },
+    { nombre: "Manos Tradicional",                  calendarId: "ItIbYfgFYYvZYQ6Oje0B", duracion: 45,  precio: "$40.000",  profesionales: NAILS },
     { nombre: "Manos Evolution",                    calendarId: "uyBy6KxStea3tyJXkxvE", duracion: 45,  precio: "$45.000",  profesionales: NAILS },
     { nombre: "Builder Gel",                        calendarId: "58aCvkqxbMBcFFPgZmyk", duracion: 120, precio: "$120.000", profesionales: NAILS },
     { nombre: "Baby Boomer",                        calendarId: "HhrSGv6kTKZOtLwLtLaO", duracion: 170, precio: "$170.000", profesionales: NAILS },
@@ -61,8 +61,8 @@ export const SERVICIOS: Record<string, Servicio[]> = {
     { nombre: "Pies Semipermanente",            calendarId: "szaDqVWMTKAFCVcYjgTh", duracion: 60, precio: "$60.000", profesionales: NAILS },
     { nombre: "Pedicura Tradicional + Pedi Spa",calendarId: "MPv75km6l8sal1NKHqtV", duracion: 60, precio: "$60.000", profesionales: NAILS },
     { nombre: "Pedicura Semi + Pedi Spa",       calendarId: "1OpkJJuQoNlATF5hd9Zi", duracion: 70, precio: "$70.000", profesionales: NAILS },
-    { nombre: "Pies Evolution",                 calendarId: "tKn5Hy3A7pKqg7nhVpgC", duracion: 45, precio: "$40.000", profesionales: NAILS },
-    { nombre: "Tradicional Pies",               calendarId: "XbxF4HF4VH3KNB16sNBU", duracion: 40, precio: "$45.000", profesionales: NAILS },
+    { nombre: "Pies Evolution",                 calendarId: "tKn5Hy3A7pKqg7nhVpgC", duracion: 45, precio: "$45.000", profesionales: NAILS },
+    { nombre: "Tradicional Pies",               calendarId: "XbxF4HF4VH3KNB16sNBU", duracion: 40, precio: "$40.000", profesionales: NAILS },
     { nombre: "Retiro Semipermanente Pies",     calendarId: "FJDuHD0L2DqBLPUeYsqM", duracion: 20, precio: "$20.000", profesionales: NAILS },
     { nombre: "Solo Limpieza Pies",             calendarId: "rcuBG3bPRNwG11VFqgH2", duracion: 30, precio: "$30.000", profesionales: NAILS },
   ],
