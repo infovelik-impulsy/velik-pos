@@ -83,7 +83,7 @@ export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
     if (!confirm('¿Eliminar este bloqueo?')) return
     try {
       // Eliminar en GHL si tenemos el event ID
-      if (cita.ghl_event_id && false) { // columna pendiente de crear en Supabase
+      if (cita.ghl_event_id) {
         await fetch(`https://services.leadconnectorhq.com/calendars/events/block-slots/${cita.ghl_event_id}`, {
           method: 'DELETE',
           headers: {
@@ -104,7 +104,7 @@ export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
     setLoading(true)
     const { data } = await supabase
       .from('citas')
-      .select('id, fecha, start_time, end_time, titulo, cliente_nombre, cliente_telefono, status')
+      .select('id, fecha, start_time, end_time, titulo, cliente_nombre, cliente_telefono, status, ghl_event_id')
       .eq('profesional_id', profesionalId)
       .eq('fecha', fechaSeleccionada)
       .order('start_time')
@@ -565,6 +565,7 @@ function ModalBloquear({ profesionalId, profesionalNombre, fechaInicial, onClose
         profesional_nombre: profesionalNombre,
         status: 'blocked',
         origen: 'bloqueo',
+        ghl_event_id: ghlEventId,
       })
       if (sbErr) throw new Error(sbErr.message)
       onBloqueado()
