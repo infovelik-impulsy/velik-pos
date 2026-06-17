@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { SERVICIOS, CREAR_URL } from '../data/bookingData'
-import { LogOut, Plus, Lock, ChevronLeft, ChevronRight, Clock, User, X, CheckCircle, Loader2, Calendar } from 'lucide-react'
+import { LogOut, Plus, Lock, ChevronLeft, ChevronRight, Clock, User, X, CheckCircle, Loader2, Calendar, Trash2 } from 'lucide-react'
 
 interface Cita {
   id: string
@@ -12,6 +12,7 @@ interface Cita {
   cliente_nombre: string
   cliente_telefono: string | null
   status: string
+  ghl_event_id?: string | null
 }
 
 interface Props {
@@ -78,11 +79,32 @@ export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
     }
   }
 
+  async function eliminarBloqueo(cita: Cita) {
+    if (!confirm('¿Eliminar este bloqueo?')) return
+    try {
+      // Eliminar en GHL si tenemos el event ID
+      if (cita.ghl_event_id) {
+        await fetch(`https://services.leadconnectorhq.com/calendars/events/block-slots/${cita.ghl_event_id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${GHL_TOKEN}`,
+            'Version': '2021-04-15',
+          },
+        })
+      }
+      // Eliminar en Supabase
+      await supabase.from('citas').delete().eq('id', cita.id)
+      cargarCitas()
+    } catch (e) {
+      alert('Error al eliminar: ' + (e instanceof Error ? e.message : String(e)))
+    }
+  }
+
   async function cargarCitas() {
     setLoading(true)
     const { data } = await supabase
       .from('citas')
-      .select('id, fecha, start_time, end_time, titulo, cliente_nombre, cliente_telefono, status')
+      .select('id, fecha, start_time, end_time, titulo, cliente_nombre, cliente_telefono, status, ghl_event_id')
       .eq('profesional_id', profesionalId)
       .eq('fecha', fechaSeleccionada)
       .order('start_time')
@@ -212,9 +234,17 @@ export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
                     {statusLabel(c.status)}
                   </span>
                 </div>
-                <div className="flex items-center gap-1 mt-2 text-xs text-[#8a7a6a]">
-                  <Clock size={11} />
-                  <span>{formatHora(c.start_time)} — {formatHora(c.end_time)}</span>
+                <div className="flex items-center justify-between mt-2">
+                  <div className="flex items-center gap-1 text-xs text-[#8a7a6a]">
+                    <Clock size={11} />
+                    <span>{formatHora(c.start_time)} — {formatHora(c.end_time)}</span>
+                  </div>
+                  {c.status === 'blocked' && (
+                    <button onClick={() => eliminarBloqueo(c)}
+                      className="flex items-center gap-1 text-xs text-red-400 hover:text-red-600 transition-colors">
+                      <Trash2 size={12} /> Eliminar
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -443,6 +473,44 @@ function ModalNuevaCita({ profesionalId, onClose, onCreada }: {
 
 // ─── Modal Bloquear Horario ──────────────────────────────────────────────────
 
+const MESES_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+
+function SelectorFecha({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [anio, mes, dia] = value.split('-').map(Number)
+  const hoy = new Date()
+  const anioActual = hoy.getFullYear()
+  const diasEnMes = new Date(anio, mes, 0).getDate()
+
+  function update(nuevoAnio: number, nuevoMes: number, nuevoDia: number) {
+    const maxDia = new Date(nuevoAnio, nuevoMes, 0).getDate()
+    const diaFinal = Math.min(nuevoDia, maxDia)
+    onChange(`${nuevoAnio}-${String(nuevoMes).padStart(2,'0')}-${String(diaFinal).padStart(2,'0')}`)
+  }
+
+  return (
+    <div className="grid grid-cols-3 gap-2">
+      <select value={dia} onChange={e => update(anio, mes, Number(e.target.value))}
+        className="px-3 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-[#C9A84C]">
+        {Array.from({ length: diasEnMes }, (_, i) => i + 1).map(d => (
+          <option key={d} value={d}>{d}</option>
+        ))}
+      </select>
+      <select value={mes} onChange={e => update(anio, Number(e.target.value), dia)}
+        className="px-3 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-[#C9A84C]">
+        {MESES_ES.map((m, i) => (
+          <option key={i+1} value={i+1}>{m}</option>
+        ))}
+      </select>
+      <select value={anio} onChange={e => update(Number(e.target.value), mes, dia)}
+        className="px-3 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-[#C9A84C]">
+        {[anioActual, anioActual + 1].map(a => (
+          <option key={a} value={a}>{a}</option>
+        ))}
+      </select>
+    </div>
+  )
+}
+
 function ModalBloquear({ profesionalId, profesionalNombre, fechaInicial, onClose, onBloqueado }: {
   profesionalId: string; profesionalNombre: string; fechaInicial: string
   onClose: () => void; onBloqueado: () => void
@@ -482,6 +550,8 @@ function ModalBloquear({ profesionalId, profesionalNombre, fechaInicial, onClose
         const ghlData = await ghlRes.json().catch(() => ({}))
         throw new Error(ghlData?.message || `GHL error ${ghlRes.status}`)
       }
+      const ghlData = await ghlRes.json()
+      const ghlEventId = ghlData?.id || ghlData?.event?.id || null
 
       // 2. Guardar en Supabase para que aparezca en el panel
       const { error: sbErr } = await supabase.from('citas').insert({
@@ -495,6 +565,7 @@ function ModalBloquear({ profesionalId, profesionalNombre, fechaInicial, onClose
         profesional_nombre: profesionalNombre,
         status: 'blocked',
         origen: 'bloqueo',
+        ghl_event_id: ghlEventId,
       })
       if (sbErr) throw new Error(sbErr.message)
       onBloqueado()
@@ -527,8 +598,7 @@ function ModalBloquear({ profesionalId, profesionalNombre, fechaInicial, onClose
 
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-[#8a7a6a] mb-2">Fecha</p>
-            <input type="date" value={fecha} onChange={e => setFecha(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-[#C9A84C]" />
+            <SelectorFecha value={fecha} onChange={setFecha} />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
