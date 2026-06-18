@@ -7,7 +7,11 @@ import { PROFESIONALES, METODOS_PAGO, type ServicioVendido } from '../types'
 import ContactSearch from '../components/ContactSearch'
 import ServiceSelector from '../components/ServiceSelector'
 import ProductoSelector from '../components/ProductoSelector'
-import type { Producto } from '../data/productosData'
+
+interface ProductoCarrito {
+  nombre: string
+  precio: number
+}
 
 interface LocationState {
   appointmentId?: string
@@ -44,7 +48,7 @@ export default function NuevaVenta() {
   )
   const [metodoPago, setMetodoPago] = useState<'efectivo' | 'transferencia' | 'tarjeta' | 'mixto' | 'de_la_casa'>('efectivo')
   const [pagadoEfectivo, setPagadoEfectivo] = useState(0)
-  const [productos, setProductos] = useState<Producto[]>([])
+  const [productos, setProductos] = useState<ProductoCarrito[]>([])
   const [notas, setNotas] = useState('')
   const [guardando, setGuardando] = useState(false)
   const [exito, setExito] = useState(false)
