@@ -1,16 +1,13 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { X, CheckCircle, ChevronLeft, Plus } from 'lucide-react'
+import { X, CheckCircle, ChevronLeft } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { updateAppointmentStatus } from '../lib/ghl'
 import { PROFESIONALES, METODOS_PAGO, type ServicioVendido } from '../types'
 import ContactSearch from '../components/ContactSearch'
 import ServiceSelector from '../components/ServiceSelector'
-
-interface Producto {
-  nombre: string
-  precio: number
-}
+import ProductoSelector from '../components/ProductoSelector'
+import type { Producto } from '../data/productosData'
 
 interface LocationState {
   appointmentId?: string
@@ -282,56 +279,49 @@ export default function NuevaVenta() {
 
       {/* Productos */}
       <section className="bg-white rounded-2xl p-4 mb-4">
-        <h3 className="text-xs font-medium uppercase tracking-widest text-[#8a7a6a] mb-3">Productos vendidos</h3>
-        <div className="space-y-2 mb-3">
-          {productos.map((p, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <input
-                type="text"
-                value={p.nombre}
-                onChange={e => {
-                  const updated = [...productos]
-                  updated[i] = { ...updated[i], nombre: e.target.value }
-                  setProductos(updated)
-                }}
-                placeholder="Nombre del producto"
-                className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#C9A84C]"
-              />
-              <div className="flex items-center border border-gray-200 rounded-xl px-3 py-2 w-32">
-                <span className="text-xs text-[#8a7a6a] mr-1">$</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={p.precio === 0 ? '' : p.precio.toLocaleString('es-CO')}
-                  onChange={e => {
-                    const raw = parseInt(e.target.value.replace(/\D/g, '')) || 0
-                    const updated = [...productos]
-                    updated[i] = { ...updated[i], precio: raw }
-                    setProductos(updated)
-                  }}
-                  placeholder="Valor"
-                  className="w-full text-sm focus:outline-none"
-                />
+        <h3 className="text-xs font-medium uppercase tracking-widest text-[#8a7a6a] mb-3">Productos Authentic</h3>
+
+        {/* Productos seleccionados */}
+        {productos.length > 0 && (
+          <div className="space-y-2 mb-4">
+            {productos.map((p, i) => (
+              <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex-1">
+                  <p className="font-medium text-sm">{p.nombre}</p>
+                  <div className="flex items-center gap-1 mt-1">
+                    <span className="text-xs text-[#8a7a6a]">$</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={p.precio === 0 ? '' : p.precio.toLocaleString('es-CO')}
+                      onChange={e => {
+                        const raw = parseInt(e.target.value.replace(/\D/g, '')) || 0
+                        const updated = [...productos]
+                        updated[i] = { ...updated[i], precio: raw }
+                        setProductos(updated)
+                      }}
+                      className="text-sm border-b border-[#C9A84C] bg-transparent px-1 py-0.5 w-32 focus:outline-none"
+                    />
+                  </div>
+                </div>
+                <button onClick={() => setProductos(prev => prev.filter((_, idx) => idx !== i))}
+                  className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg ml-2">
+                  <X size={16} />
+                </button>
               </div>
-              <button onClick={() => setProductos(p => p.filter((_, idx) => idx !== i))}
-                className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
-                <X size={16} />
-              </button>
+            ))}
+            <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+              <span className="text-sm text-[#8a7a6a]">Subtotal productos</span>
+              <span className="font-semibold text-[#C9A84C]">${totalProductos.toLocaleString('es-CO')}</span>
             </div>
-          ))}
-        </div>
-        <button
-          onClick={() => setProductos([...productos, { nombre: '', precio: 0 }])}
-          className="flex items-center gap-2 text-sm text-[#C9A84C] hover:text-[#b8963e] font-medium"
-        >
-          <Plus size={16} /> Agregar producto
-        </button>
-        {totalProductos > 0 && (
-          <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
-            <span className="text-sm text-[#8a7a6a]">Subtotal productos</span>
-            <span className="text-base font-semibold text-[#C9A84C]">${totalProductos.toLocaleString('es-CO')}</span>
           </div>
         )}
+
+        {/* Selector */}
+        <div className="border-t border-gray-100 pt-4">
+          <p className="text-xs text-[#8a7a6a] uppercase tracking-widest font-medium mb-3">Agregar producto</p>
+          <ProductoSelector onSelect={p => setProductos(prev => [...prev, { nombre: p.nombre, precio: p.precio }])} />
+        </div>
       </section>
 
       {/* Pago */}
