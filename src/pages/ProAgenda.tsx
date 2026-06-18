@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { SERVICIOS, CREAR_URL, type Servicio } from '../data/bookingData'
-import { LogOut, Plus, Lock, ChevronLeft, ChevronRight, Clock, User, X, CheckCircle, XCircle, Loader2, Calendar, Trash2, DollarSign } from 'lucide-react'
+import { LogOut, Plus, Lock, ChevronLeft, ChevronRight, Clock, User, X, CheckCircle, XCircle, Loader2, Calendar, Trash2, DollarSign, Users } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { updateAppointmentStatus } from '../lib/ghl'
 import { useNavigate } from 'react-router-dom'
 
@@ -353,6 +354,12 @@ export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
           className="flex items-center gap-2 bg-white border border-gray-200 text-[#8a7a6a] px-4 py-3 rounded-2xl shadow-md text-sm font-medium hover:border-[#C9A84C] hover:text-[#C9A84C] transition-all"
         >
           <Lock size={16} /> Bloquear horario
+        </button>
+        <button
+          onClick={() => navigate('/clientes')}
+          className="flex items-center gap-2 bg-white border border-gray-200 text-[#8a7a6a] px-4 py-3 rounded-2xl shadow-md text-sm font-medium hover:border-[#C9A84C] hover:text-[#C9A84C] transition-all"
+        >
+          <Users size={16} /> Clientes
         </button>
         <button
           onClick={() => navigate('/venta', { state: { profesionalId, fromPro: true } })}
