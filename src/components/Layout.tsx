@@ -41,22 +41,24 @@ export default function Layout({ children, userName, onLogout }: Props) {
       </main>
 
       {/* Bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex z-50 safe-area-inset-bottom">
-        {nav.map(({ to, icon: Icon, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={to === '/'}
-            className={({ isActive }) =>
-              `flex-1 flex flex-col items-center py-3 gap-1 text-xs transition-colors ${
-                isActive ? 'text-[#C9A84C]' : 'text-gray-400 hover:text-gray-600'
-              }`
-            }
-          >
-            <Icon size={20} />
-            <span>{label}</span>
-          </NavLink>
-        ))}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-50 safe-area-inset-bottom">
+        <div className="flex overflow-x-auto scrollbar-none">
+          {nav.map(({ to, icon: Icon, label }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={to === '/'}
+              className={({ isActive }) =>
+                `flex flex-col items-center py-2.5 px-3 gap-0.5 min-w-[64px] text-center transition-colors flex-shrink-0 ${
+                  isActive ? 'text-[#C9A84C]' : 'text-gray-400 hover:text-gray-600'
+                }`
+              }
+            >
+              <Icon size={18} />
+              <span className="text-[9px] leading-tight whitespace-nowrap">{label}</span>
+            </NavLink>
+          ))}
+        </div>
       </nav>
     </div>
   )
