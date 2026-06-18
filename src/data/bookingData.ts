@@ -101,6 +101,7 @@ export const SERVICIOS: Record<string, Servicio[]> = {
     { nombre: "Corte de Puntas",                            calendarId: "4aMo5CLViO46g2Q6jnip", duracion: 30,  precio: "$50.000",  profesionales: HAIR },
     { nombre: "Corte Caballero",                            calendarId: "6V88WbxYuumHKt5RBfGO", duracion: 30,  precio: "$50.000",  profesionales: HAIR },
     { nombre: "Terapia Capilar de L'Oréal",                 calendarId: "gJhd4efPJ7Zs7Ogybq95", duracion: 20,  precio: "$120.000", profesionales: HAIR },
+    { nombre: "Terapia Capilar Authentic",                  calendarId: "",                       duracion: 60,  precio: "$250.000", profesionales: HAIR },
     { nombre: "Toxina Botulínica",                          calendarId: "7G42EdlizK39sGWSRTWO", duracion: 20,  precio: "$0",       profesionales: HAIR },
   ],
 

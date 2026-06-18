@@ -1,11 +1,16 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { X, CheckCircle, ChevronLeft } from 'lucide-react'
+import { X, CheckCircle, ChevronLeft, Plus } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { updateAppointmentStatus } from '../lib/ghl'
 import { PROFESIONALES, METODOS_PAGO, type ServicioVendido } from '../types'
 import ContactSearch from '../components/ContactSearch'
 import ServiceSelector from '../components/ServiceSelector'
+
+interface Producto {
+  nombre: string
+  precio: number
+}
 
 interface LocationState {
   appointmentId?: string
@@ -42,11 +47,14 @@ export default function NuevaVenta() {
   )
   const [metodoPago, setMetodoPago] = useState<'efectivo' | 'transferencia' | 'tarjeta' | 'mixto' | 'de_la_casa'>('efectivo')
   const [pagadoEfectivo, setPagadoEfectivo] = useState(0)
+  const [productos, setProductos] = useState<Producto[]>([])
   const [notas, setNotas] = useState('')
   const [guardando, setGuardando] = useState(false)
   const [exito, setExito] = useState(false)
 
-  const total = servicios.reduce((s, sv) => s + (sv.precio || 0), 0)
+  const totalServicios = servicios.reduce((s, sv) => s + (sv.precio || 0), 0)
+  const totalProductos = productos.reduce((s, p) => s + (p.precio || 0), 0)
+  const total = totalServicios + totalProductos
   const pagadoDigital = metodoPago === 'mixto' ? total - pagadoEfectivo : 0
 
   function removeServicio(i: number) {
@@ -86,7 +94,10 @@ export default function NuevaVenta() {
     setGuardando(true)
 
     const prof = PROFESIONALES.find(p => p.id === profesionalId)
-    const comision = total * 0.5
+    const esGeraldine = profesionalId === 'saGMogKgCH3kmIhq4VlJ'
+    const comisionServicios = totalServicios * (esGeraldine ? 0.45 : 0.5)
+    const comisionProductos = totalProductos * 0.05
+    const comision = comisionServicios + comisionProductos
 
     const efectivo = metodoPago === 'efectivo' ? total : metodoPago === 'mixto' ? pagadoEfectivo : 0
     const digital = metodoPago === 'transferencia' || metodoPago === 'tarjeta' ? total : metodoPago === 'mixto' ? pagadoDigital : 0
@@ -102,6 +113,7 @@ export default function NuevaVenta() {
       fecha_cita: fechaCita,
       hora_cita: horaCita,
       servicios,
+      productos,
       total,
       metodo_pago: metodoPago,
       pagado_efectivo: efectivo,
@@ -221,31 +233,26 @@ export default function NuevaVenta() {
       <section className="bg-white rounded-2xl p-4 mb-4">
         <h3 className="text-xs font-medium uppercase tracking-widest text-[#8a7a6a] mb-3">Servicios Seleccionados *</h3>
         <div className="space-y-2 mb-4">
-          {servicios.map((sv, i) => {
-            const esColor = /color/i.test(sv.nombre)
-            return (
+          {servicios.map((sv, i) => (
               <div key={i} className="flex justify-between items-center p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
                 <div className="flex-1">
                   <p className="font-medium text-sm">{sv.nombre}</p>
-                  {esColor ? (
-                    <div className="flex items-center gap-1 mt-1">
-                      <span className="text-xs text-amber-600">$</span>
-                      <input
-                        type="number"
-                        value={sv.precio || ''}
-                        onChange={e => {
-                          const updated = [...servicios]
-                          updated[i] = { ...updated[i], precio: parseInt(e.target.value) || 0 }
-                          setServicios(updated)
-                        }}
-                        placeholder="Precio según valoración"
-                        className="text-xs border border-amber-300 rounded px-2 py-0.5 w-40 focus:outline-none focus:border-[#C9A84C]"
-                        inputMode="numeric"
-                      />
-                    </div>
-                  ) : (
-                    <p className="text-xs text-gray-500">${sv.precio.toLocaleString('es-CO')}</p>
-                  )}
+                  <div className="flex items-center gap-1 mt-1">
+                    <span className="text-xs text-[#8a7a6a]">$</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={sv.precio === 0 ? '' : sv.precio.toLocaleString('es-CO')}
+                      onChange={e => {
+                        const raw = parseInt(e.target.value.replace(/\D/g, '')) || 0
+                        const updated = [...servicios]
+                        updated[i] = { ...updated[i], precio: raw }
+                        setServicios(updated)
+                      }}
+                      placeholder="Precio"
+                      className="text-sm border-b border-[#C9A84C] bg-transparent px-1 py-0.5 w-36 focus:outline-none"
+                    />
+                  </div>
                 </div>
                 <button
                   onClick={() => removeServicio(i)}
@@ -255,8 +262,7 @@ export default function NuevaVenta() {
                   <X size={18} />
                 </button>
               </div>
-            )
-          })}
+          ))}
         </div>
 
         <div className="border-t border-gray-100 pt-4">
@@ -269,9 +275,63 @@ export default function NuevaVenta() {
         </div>
 
         <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center">
-          <span className="text-sm text-[#8a7a6a]">Total</span>
-          <span className="text-xl font-semibold text-[#C9A84C]">${total.toLocaleString('es-CO')}</span>
+          <span className="text-sm text-[#8a7a6a]">Subtotal servicios</span>
+          <span className="text-base font-semibold text-[#C9A84C]">${totalServicios.toLocaleString('es-CO')}</span>
         </div>
+      </section>
+
+      {/* Productos */}
+      <section className="bg-white rounded-2xl p-4 mb-4">
+        <h3 className="text-xs font-medium uppercase tracking-widest text-[#8a7a6a] mb-3">Productos vendidos</h3>
+        <div className="space-y-2 mb-3">
+          {productos.map((p, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <input
+                type="text"
+                value={p.nombre}
+                onChange={e => {
+                  const updated = [...productos]
+                  updated[i] = { ...updated[i], nombre: e.target.value }
+                  setProductos(updated)
+                }}
+                placeholder="Nombre del producto"
+                className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#C9A84C]"
+              />
+              <div className="flex items-center border border-gray-200 rounded-xl px-3 py-2 w-32">
+                <span className="text-xs text-[#8a7a6a] mr-1">$</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={p.precio === 0 ? '' : p.precio.toLocaleString('es-CO')}
+                  onChange={e => {
+                    const raw = parseInt(e.target.value.replace(/\D/g, '')) || 0
+                    const updated = [...productos]
+                    updated[i] = { ...updated[i], precio: raw }
+                    setProductos(updated)
+                  }}
+                  placeholder="Valor"
+                  className="w-full text-sm focus:outline-none"
+                />
+              </div>
+              <button onClick={() => setProductos(p => p.filter((_, idx) => idx !== i))}
+                className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
+                <X size={16} />
+              </button>
+            </div>
+          ))}
+        </div>
+        <button
+          onClick={() => setProductos([...productos, { nombre: '', precio: 0 }])}
+          className="flex items-center gap-2 text-sm text-[#C9A84C] hover:text-[#b8963e] font-medium"
+        >
+          <Plus size={16} /> Agregar producto
+        </button>
+        {totalProductos > 0 && (
+          <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
+            <span className="text-sm text-[#8a7a6a]">Subtotal productos</span>
+            <span className="text-base font-semibold text-[#C9A84C]">${totalProductos.toLocaleString('es-CO')}</span>
+          </div>
+        )}
       </section>
 
       {/* Pago */}
@@ -337,13 +397,22 @@ export default function NuevaVenta() {
       </section>
 
       {/* Comisiones preview */}
-      {total > 0 && (
-        metodoPago === 'de_la_casa' ? (
+      {total > 0 && (() => {
+        const esGeraldine = profesionalId === 'saGMogKgCH3kmIhq4VlJ'
+        const pctPro = esGeraldine ? 45 : 50
+        const pctVelik = esGeraldine ? 55 : 50
+        const comProServ = totalServicios * (pctPro / 100)
+        const comVelikServ = totalServicios * (pctVelik / 100)
+        const comProProd = totalProductos * 0.05
+        const comVelikProd = totalProductos * 0.95
+        const totalPro = comProServ + comProProd
+        const totalVelik = comVelikServ + comVelikProd
+        return metodoPago === 'de_la_casa' ? (
           <div className="bg-purple-50 rounded-2xl p-4 mb-6 text-sm border border-purple-100">
             <p className="text-xs font-medium uppercase tracking-widest text-purple-400 mb-2">De la casa</p>
             <div className="flex justify-between">
               <span className="text-gray-600">Profesional (a pagar)</span>
-              <span className="font-medium">${(total * 0.5).toLocaleString('es-CO')}</span>
+              <span className="font-medium">${totalPro.toLocaleString('es-CO')}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Velik asume</span>
@@ -351,19 +420,31 @@ export default function NuevaVenta() {
             </div>
           </div>
         ) : (
-          <div className="bg-[#f9f6ee] rounded-2xl p-4 mb-6 text-sm">
-            <p className="text-xs font-medium uppercase tracking-widest text-[#8a7a6a] mb-2">Distribución 50/50</p>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Profesional</span>
-              <span className="font-medium">${(total * 0.5).toLocaleString('es-CO')}</span>
+          <div className="bg-[#f9f6ee] rounded-2xl p-4 mb-6 text-sm space-y-1">
+            <p className="text-xs font-medium uppercase tracking-widest text-[#8a7a6a] mb-2">Distribución</p>
+            {totalServicios > 0 && (
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>Servicios — Prof. {pctPro}% / Velik {pctVelik}%</span>
+                <span>${comProServ.toLocaleString('es-CO')} / ${comVelikServ.toLocaleString('es-CO')}</span>
+              </div>
+            )}
+            {totalProductos > 0 && (
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>Productos — Prof. 5% / Velik 95%</span>
+                <span>${comProProd.toLocaleString('es-CO')} / ${comVelikProd.toLocaleString('es-CO')}</span>
+              </div>
+            )}
+            <div className="flex justify-between font-semibold pt-1 border-t border-[#e8dfc8] mt-1">
+              <span className="text-gray-700">Total profesional</span>
+              <span className="text-[#C9A84C]">${totalPro.toLocaleString('es-CO')}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Velik</span>
-              <span className="font-medium">${(total * 0.5).toLocaleString('es-CO')}</span>
+            <div className="flex justify-between font-semibold">
+              <span className="text-gray-700">Total Velik</span>
+              <span>${totalVelik.toLocaleString('es-CO')}</span>
             </div>
           </div>
         )
-      )}
+      })()}
 
       <button
         onClick={guardar}

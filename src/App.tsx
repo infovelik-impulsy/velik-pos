@@ -9,6 +9,7 @@ import Caja from './pages/Caja'
 import Cierre from './pages/Cierre'
 import Resumen from './pages/Resumen'
 import Facturacion from './pages/Facturacion'
+import Liquidacion from './pages/Liquidacion'
 import ProAgenda from './pages/ProAgenda'
 
 export default function App() {
@@ -38,6 +39,7 @@ export default function App() {
           <Route path="/nueva-cita" element={<NuevaCita />} />
           <Route path="/caja" element={<Caja />} />
           <Route path="/facturacion" element={<Facturacion />} />
+          <Route path="/liquidacion" element={<Liquidacion />} />
           <Route path="/cierre" element={<Cierre />} />
           <Route path="/resumen" element={<Resumen />} />
         </Routes>
