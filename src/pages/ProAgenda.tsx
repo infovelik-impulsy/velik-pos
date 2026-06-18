@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { SERVICIOS, CREAR_URL, type Servicio } from '../data/bookingData'
 import { LogOut, Plus, Lock, ChevronLeft, ChevronRight, Clock, User, X, CheckCircle, XCircle, Loader2, Calendar, Trash2, DollarSign, Users } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
 import { updateAppointmentStatus } from '../lib/ghl'
 import { useNavigate } from 'react-router-dom'
 
