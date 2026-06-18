@@ -266,19 +266,38 @@ export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
                   )}
                 </div>
                 {(c.status === 'confirmed' || c.status === 'new') && (
-                  <div className="flex gap-2 mt-3">
+                  <div className="mt-3 space-y-2">
                     <button
-                      onClick={() => marcarAsistio(c.id)}
-                      className="flex-1 flex items-center justify-center gap-1 py-2 bg-green-500 text-white rounded-xl text-xs font-medium hover:bg-green-600 transition-colors"
+                      onClick={async () => {
+                        await marcarAsistio(c.id)
+                        navigate('/venta', {
+                          state: {
+                            appointmentId: c.id,
+                            clienteNombre: c.cliente_nombre,
+                            clienteTelefono: c.cliente_telefono,
+                            profesionalId,
+                            servicioNombre: c.titulo,
+                          }
+                        })
+                      }}
+                      className="w-full flex items-center justify-center gap-1.5 py-2.5 bg-[#C9A84C] text-white rounded-xl text-xs font-semibold hover:bg-[#b8963e] transition-colors"
                     >
-                      <CheckCircle size={13} /> Asistió
+                      <DollarSign size={13} /> Asistió — Registrar venta
                     </button>
-                    <button
-                      onClick={() => marcarNoShow(c.id)}
-                      className="flex-1 flex items-center justify-center gap-1 py-2 bg-red-50 text-red-400 rounded-xl text-xs font-medium hover:bg-red-100 transition-colors"
-                    >
-                      <XCircle size={13} /> No asistió
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => marcarAsistio(c.id)}
+                        className="flex-1 flex items-center justify-center gap-1 py-2 bg-green-50 text-green-600 rounded-xl text-xs font-medium hover:bg-green-100 transition-colors"
+                      >
+                        <CheckCircle size={13} /> Solo marcar asistió
+                      </button>
+                      <button
+                        onClick={() => marcarNoShow(c.id)}
+                        className="flex-1 flex items-center justify-center gap-1 py-2 bg-red-50 text-red-400 rounded-xl text-xs font-medium hover:bg-red-100 transition-colors"
+                      >
+                        <XCircle size={13} /> No asistió
+                      </button>
+                    </div>
                   </div>
                 )}
                 {c.status === 'showed' && (
