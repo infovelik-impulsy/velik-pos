@@ -82,7 +82,7 @@ export default function NuevaVenta() {
   }
 
   async function guardar() {
-    if (!clienteNombre || !profesionalId || !fechaCita || !horaCita || servicios.some(s => !s.nombre || !s.precio)) return
+    if (!clienteNombre || !profesionalId || !fechaCita || !horaCita || servicios.some(s => !s.nombre || s.precio == null)) return
     setGuardando(true)
 
     const prof = PROFESIONALES.find(p => p.id === profesionalId)
@@ -367,7 +367,7 @@ export default function NuevaVenta() {
 
       <button
         onClick={guardar}
-        disabled={guardando || !clienteNombre || !profesionalId || servicios.length === 0 || servicios.some(s => !s.nombre || !s.precio)}
+        disabled={guardando || !clienteNombre || !profesionalId || servicios.length === 0 || servicios.some(s => !s.nombre || s.precio == null)}
         className="w-full py-4 bg-[#C9A84C] text-white rounded-2xl font-medium text-sm disabled:opacity-40 hover:bg-[#b8963e] transition-all active:scale-[0.99]"
       >
         {guardando ? 'Guardando...' : 'Confirmar venta'}
