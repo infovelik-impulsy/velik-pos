@@ -32,6 +32,7 @@ interface CitaEnriquecida {
 export default function Agenda() {
   const [fecha, setFecha] = useState(new Date())
   const [citas, setCitas] = useState<CitaEnriquecida[]>([])
+  const [ventasIds, setVentasIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
 
@@ -61,7 +62,19 @@ export default function Agenda() {
         .eq('fecha', fechaStr)
         .neq('status', 'cancelled')
         .order('start_time', { ascending: true })
-      setCitas(data || [])
+      const citasList = data || []
+      setCitas(citasList)
+
+      if (citasList.length > 0) {
+        const ids = citasList.map(c => c.id)
+        const { data: ventas } = await supabase
+          .from('ventas')
+          .select('appointment_id')
+          .in('appointment_id', ids)
+        setVentasIds(new Set((ventas || []).map(v => v.appointment_id)))
+      } else {
+        setVentasIds(new Set())
+      }
     } catch (e) {
       console.error(e)
     }
@@ -166,22 +179,28 @@ export default function Agenda() {
                           <div className="flex items-center justify-center gap-1 py-2 bg-green-50 rounded-xl text-xs font-medium text-green-600">
                             <CheckCircle size={14} /> Asistió ✓
                           </div>
-                          <button
-                            onClick={() => navigate('/venta', {
-                              state: {
-                                appointmentId: cita.id,
-                                contactId: cita.contact_id,
-                                clienteNombre: cita.cliente_nombre,
-                                clienteTelefono: cita.cliente_telefono,
-                                profesionalId: cita.profesional_id,
-                                servicioNombre: cita.titulo,
-                                precioCita: cita.precio,
-                              }
-                            })}
-                            className="w-full flex items-center justify-center gap-1 py-2 bg-[#C9A84C] text-white rounded-xl text-xs font-medium hover:bg-[#b8963e] transition-colors"
-                          >
-                            💰 Registrar venta (Luz)
-                          </button>
+                          {ventasIds.has(cita.id) ? (
+                            <div className="w-full flex items-center justify-center gap-1 py-2 bg-emerald-50 rounded-xl text-xs font-medium text-emerald-600 border border-emerald-200">
+                              <CheckCircle size={13} /> Venta registrada ✓
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => navigate('/venta', {
+                                state: {
+                                  appointmentId: cita.id,
+                                  contactId: cita.contact_id,
+                                  clienteNombre: cita.cliente_nombre,
+                                  clienteTelefono: cita.cliente_telefono,
+                                  profesionalId: cita.profesional_id,
+                                  servicioNombre: cita.titulo,
+                                  precioCita: cita.precio,
+                                }
+                              })}
+                              className="w-full flex items-center justify-center gap-1 py-2 bg-[#C9A84C] text-white rounded-xl text-xs font-medium hover:bg-[#b8963e] transition-colors"
+                            >
+                              💰 Registrar venta ({profesional.nombre})
+                            </button>
+                          )}
                         </div>
                       ) : cita.status === 'noshow' ? (
                         <div className="mt-3 flex items-center justify-center gap-1 py-2 bg-red-50 rounded-xl text-xs font-medium text-red-400">
