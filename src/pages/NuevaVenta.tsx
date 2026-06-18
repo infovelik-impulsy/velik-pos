@@ -94,6 +94,20 @@ export default function NuevaVenta() {
     if (!clienteNombre || !profesionalId || !fechaCita || !horaCita || servicios.some(s => !s.nombre || s.precio == null)) return
     setGuardando(true)
 
+    // Verificar si ya existe una venta para esta cita
+    if (state?.appointmentId) {
+      const { data: existente } = await supabase
+        .from('ventas')
+        .select('id')
+        .eq('appointment_id', state.appointmentId)
+        .maybeSingle()
+      if (existente) {
+        alert('Esta cita ya tiene una venta registrada. No se puede registrar dos veces.')
+        setGuardando(false)
+        return
+      }
+    }
+
     const prof = PROFESIONALES.find(p => p.id === profesionalId)
     const esGeraldine = profesionalId === 'saGMogKgCH3kmIhq4VlJ'
     const comisionServicios = totalServicios * (esGeraldine ? 0.45 : 0.5)
