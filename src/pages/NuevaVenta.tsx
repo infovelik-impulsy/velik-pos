@@ -94,7 +94,7 @@ export default function NuevaVenta() {
     if (!clienteNombre || !profesionalId || !fechaCita || !horaCita || servicios.some(s => !s.nombre || s.precio == null)) return
     setGuardando(true)
 
-    // Verificar si ya existe una venta para esta cita
+    // Verificar si ya existe una venta para esta cita agendada
     if (state?.appointmentId) {
       const { data: existente } = await supabase
         .from('ventas')
@@ -116,10 +116,12 @@ export default function NuevaVenta() {
 
     const efectivo = metodoPago === 'efectivo' ? total : metodoPago === 'mixto' ? pagadoEfectivo : 0
     const digital = metodoPago === 'transferencia' || metodoPago === 'tarjeta' ? total : metodoPago === 'mixto' ? pagadoDigital : 0
-    // de_la_casa: cliente paga $0, Velik absorbe el costo
+
+    // Si no viene de una cita agendada, generamos un ID para vincular venta ↔ cita nueva
+    const appointmentId = state?.appointmentId || crypto.randomUUID()
 
     const { error } = await supabase.from('ventas').insert({
-      appointment_id: state?.appointmentId,
+      appointment_id: appointmentId,
       contact_id: state?.contactId,
       cliente_nombre: clienteNombre,
       cliente_telefono: clienteTelefono,
@@ -138,10 +140,6 @@ export default function NuevaVenta() {
       notas,
     })
 
-    if (!error) {
-      await crearContactoEnGHL()
-    }
-
     setGuardando(false)
     if (error) {
       console.error('Error guardando venta:', error)
@@ -149,17 +147,35 @@ export default function NuevaVenta() {
       return
     }
 
+    await crearContactoEnGHL()
+
     if (state?.appointmentId) {
-      const { error: errorCita } = await supabase.from('citas').update({
-        status: 'showed',
-        precio: total
-      }).eq('id', state.appointmentId)
-
-      if (errorCita) {
-        console.error('Error actualizando cita:', errorCita)
-      }
-
+      // Actualizar cita existente a "atendida"
+      await supabase.from('citas').update({ status: 'showed', precio: total }).eq('id', state.appointmentId)
       updateAppointmentStatus(state.appointmentId, 'showed')
+    } else {
+      // Crear entrada en el calendario para que aparezca en la agenda de la profesional
+      const startISO = `${fechaCita}T${horaCita}:00-05:00`
+      const endDate = new Date(`${fechaCita}T${horaCita}:00`)
+      endDate.setMinutes(endDate.getMinutes() + 30)
+      const endH = String(endDate.getHours()).padStart(2, '0')
+      const endM = String(endDate.getMinutes()).padStart(2, '0')
+      const endISO = `${fechaCita}T${endH}:${endM}:00-05:00`
+
+      await supabase.from('citas').insert({
+        id: appointmentId,
+        fecha: fechaCita,
+        start_time: startISO,
+        end_time: endISO,
+        titulo: servicios.map(s => s.nombre).join(', '),
+        cliente_nombre: clienteNombre,
+        cliente_telefono: clienteTelefono,
+        profesional_id: profesionalId,
+        profesional_nombre: prof?.nombre || '',
+        status: 'showed',
+        precio: total,
+        origen: 'venta_directa',
+      })
     }
 
     setExito(true)
