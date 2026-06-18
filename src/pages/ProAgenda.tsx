@@ -34,7 +34,7 @@ function fechaLocal(date: Date) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 }
 
-const VAPID_PUBLIC = 'BCEePlXRzxGGdMBwAIxLtL6NcWaX1j6kLi9MIa9963VqwB9A57ZZ6MTt6kyyPVUxwRAU4prFTZqMZBYRHr3nh4s'
+const VAPID_PUBLIC = 'BJ2wtqb-hb7ajcRdooLW9GWqOThEN7K87VZdtiF5L-RPyjrxLUntI4xPtT4Iwezquyu04OUxmVFDkopg0WsG8FU'
 const GHL_TOKEN = 'pit-022a5206-1196-4066-8957-50cf5634da09'
 const GHL_LOC   = '0zeAaf3V1WrlkbyD4tJo'
 
