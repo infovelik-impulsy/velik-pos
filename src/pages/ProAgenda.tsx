@@ -49,6 +49,7 @@ function urlBase64ToUint8Array(base64String: string) {
 export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
   const [fechaSeleccionada, setFechaSeleccionada] = useState(fechaLocal(new Date()))
   const [citas, setCitas] = useState<Cita[]>([])
+  const [ventasIds, setVentasIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)
   const [modal, setModal] = useState<'nueva_cita' | 'bloquear' | null>(null)
   const [pushActivo, setPushActivo] = useState(false)
@@ -124,7 +125,20 @@ export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
       .eq('fecha', fechaSeleccionada)
       .neq('status', 'cancelled')
       .order('start_time')
-    setCitas(data || [])
+    const citasList = data || []
+    setCitas(citasList)
+
+    // Verificar cuáles ya tienen venta registrada
+    if (citasList.length > 0) {
+      const ids = citasList.map(c => c.id)
+      const { data: ventas } = await supabase
+        .from('ventas')
+        .select('appointment_id')
+        .in('appointment_id', ids)
+      setVentasIds(new Set((ventas || []).map(v => v.appointment_id)))
+    } else {
+      setVentasIds(new Set())
+    }
     setLoading(false)
   }
 
@@ -311,28 +325,34 @@ export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
                     <div className="flex items-center justify-center gap-1 py-2 bg-green-50 rounded-xl text-xs font-medium text-green-600">
                       <CheckCircle size={13} /> Asistió ✓
                     </div>
-                    <button
-                      onClick={() => {
-                        const fechaCita = c.fecha
-                        const co = toColombiaDate(new Date(c.start_time))
-                        const horaCita = `${String(co.getHours()).padStart(2,'0')}:${String(co.getMinutes()).padStart(2,'0')}`
-                        navigate('/venta', {
-                          state: {
-                            appointmentId: c.id,
-                            clienteNombre: c.cliente_nombre,
-                            clienteTelefono: c.cliente_telefono,
-                            profesionalId,
-                            servicioNombre: c.titulo,
-                            fechaCita,
-                            horaCita,
-                            fromPro: true,
-                          }
-                        })
-                      }}
-                      className="w-full flex items-center justify-center gap-1 py-2 bg-[#C9A84C] text-white rounded-xl text-xs font-medium hover:bg-[#b8963e] transition-colors"
-                    >
-                      <DollarSign size={13} /> Registrar venta
-                    </button>
+                    {ventasIds.has(c.id) ? (
+                      <div className="w-full flex items-center justify-center gap-1 py-2 bg-emerald-50 rounded-xl text-xs font-medium text-emerald-600 border border-emerald-200">
+                        <CheckCircle size={13} /> Venta registrada ✓
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          const fechaCita = c.fecha
+                          const co = toColombiaDate(new Date(c.start_time))
+                          const horaCita = `${String(co.getHours()).padStart(2,'0')}:${String(co.getMinutes()).padStart(2,'0')}`
+                          navigate('/venta', {
+                            state: {
+                              appointmentId: c.id,
+                              clienteNombre: c.cliente_nombre,
+                              clienteTelefono: c.cliente_telefono,
+                              profesionalId,
+                              servicioNombre: c.titulo,
+                              fechaCita,
+                              horaCita,
+                              fromPro: true,
+                            }
+                          })
+                        }}
+                        className="w-full flex items-center justify-center gap-1 py-2 bg-[#C9A84C] text-white rounded-xl text-xs font-medium hover:bg-[#b8963e] transition-colors"
+                      >
+                        <DollarSign size={13} /> Registrar venta
+                      </button>
+                    )}
                   </div>
                 )}
                 {c.status === 'noshow' && (
