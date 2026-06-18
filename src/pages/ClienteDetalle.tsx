@@ -85,7 +85,7 @@ export default function ClienteDetalle() {
 
   async function guardarFicha() {
     setGuardandoFicha(true)
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('fichas_tecnicas')
       .upsert({ cliente_telefono: tel, cliente_nombre: nombre, ...ficha, updated_at: new Date().toISOString() }, { onConflict: 'cliente_telefono' })
       .select()
