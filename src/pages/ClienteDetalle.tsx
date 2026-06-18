@@ -72,6 +72,7 @@ export default function ClienteDetalle() {
       supabase.from('fichas_tecnicas').select('*').eq('cliente_telefono', tel).maybeSingle(),
       supabase.from('abonos').select('*').eq('cliente_telefono', tel).order('fecha', { ascending: false }),
     ])
+    console.log('tel:', tel, 'ficha:', fichaRes.data, 'error:', fichaRes.error)
 
     setVentas((ventasRes.data || []) as Venta[])
     if (fichaRes.data) {
@@ -94,10 +95,10 @@ export default function ClienteDetalle() {
       setGuardandoFicha(false)
       return
     }
-    if (data) setFichaId(data.id)
     setGuardandoFicha(false)
     setFichaGuardada(true)
     setTimeout(() => setFichaGuardada(false), 2000)
+    await cargar()
   }
 
   async function agregarAbono() {
