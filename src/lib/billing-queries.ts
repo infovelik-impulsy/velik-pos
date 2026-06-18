@@ -37,17 +37,17 @@ export async function getDailySalesData(
 ): Promise<DailySalesData[]> {
   const { data, error } = await supabase
     .from('ventas')
-    .select('fecha, total, pagado_efectivo, pagado_digital')
-    .gte('fecha', startDate)
-    .lte('fecha', endDate)
-    .order('fecha', { ascending: true })
+    .select('fecha_cita, total, pagado_efectivo, pagado_digital')
+    .gte('fecha_cita', startDate)
+    .lte('fecha_cita', endDate)
+    .order('fecha_cita', { ascending: true })
 
   if (error) throw error
 
   const grouped = new Map<string, DailySalesData>()
 
   data?.forEach(row => {
-    const fecha = row.fecha
+    const fecha = row.fecha_cita
     if (!grouped.has(fecha)) {
       grouped.set(fecha, {
         fecha,
@@ -74,8 +74,8 @@ export async function getProfessionalBreakdown(
   const { data, error } = await supabase
     .from('ventas')
     .select('profesional_id, profesional_nombre, total, comision_profesional')
-    .gte('fecha', startDate)
-    .lte('fecha', endDate)
+    .gte('fecha_cita', startDate)
+    .lte('fecha_cita', endDate)
 
   if (error) throw error
 
@@ -109,8 +109,8 @@ export async function getTopServices(
   const { data, error } = await supabase
     .from('ventas')
     .select('servicios')
-    .gte('fecha', startDate)
-    .lte('fecha', endDate)
+    .gte('fecha_cita', startDate)
+    .lte('fecha_cita', endDate)
 
   if (error) throw error
 
@@ -143,8 +143,8 @@ export async function getPaymentMethodBreakdown(
   const { data, error } = await supabase
     .from('ventas')
     .select('metodo_pago, total, pagado_efectivo, pagado_digital')
-    .gte('fecha', startDate)
-    .lte('fecha', endDate)
+    .gte('fecha_cita', startDate)
+    .lte('fecha_cita', endDate)
 
   if (error) throw error
 
@@ -180,8 +180,8 @@ export async function getTotalMetrics(startDate: string, endDate: string) {
   const { data, error } = await supabase
     .from('ventas')
     .select('total, comision_profesional')
-    .gte('fecha', startDate)
-    .lte('fecha', endDate)
+    .gte('fecha_cita', startDate)
+    .lte('fecha_cita', endDate)
 
   if (error) throw error
 
