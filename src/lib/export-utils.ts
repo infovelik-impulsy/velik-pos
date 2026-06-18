@@ -1,6 +1,5 @@
 import * as XLSX from 'xlsx'
 import jsPDF from 'jspdf'
-import html2canvas from 'html2canvas'
 import type { DailySalesData, ProfessionalMetrics, ServiceMetric, PaymentBreakdown } from './billing-queries'
 
 interface ExportData {
@@ -259,7 +258,7 @@ export async function exportToPDF(
     pdf.setFontSize(7)
     pdf.setTextColor(150, 150, 150)
     pdf.setFont('helvetica', 'normal')
-    const pages = (pdf as any).internal.getNumberOfPages()
+    const pages = pdf.getNumberOfPages()
     for (let i = 1; i <= pages; i++) {
       pdf.setPage(i)
       pdf.text(`Velik Beauty House · Página ${i} de ${pages}`, W / 2, 290, { align: 'center' })
