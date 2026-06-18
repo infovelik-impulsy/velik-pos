@@ -34,7 +34,7 @@ export default function NuevaVenta() {
   const [servicios, setServicios] = useState<ServicioVendido[]>(
     state?.servicioNombre
       ? [{ nombre: state.servicioNombre, precio: parsePrecio(state.precioCita) }]
-      : [{ nombre: '', precio: 0 }]
+      : []
   )
   const [metodoPago, setMetodoPago] = useState<'efectivo' | 'transferencia' | 'tarjeta' | 'mixto' | 'de_la_casa'>('efectivo')
   const [pagadoEfectivo, setPagadoEfectivo] = useState(0)
@@ -351,7 +351,7 @@ export default function NuevaVenta() {
 
       <button
         onClick={guardar}
-        disabled={guardando || !clienteNombre || !profesionalId || servicios.some(s => !s.nombre || !s.precio)}
+        disabled={guardando || !clienteNombre || !profesionalId || servicios.length === 0 || servicios.some(s => !s.nombre || !s.precio)}
         className="w-full py-4 bg-[#C9A84C] text-white rounded-2xl font-medium text-sm disabled:opacity-40 hover:bg-[#b8963e] transition-all active:scale-[0.99]"
       >
         {guardando ? 'Guardando...' : 'Confirmar venta'}
