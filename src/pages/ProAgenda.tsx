@@ -270,6 +270,9 @@ export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
                     <button
                       onClick={async () => {
                         await marcarAsistio(c.id)
+                        const fechaCita = c.fecha
+                        const co = toColombiaDate(new Date(c.start_time))
+                        const horaCita = `${String(co.getHours()).padStart(2,'0')}:${String(co.getMinutes()).padStart(2,'0')}`
                         navigate('/venta', {
                           state: {
                             appointmentId: c.id,
@@ -277,6 +280,9 @@ export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
                             clienteTelefono: c.cliente_telefono,
                             profesionalId,
                             servicioNombre: c.titulo,
+                            fechaCita,
+                            horaCita,
+                            fromPro: true,
                           }
                         })
                       }}
@@ -306,15 +312,23 @@ export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
                       <CheckCircle size={13} /> Asistió ✓
                     </div>
                     <button
-                      onClick={() => navigate('/venta', {
-                        state: {
-                          appointmentId: c.id,
-                          clienteNombre: c.cliente_nombre,
-                          clienteTelefono: c.cliente_telefono,
-                          profesionalId,
-                          servicioNombre: c.titulo,
-                        }
-                      })}
+                      onClick={() => {
+                        const fechaCita = c.fecha
+                        const co = toColombiaDate(new Date(c.start_time))
+                        const horaCita = `${String(co.getHours()).padStart(2,'0')}:${String(co.getMinutes()).padStart(2,'0')}`
+                        navigate('/venta', {
+                          state: {
+                            appointmentId: c.id,
+                            clienteNombre: c.cliente_nombre,
+                            clienteTelefono: c.cliente_telefono,
+                            profesionalId,
+                            servicioNombre: c.titulo,
+                            fechaCita,
+                            horaCita,
+                            fromPro: true,
+                          }
+                        })
+                      }}
                       className="w-full flex items-center justify-center gap-1 py-2 bg-[#C9A84C] text-white rounded-xl text-xs font-medium hover:bg-[#b8963e] transition-colors"
                     >
                       <DollarSign size={13} /> Registrar venta

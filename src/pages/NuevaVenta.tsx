@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { X, CheckCircle } from 'lucide-react'
+import { X, CheckCircle, ChevronLeft } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { updateAppointmentStatus } from '../lib/ghl'
 import { PROFESIONALES, METODOS_PAGO, type ServicioVendido } from '../types'
@@ -15,6 +15,9 @@ interface LocationState {
   profesionalId?: string
   servicioNombre?: string
   precioCita?: string
+  fechaCita?: string
+  horaCita?: string
+  fromPro?: boolean
 }
 
 function parsePrecio(p?: string): number {
@@ -29,8 +32,9 @@ export default function NuevaVenta() {
   const [clienteNombre, setClienteNombre] = useState(state?.clienteNombre || '')
   const [clienteTelefono, setClienteTelefono] = useState(state?.clienteTelefono || '')
   const [profesionalId, setProfesionalId] = useState(state?.profesionalId || '')
-  const [fechaCita, setFechaCita] = useState('')
-  const [horaCita, setHoraCita] = useState('')
+  const [fechaCita, setFechaCita] = useState(state?.fechaCita || '')
+  const [horaCita, setHoraCita] = useState(state?.horaCita || '')
+  const fromPro = state?.fromPro || false
   const [servicios, setServicios] = useState<ServicioVendido[]>(
     state?.servicioNombre
       ? [{ nombre: state.servicioNombre, precio: parsePrecio(state.precioCita) }]
@@ -147,7 +151,14 @@ export default function NuevaVenta() {
 
   return (
     <div className="p-4 max-w-lg mx-auto pb-24">
-      <h2 className="font-serif text-2xl font-light mb-6">Nueva Venta</h2>
+      <div className="flex items-center gap-3 mb-6">
+        {fromPro && (
+          <button onClick={() => navigate('/')} className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 transition-colors">
+            <ChevronLeft size={18} />
+          </button>
+        )}
+        <h2 className="font-serif text-2xl font-light">Nueva Venta</h2>
+      </div>
 
       {/* Cliente */}
       <section className="bg-white rounded-2xl p-4 mb-4 space-y-3">
@@ -164,22 +175,27 @@ export default function NuevaVenta() {
       {/* Profesional */}
       <section className="bg-white rounded-2xl p-4 mb-4">
         <h3 className="text-xs font-medium uppercase tracking-widest text-[#8a7a6a] mb-3">Profesional *</h3>
-        <div className="grid grid-cols-3 gap-2">
-          {PROFESIONALES.map(p => (
-            <button
-              key={p.id}
-              onClick={() => setProfesionalId(p.id)}
-              className={`py-3 px-2 rounded-xl text-xs font-medium text-center transition-all ${
-                profesionalId === p.id
-                  ? 'text-white'
-                  : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-              }`}
-              style={profesionalId === p.id ? { backgroundColor: p.color } : {}}
-            >
-              {p.nombre.split(' ')[0]}
-            </button>
-          ))}
-        </div>
+        {fromPro ? (
+          <div className="py-3 px-4 rounded-xl text-sm font-medium text-white text-center"
+            style={{ backgroundColor: PROFESIONALES.find(p => p.id === profesionalId)?.color || '#C9A84C' }}>
+            {PROFESIONALES.find(p => p.id === profesionalId)?.nombre}
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-2">
+            {PROFESIONALES.map(p => (
+              <button
+                key={p.id}
+                onClick={() => setProfesionalId(p.id)}
+                className={`py-3 px-2 rounded-xl text-xs font-medium text-center transition-all ${
+                  profesionalId === p.id ? 'text-white' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                }`}
+                style={profesionalId === p.id ? { backgroundColor: p.color } : {}}
+              >
+                {p.nombre.split(' ')[0]}
+              </button>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Fecha y Hora */}
