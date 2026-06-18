@@ -45,6 +45,12 @@ export default function Agenda() {
     load()
   }
 
+  async function marcarAsistio(id: string) {
+    await supabase.from('citas').update({ status: 'showed' }).eq('id', id)
+    updateAppointmentStatus(id, 'showed')
+    load()
+  }
+
   async function load() {
     setLoading(true)
     try {
@@ -156,15 +162,10 @@ export default function Agenda() {
                         <span className={`text-xs px-2 py-1 rounded-full ${st.cls}`}>{st.label}</span>
                       </div>
                       {cita.status === 'showed' ? (
-                        <div className="mt-3 flex items-center justify-center gap-1 py-2 bg-green-50 rounded-xl text-xs font-medium text-green-600">
-                          <CheckCircle size={14} /> Servicio registrado
-                        </div>
-                      ) : cita.status === 'noshow' ? (
-                        <div className="mt-3 flex items-center justify-center gap-1 py-2 bg-red-50 rounded-xl text-xs font-medium text-red-400">
-                          <XCircle size={14} /> No asistió
-                        </div>
-                      ) : (
-                        <div className="mt-3 flex gap-2">
+                        <div className="mt-3 space-y-2">
+                          <div className="flex items-center justify-center gap-1 py-2 bg-green-50 rounded-xl text-xs font-medium text-green-600">
+                            <CheckCircle size={14} /> Asistió ✓
+                          </div>
                           <button
                             onClick={() => navigate('/venta', {
                               state: {
@@ -177,17 +178,28 @@ export default function Agenda() {
                                 precioCita: cita.precio,
                               }
                             })}
-                            className="flex-1 flex items-center justify-center gap-1 py-2 bg-[#C9A84C] text-white rounded-xl text-xs font-medium hover:bg-[#b8963e] transition-colors"
+                            className="w-full flex items-center justify-center gap-1 py-2 bg-[#C9A84C] text-white rounded-xl text-xs font-medium hover:bg-[#b8963e] transition-colors"
                           >
-                            <CheckCircle size={14} />
-                            Registrar servicio
+                            💰 Registrar venta (Luz)
+                          </button>
+                        </div>
+                      ) : cita.status === 'noshow' ? (
+                        <div className="mt-3 flex items-center justify-center gap-1 py-2 bg-red-50 rounded-xl text-xs font-medium text-red-400">
+                          <XCircle size={14} /> No asistió
+                        </div>
+                      ) : (
+                        <div className="mt-3 flex gap-2">
+                          <button
+                            onClick={() => marcarAsistio(cita.id)}
+                            className="flex-1 flex items-center justify-center gap-1 py-2 bg-green-500 text-white rounded-xl text-xs font-medium hover:bg-green-600 transition-colors"
+                          >
+                            <CheckCircle size={14} /> Asistió
                           </button>
                           <button
                             onClick={() => marcarNoShow(cita.id)}
-                            className="flex items-center justify-center gap-1 px-3 py-2 bg-red-50 text-red-400 rounded-xl text-xs font-medium hover:bg-red-100 transition-colors"
+                            className="flex-1 flex items-center justify-center gap-1 py-2 bg-red-50 text-red-400 rounded-xl text-xs font-medium hover:bg-red-100 transition-colors"
                           >
-                            <XCircle size={14} />
-                            No asistió
+                            <XCircle size={14} /> No asistió
                           </button>
                         </div>
                       )}
