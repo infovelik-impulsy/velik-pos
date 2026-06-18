@@ -24,7 +24,7 @@ interface BillingData {
   }
 }
 
-export function useBillingData(startDate: string, endDate: string) {
+export function useBillingData(startDate: string, endDate: string, profesionalId?: string) {
   const [data, setData] = useState<BillingData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -36,20 +36,14 @@ export function useBillingData(startDate: string, endDate: string) {
       try {
         const [dailySales, professionals, topServices, paymentBreakdown, metrics] =
           await Promise.all([
-            getDailySalesData(startDate, endDate),
-            getProfessionalBreakdown(startDate, endDate),
-            getTopServices(startDate, endDate, 10),
-            getPaymentMethodBreakdown(startDate, endDate),
-            getTotalMetrics(startDate, endDate),
+            getDailySalesData(startDate, endDate, profesionalId),
+            getProfessionalBreakdown(startDate, endDate, profesionalId),
+            getTopServices(startDate, endDate, 10, profesionalId),
+            getPaymentMethodBreakdown(startDate, endDate, profesionalId),
+            getTotalMetrics(startDate, endDate, profesionalId),
           ])
 
-        setData({
-          dailySales,
-          professionals,
-          topServices,
-          paymentBreakdown,
-          metrics,
-        })
+        setData({ dailySales, professionals, topServices, paymentBreakdown, metrics })
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error fetching data')
       } finally {
@@ -58,7 +52,7 @@ export function useBillingData(startDate: string, endDate: string) {
     }
 
     fetchData()
-  }, [startDate, endDate])
+  }, [startDate, endDate, profesionalId])
 
   return { data, loading, error }
 }

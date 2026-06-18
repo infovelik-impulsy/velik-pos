@@ -122,7 +122,7 @@ export default function DateRangeFilter({ onDateChange }: DateRangeFilterProps) 
       </div>
 
       <div className="grid grid-cols-2 gap-2 mb-4">
-        {periods.slice(0, 8).map(p => (
+        {periods.slice(0, 9).map(p => (
           <button
             key={p.value}
             onClick={() => handlePeriodChange(p.value)}

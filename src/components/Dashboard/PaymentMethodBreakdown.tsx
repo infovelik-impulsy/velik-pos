@@ -19,26 +19,11 @@ export default function PaymentMethodBreakdown({
   }
 
   const chartData = [
-    {
-      name: 'Efectivo',
-      value: data.efectivo,
-      color: '#C9A84C',
-    },
-    {
-      name: 'Transferencia',
-      value: data.transferencia,
-      color: '#8B7355',
-    },
-    {
-      name: 'Tarjeta',
-      value: data.tarjeta,
-      color: '#A0856C',
-    },
-    {
-      name: 'Mixto',
-      value: data.mixto,
-      color: '#9a8b7a',
-    },
+    { name: 'Efectivo',      value: data.efectivo,      color: '#C9A84C' },
+    { name: 'Transferencia', value: data.transferencia, color: '#8B7355' },
+    { name: 'Tarjeta',       value: data.tarjeta,       color: '#A0856C' },
+    { name: 'Mixto',         value: data.mixto,         color: '#9a8b7a' },
+    { name: 'De la casa',    value: data.de_la_casa ?? 0, color: '#a855f7' },
   ].filter(item => item.value > 0)
 
   const total = data.total_dinero

@@ -27,41 +27,42 @@ export interface PaymentBreakdown {
   transferencia: number
   tarjeta: number
   mixto: number
+  de_la_casa: number
   total_transacciones: number
   total_dinero: number
 }
 
+function applyFilters(query: any, startDate: string, endDate: string, profesionalId?: string) {
+  query = query.gte('fecha_cita', startDate).lte('fecha_cita', endDate)
+  if (profesionalId) query = query.eq('profesional_id', profesionalId)
+  return query
+}
+
 export async function getDailySalesData(
   startDate: string,
-  endDate: string
+  endDate: string,
+  profesionalId?: string
 ): Promise<DailySalesData[]> {
-  const { data, error } = await supabase
+  let query = supabase
     .from('ventas')
     .select('fecha_cita, total, pagado_efectivo, pagado_digital')
-    .gte('fecha_cita', startDate)
-    .lte('fecha_cita', endDate)
     .order('fecha_cita', { ascending: true })
 
+  query = applyFilters(query, startDate, endDate, profesionalId)
+  const { data, error } = await query
   if (error) throw error
 
   const grouped = new Map<string, DailySalesData>()
-
   data?.forEach(row => {
     const fecha = row.fecha_cita
     if (!grouped.has(fecha)) {
-      grouped.set(fecha, {
-        fecha,
-        total: 0,
-        count: 0,
-        efectivo: 0,
-        digital: 0,
-      })
+      grouped.set(fecha, { fecha, total: 0, count: 0, efectivo: 0, digital: 0 })
     }
-    const current = grouped.get(fecha)!
-    current.total += row.total || 0
-    current.count += 1
-    current.efectivo += row.pagado_efectivo || 0
-    current.digital += row.pagado_digital || 0
+    const cur = grouped.get(fecha)!
+    cur.total += row.total || 0
+    cur.count += 1
+    cur.efectivo += row.pagado_efectivo || 0
+    cur.digital += row.pagado_digital || 0
   })
 
   return Array.from(grouped.values())
@@ -69,18 +70,18 @@ export async function getDailySalesData(
 
 export async function getProfessionalBreakdown(
   startDate: string,
-  endDate: string
+  endDate: string,
+  profesionalId?: string
 ): Promise<ProfessionalMetrics[]> {
-  const { data, error } = await supabase
+  let query = supabase
     .from('ventas')
     .select('profesional_id, profesional_nombre, total, comision_profesional')
-    .gte('fecha_cita', startDate)
-    .lte('fecha_cita', endDate)
 
+  query = applyFilters(query, startDate, endDate, profesionalId)
+  const { data, error } = await query
   if (error) throw error
 
   const grouped = new Map<string, ProfessionalMetrics>()
-
   data?.forEach(row => {
     const key = row.profesional_id
     if (!grouped.has(key)) {
@@ -92,10 +93,10 @@ export async function getProfessionalBreakdown(
         servicios_count: 0,
       })
     }
-    const current = grouped.get(key)!
-    current.total += row.total || 0
-    current.comision += row.comision_profesional || 0
-    current.servicios_count += 1
+    const cur = grouped.get(key)!
+    cur.total += row.total || 0
+    cur.comision += row.comision_profesional || 0
+    cur.servicios_count += 1
   })
 
   return Array.from(grouped.values()).sort((a, b) => b.total - a.total)
@@ -104,28 +105,23 @@ export async function getProfessionalBreakdown(
 export async function getTopServices(
   startDate: string,
   endDate: string,
-  limit = 10
+  limit = 10,
+  profesionalId?: string
 ): Promise<ServiceMetric[]> {
-  const { data, error } = await supabase
-    .from('ventas')
-    .select('servicios')
-    .gte('fecha_cita', startDate)
-    .lte('fecha_cita', endDate)
-
+  let query = supabase.from('ventas').select('servicios')
+  query = applyFilters(query, startDate, endDate, profesionalId)
+  const { data, error } = await query
   if (error) throw error
 
   const grouped = new Map<string, { count: number; revenue: number }>()
-
   data?.forEach(row => {
     if (Array.isArray(row.servicios)) {
       row.servicios.forEach((srv: any) => {
         const nombre = srv.nombre || 'Sin nombre'
-        if (!grouped.has(nombre)) {
-          grouped.set(nombre, { count: 0, revenue: 0 })
-        }
-        const current = grouped.get(nombre)!
-        current.count += 1
-        current.revenue += srv.precio || 0
+        if (!grouped.has(nombre)) grouped.set(nombre, { count: 0, revenue: 0 })
+        const cur = grouped.get(nombre)!
+        cur.count += 1
+        cur.revenue += srv.precio || 0
       })
     }
   })
@@ -138,14 +134,15 @@ export async function getTopServices(
 
 export async function getPaymentMethodBreakdown(
   startDate: string,
-  endDate: string
+  endDate: string,
+  profesionalId?: string
 ): Promise<PaymentBreakdown> {
-  const { data, error } = await supabase
+  let query = supabase
     .from('ventas')
     .select('metodo_pago, total, pagado_efectivo, pagado_digital')
-    .gte('fecha_cita', startDate)
-    .lte('fecha_cita', endDate)
 
+  query = applyFilters(query, startDate, endDate, profesionalId)
+  const { data, error } = await query
   if (error) throw error
 
   const breakdown: PaymentBreakdown = {
@@ -153,6 +150,7 @@ export async function getPaymentMethodBreakdown(
     transferencia: 0,
     tarjeta: 0,
     mixto: 0,
+    de_la_casa: 0,
     total_transacciones: 0,
     total_dinero: 0,
   }
@@ -161,40 +159,44 @@ export async function getPaymentMethodBreakdown(
     breakdown.total_transacciones += 1
     breakdown.total_dinero += row.total || 0
 
-    if (row.metodo_pago === 'efectivo') {
-      breakdown.efectivo += row.pagado_efectivo || 0
-    } else if (row.metodo_pago === 'transferencia') {
-      breakdown.transferencia += row.pagado_digital || 0
-    } else if (row.metodo_pago === 'tarjeta') {
-      breakdown.tarjeta += row.pagado_digital || 0
-    } else if (row.metodo_pago === 'mixto') {
-      breakdown.efectivo += row.pagado_efectivo || 0
-      breakdown.mixto += row.pagado_digital || 0
+    switch (row.metodo_pago) {
+      case 'efectivo':
+        breakdown.efectivo += row.pagado_efectivo || 0
+        break
+      case 'transferencia':
+        breakdown.transferencia += row.pagado_digital || 0
+        break
+      case 'tarjeta':
+        breakdown.tarjeta += row.pagado_digital || 0
+        break
+      case 'mixto':
+        breakdown.efectivo += row.pagado_efectivo || 0
+        breakdown.mixto += row.pagado_digital || 0
+        break
+      case 'de_la_casa':
+        breakdown.de_la_casa += row.total || 0
+        break
     }
   })
 
   return breakdown
 }
 
-export async function getTotalMetrics(startDate: string, endDate: string) {
-  const { data, error } = await supabase
-    .from('ventas')
-    .select('total, comision_profesional')
-    .gte('fecha_cita', startDate)
-    .lte('fecha_cita', endDate)
-
+export async function getTotalMetrics(
+  startDate: string,
+  endDate: string,
+  profesionalId?: string
+) {
+  let query = supabase.from('ventas').select('total, comision_profesional, metodo_pago')
+  query = applyFilters(query, startDate, endDate, profesionalId)
+  const { data, error } = await query
   if (error) throw error
 
-  const totalIncome = data?.reduce((sum, row) => sum + (row.total || 0), 0) || 0
-  const totalComisiones =
-    data?.reduce((sum, row) => sum + (row.comision_profesional || 0), 0) || 0
-  const transactionCount = data?.length || 0
+  // "de la casa" no cuenta como ingreso real
+  const totalIncome = data?.reduce((s, r) => r.metodo_pago === 'de_la_casa' ? s : s + (r.total || 0), 0) || 0
+  const totalComisiones = data?.reduce((s, r) => s + (r.comision_profesional || 0), 0) || 0
+  const transactionCount = data?.filter(r => r.metodo_pago !== 'de_la_casa').length || 0
   const averageTransaction = transactionCount > 0 ? totalIncome / transactionCount : 0
 
-  return {
-    totalIncome,
-    totalComisiones,
-    transactionCount,
-    averageTransaction,
-  }
+  return { totalIncome, totalComisiones, transactionCount, averageTransaction }
 }
