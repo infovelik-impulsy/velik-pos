@@ -336,42 +336,95 @@ export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
 
 // ─── Modal Nueva Cita ────────────────────────────────────────────────────────
 
+const SLOTS_URL = 'https://santiagon8nmejia.dominadoresia.com/webhook/booking/slots'
+const DIAS_LABEL = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
+const MESES_LABEL = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic']
+
+type Paso = 1 | 2 | 3
+
 function ModalNuevaCita({ profesionalId, onClose, onCreada }: {
   profesionalId: string
-  onClose: () => void; onCreada: () => void
+  onClose: () => void
+  onCreada: () => void
 }) {
-  const [categoria, setCategoria] = useState('')
-  const [servicio, setServicio] = useState<{ nombre: string; calendarId: string; duracion: number; precio: string } | null>(null)
+  const [paso, setPaso] = useState<Paso>(1)
+  const [busqueda, setBusqueda] = useState('')
+  const [servicio, setServicio] = useState<Servicio | null>(null)
   const [slots, setSlots] = useState<{ label: string; date: string; slot: string }[]>([])
   const [fechaSlot, setFechaSlot] = useState<string | null>(null)
   const [slotSel, setSlotSel] = useState<{ label: string; date: string; slot: string } | null>(null)
-  const [nombre, setNombre] = useState('')
-  const [telefono, setTelefono] = useState('')
   const [loadingSlots, setLoadingSlots] = useState(false)
+  // cliente
+  const [busqCliente, setBusqCliente] = useState('')
+  const [resultados, setResultados] = useState<{ id: string; nombres: string; apellidos: string | null; telefono: string | null }[]>([])
+  const [buscandoCliente, setBuscandoCliente] = useState(false)
+  const [clienteSel, setClienteSel] = useState<{ nombre: string; telefono: string } | null>(null)
+  const [nombreManual, setNombreManual] = useState('')
+  const [telefonoManual, setTelefonoManual] = useState('')
+  const [modoManual, setModoManual] = useState(false)
+  // envío
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
   const [exito, setExito] = useState(false)
 
-  const { SLOTS_URL } = { SLOTS_URL: 'https://santiagon8nmejia.dominadoresia.com/webhook/booking/slots' }
-
-  const CATS = Object.keys(SERVICIOS).filter(cat =>
-    SERVICIOS[cat].some(s => !s.profesionales || s.profesionales.includes(profesionalId))
+  // todos los servicios de este profesional
+  const todosServicios = Object.entries(SERVICIOS).flatMap(([, lista]) =>
+    lista.filter(s => !s.profesionales || s.profesionales.includes(profesionalId))
   )
 
-  async function fetchSlots(calendarId: string) {
-    setLoadingSlots(true); setSlots([]); setFechaSlot(null); setSlotSel(null)
-    const start = new Date(); start.setHours(0,0,0,0)
-    const end = new Date(start); end.setDate(end.getDate() + 30)
+  const serviciosFiltrados = busqueda.trim().length > 0
+    ? todosServicios.filter(s => s.nombre.toLowerCase().includes(busqueda.toLowerCase()))
+    : todosServicios
+
+  // agrupar por categoría cuando no hay búsqueda
+  const categoriasFiltradas = busqueda.trim().length === 0
+    ? Object.entries(SERVICIOS)
+        .map(([cat, lista]) => ({
+          cat,
+          items: lista.filter(s => !s.profesionales || s.profesionales.includes(profesionalId))
+        }))
+        .filter(g => g.items.length > 0)
+    : null
+
+  async function seleccionarServicio(s: Servicio) {
+    setServicio(s)
+    setFechaSlot(null)
+    setSlotSel(null)
+    setSlots([])
+    setPaso(2)
+    setLoadingSlots(true)
     try {
-      const r = await fetch(`${SLOTS_URL}?calendarId=${calendarId}&startDate=${start.getTime()}&endDate=${end.getTime()}&userId=${profesionalId}`)
+      const start = new Date(); start.setHours(0,0,0,0)
+      const end = new Date(start); end.setDate(end.getDate() + 30)
+      const r = await fetch(`${SLOTS_URL}?calendarId=${s.calendarId}&startDate=${start.getTime()}&endDate=${end.getTime()}&userId=${profesionalId}`)
       const data = await r.json()
-      setSlots(data.slots || [])
+      const sl = data.slots || []
+      setSlots(sl)
+      // auto-seleccionar primer día disponible
+      if (sl.length > 0) setFechaSlot(sl[0].date)
     } catch { setError('Error al cargar horarios') }
     setLoadingSlots(false)
   }
 
+  useEffect(() => {
+    if (busqCliente.trim().length < 2) { setResultados([]); return }
+    const t = setTimeout(async () => {
+      setBuscandoCliente(true)
+      const { data } = await supabase
+        .from('contactos')
+        .select('id, nombres, apellidos, telefono')
+        .or(`nombres.ilike.%${busqCliente}%,apellidos.ilike.%${busqCliente}%,telefono.ilike.%${busqCliente}%`)
+        .limit(6)
+      setResultados(data || [])
+      setBuscandoCliente(false)
+    }, 300)
+    return () => clearTimeout(t)
+  }, [busqCliente])
+
   async function crear() {
-    if (!servicio || !slotSel || !nombre || !telefono) return
+    const nombreFinal = clienteSel ? clienteSel.nombre : nombreManual
+    const telFinal = clienteSel ? clienteSel.telefono : telefonoManual
+    if (!servicio || !slotSel || !nombreFinal || !telFinal) return
     setGuardando(true); setError('')
     try {
       const r = await fetch(CREAR_URL, {
@@ -380,8 +433,8 @@ function ModalNuevaCita({ profesionalId, onClose, onCreada }: {
         body: JSON.stringify({
           calendarId: servicio.calendarId,
           slot: slotSel.slot,
-          nombre,
-          telefono: telefono.startsWith('+') ? telefono : '+57' + telefono.replace(/\D/g, ''),
+          nombre: nombreFinal,
+          telefono: telFinal.startsWith('+') ? telFinal : '+57' + telFinal.replace(/\D/g, ''),
           email: '',
           servicio: servicio.nombre,
           duracion: servicio.duracion,
@@ -392,7 +445,7 @@ function ModalNuevaCita({ profesionalId, onClose, onCreada }: {
       const data = await r.json()
       if (!r.ok || data.error) throw new Error(data.error || `HTTP ${r.status}`)
       setExito(true)
-      setTimeout(onCreada, 1200)
+      setTimeout(onCreada, 1400)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     } finally { setGuardando(false) }
@@ -400,115 +453,267 @@ function ModalNuevaCita({ profesionalId, onClose, onCreada }: {
 
   const fechas = [...new Set(slots.map(s => s.date))]
   const slotsDelDia = fechaSlot ? slots.filter(s => s.date === fechaSlot) : []
-  const DIAS_LABEL = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
-  const MESES_LABEL = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic']
+
+  const clienteOk = clienteSel || (nombreManual.trim().length >= 2 && telefonoManual.replace(/\D/g,'').length >= 10)
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-end">
-      <div className="bg-[#f5f4f0] w-full max-h-[92vh] overflow-y-auto rounded-t-3xl">
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white rounded-t-3xl">
-          <h2 className="font-semibold text-[#1a1a1a]">Nueva cita</h2>
-          <button onClick={onClose}><X size={20} /></button>
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-end">
+      <div className="bg-[#f5f4f0] w-full max-h-[94vh] flex flex-col rounded-t-3xl">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200 bg-white rounded-t-3xl shrink-0">
+          <div className="flex items-center gap-3">
+            {paso > 1 && !exito && (
+              <button onClick={() => setPaso(p => (p - 1) as Paso)} className="p-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 transition-colors">
+                <ChevronLeft size={16} />
+              </button>
+            )}
+            <div>
+              <h2 className="font-semibold text-[#1a1a1a] text-sm">
+                {exito ? '¡Listo!' : paso === 1 ? 'Seleccionar servicio' : paso === 2 ? 'Fecha y hora' : 'Datos de la clienta'}
+              </h2>
+              {!exito && (
+                <p className="text-xs text-[#8a7a6a]">Paso {paso} de 3</p>
+              )}
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-xl hover:bg-gray-100 transition-colors">
+            <X size={18} />
+          </button>
         </div>
 
-        {exito ? (
-          <div className="flex flex-col items-center justify-center py-16">
-            <CheckCircle size={48} className="text-green-500 mb-3" />
-            <p className="font-medium text-[#1a1a1a]">¡Cita creada!</p>
+        {/* Indicador de pasos */}
+        {!exito && (
+          <div className="flex gap-1.5 px-4 pt-3 pb-1 shrink-0">
+            {[1,2,3].map(p => (
+              <div key={p} className={`h-1 flex-1 rounded-full transition-all ${p <= paso ? 'bg-[#C9A84C]' : 'bg-gray-200'}`} />
+            ))}
           </div>
-        ) : (
-          <div className="p-4 space-y-5">
-            {/* Categoría */}
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-[#8a7a6a] mb-2">Categoría</p>
-              <div className="flex flex-wrap gap-2">
-                {CATS.map(c => (
-                  <button key={c} onClick={() => { setCategoria(c); setServicio(null); setSlots([]); setFechaSlot(null); setSlotSel(null) }}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${categoria === c ? 'bg-[#C9A84C] text-white' : 'bg-white border border-gray-200 text-[#1a1a1a]'}`}>
-                    {c}
-                  </button>
-                ))}
-              </div>
-            </div>
+        )}
 
-            {/* Servicio */}
-            {categoria && (
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-[#8a7a6a] mb-2">Servicio</p>
-                <div className="grid grid-cols-1 gap-2">
-                  {SERVICIOS[categoria]
-                    .filter(s => !s.profesionales || s.profesionales.includes(profesionalId))
-                    .map(s => (
-                      <button key={s.calendarId}
-                        onClick={() => { setServicio(s); fetchSlots(s.calendarId) }}
-                        className={`text-left px-3 py-2.5 rounded-xl border transition-all ${servicio?.calendarId === s.calendarId ? 'border-[#C9A84C] bg-[#faf6ee]' : 'border-gray-200 bg-white'}`}>
-                        <p className="text-sm font-medium">{s.nombre}</p>
-                        <p className="text-xs text-[#8a7a6a]">{s.duracion} min · {s.precio}</p>
-                      </button>
-                    ))}
-                </div>
+        {/* Resumen del servicio (pasos 2 y 3) */}
+        {servicio && !exito && paso > 1 && (
+          <div className="mx-4 mt-3 px-3 py-2.5 bg-[#faf6ee] border border-[#e8d99a] rounded-xl flex items-center justify-between shrink-0">
+            <div>
+              <p className="text-sm font-semibold text-[#1a1a1a]">{servicio.nombre}</p>
+              <p className="text-xs text-[#8a7a6a]">{servicio.duracion} min · {servicio.precio}</p>
+            </div>
+            {slotSel && paso === 3 && (
+              <div className="text-right">
+                <p className="text-xs font-medium text-[#C9A84C]">{slotSel.label}</p>
+                <p className="text-xs text-[#8a7a6a]">{fechaSlot ? (() => { const d = new Date(fechaSlot + 'T12:00:00'); return `${DIAS_LABEL[d.getDay()]} ${d.getDate()} ${MESES_LABEL[d.getMonth()]}` })() : ''}</p>
               </div>
             )}
+          </div>
+        )}
 
-            {/* Fecha y hora */}
-            {servicio && (
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-[#8a7a6a] mb-2">Fecha y hora</p>
-                {loadingSlots ? (
-                  <div className="flex items-center gap-2 text-sm text-[#8a7a6a] py-3"><Loader2 size={14} className="animate-spin" /> Buscando...</div>
-                ) : (
-                  <>
-                    <div className="flex gap-2 overflow-x-auto pb-2 mb-2">
+        {/* Contenido scrollable */}
+        <div className="flex-1 overflow-y-auto">
+
+          {exito ? (
+            <div className="flex flex-col items-center justify-center py-20 px-4">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                <CheckCircle size={36} className="text-green-500" />
+              </div>
+              <p className="font-semibold text-[#1a1a1a] text-lg">¡Cita agendada!</p>
+              <p className="text-sm text-[#8a7a6a] mt-1 text-center">{servicio?.nombre} · {slotSel?.label}</p>
+            </div>
+
+          ) : paso === 1 ? (
+            <div className="p-4 space-y-3">
+              {/* Buscador */}
+              <div className="relative">
+                <input
+                  value={busqueda}
+                  onChange={e => setBusqueda(e.target.value)}
+                  placeholder="Buscar servicio..."
+                  autoFocus
+                  className="w-full pl-9 pr-4 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-[#C9A84C]"
+                />
+                <svg className="absolute left-3 top-3.5 text-gray-400" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                {busqueda && (
+                  <button onClick={() => setBusqueda('')} className="absolute right-3 top-3 text-gray-400 hover:text-gray-600">
+                    <X size={15} />
+                  </button>
+                )}
+              </div>
+
+              {/* Lista de servicios */}
+              {busqueda.trim() ? (
+                <div className="space-y-2">
+                  {serviciosFiltrados.length === 0 ? (
+                    <p className="text-center text-sm text-[#8a7a6a] py-8">Sin resultados para "{busqueda}"</p>
+                  ) : serviciosFiltrados.map(s => (
+                    <button key={s.calendarId} onClick={() => seleccionarServicio(s)}
+                      className="w-full text-left px-4 py-3 rounded-xl bg-white border border-gray-100 hover:border-[#C9A84C] hover:bg-[#faf6ee] transition-all">
+                      <p className="text-sm font-medium text-[#1a1a1a]">{s.nombre}</p>
+                      <p className="text-xs text-[#8a7a6a] mt-0.5">{s.duracion} min · {s.precio}</p>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-4 pb-4">
+                  {categoriasFiltradas!.map(({ cat, items }) => (
+                    <div key={cat}>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-[#8a7a6a] mb-2 px-1">{cat}</p>
+                      <div className="space-y-1.5">
+                        {items.map(s => (
+                          <button key={s.calendarId} onClick={() => seleccionarServicio(s)}
+                            className="w-full text-left px-4 py-3 rounded-xl bg-white border border-gray-100 hover:border-[#C9A84C] hover:bg-[#faf6ee] transition-all flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium text-[#1a1a1a]">{s.nombre}</p>
+                              <p className="text-xs text-[#8a7a6a] mt-0.5">{s.duracion} min</p>
+                            </div>
+                            <span className="text-sm font-semibold text-[#C9A84C] ml-3 shrink-0">{s.precio}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+          ) : paso === 2 ? (
+            <div className="p-4 space-y-4">
+              {loadingSlots ? (
+                <div className="flex flex-col items-center justify-center py-16 gap-3 text-[#8a7a6a]">
+                  <Loader2 size={28} className="animate-spin text-[#C9A84C]" />
+                  <p className="text-sm">Buscando disponibilidad...</p>
+                </div>
+              ) : fechas.length === 0 ? (
+                <p className="text-center text-sm text-[#8a7a6a] py-8">Sin disponibilidad en los próximos 30 días</p>
+              ) : (
+                <>
+                  {/* Selector de fecha */}
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-[#8a7a6a] mb-2">Fecha</p>
+                    <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
                       {fechas.map(f => {
                         const d = new Date(f + 'T12:00:00')
+                        const activo = fechaSlot === f
                         return (
-                          <button key={f} onClick={() => setFechaSlot(f)}
-                            className={`shrink-0 px-3 py-2 rounded-xl text-xs font-medium transition-all ${fechaSlot === f ? 'bg-[#C9A84C] text-white' : 'bg-white border border-gray-200'}`}>
-                            {DIAS_LABEL[d.getDay()]} {d.getDate()} {MESES_LABEL[d.getMonth()]}
+                          <button key={f} onClick={() => { setFechaSlot(f); setSlotSel(null) }}
+                            className={`shrink-0 flex flex-col items-center px-3 py-2.5 rounded-xl text-xs font-medium transition-all min-w-[52px] ${activo ? 'bg-[#C9A84C] text-white' : 'bg-white border border-gray-200 text-[#1a1a1a]'}`}>
+                            <span className="uppercase text-[10px] opacity-70">{DIAS_LABEL[d.getDay()]}</span>
+                            <span className="text-base font-bold mt-0.5">{d.getDate()}</span>
+                            <span className="opacity-70">{MESES_LABEL[d.getMonth()]}</span>
                           </button>
                         )
                       })}
                     </div>
-                    {fechaSlot && (
-                      <div className="flex flex-wrap gap-2">
+                  </div>
+
+                  {/* Selector de hora */}
+                  {fechaSlot && (
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-[#8a7a6a] mb-2">
+                        Hora disponible · {slotsDelDia.length} opción{slotsDelDia.length !== 1 ? 'es' : ''}
+                      </p>
+                      <div className="grid grid-cols-3 gap-2">
                         {slotsDelDia.map(s => (
                           <button key={s.slot} onClick={() => setSlotSel(s)}
-                            className={`px-3 py-2 rounded-xl text-xs font-medium flex items-center gap-1 transition-all ${slotSel?.slot === s.slot ? 'bg-[#C9A84C] text-white' : 'bg-white border border-gray-200'}`}>
-                            <Clock size={11} /> {s.label}
+                            className={`py-3 rounded-xl text-sm font-medium flex items-center justify-center gap-1.5 transition-all ${slotSel?.slot === s.slot ? 'bg-[#C9A84C] text-white shadow-md' : 'bg-white border border-gray-200 text-[#1a1a1a] hover:border-[#C9A84C]'}`}>
+                            <Clock size={12} /> {s.label}
                           </button>
                         ))}
                       </div>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
+                    </div>
+                  )}
 
-            {/* Datos cliente */}
-            {slotSel && (
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-[#8a7a6a] mb-2">Datos de la clienta</p>
+                  {slotSel && (
+                    <button onClick={() => setPaso(3)}
+                      className="w-full py-4 bg-[#1a1a1a] text-white rounded-2xl font-medium text-sm flex items-center justify-center gap-2 hover:bg-black transition-colors">
+                      Continuar con {slotSel.label} →
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+
+          ) : (
+            <div className="p-4 space-y-4">
+              {/* Búsqueda de cliente existente */}
+              {!modoManual && !clienteSel && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[#8a7a6a] mb-2">Buscar clienta</p>
+                  <div className="relative">
+                    <input
+                      value={busqCliente}
+                      onChange={e => setBusqCliente(e.target.value)}
+                      placeholder="Nombre, apellido o teléfono..."
+                      autoFocus
+                      className="w-full pl-9 pr-4 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-[#C9A84C]"
+                    />
+                    <svg className="absolute left-3 top-3.5 text-gray-400" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                    {buscandoCliente && <Loader2 size={14} className="absolute right-3 top-3.5 text-gray-400 animate-spin" />}
+                  </div>
+                  {resultados.length > 0 && (
+                    <div className="mt-2 space-y-1.5">
+                      {resultados.map(c => (
+                        <button key={c.id}
+                          onClick={() => {
+                            setClienteSel({ nombre: [c.nombres, c.apellidos].filter(Boolean).join(' '), telefono: c.telefono || '' })
+                            setBusqCliente('')
+                            setResultados([])
+                          }}
+                          className="w-full text-left px-4 py-3 bg-white rounded-xl border border-gray-100 hover:border-[#C9A84C] hover:bg-[#faf6ee] transition-all">
+                          <p className="text-sm font-medium">{[c.nombres, c.apellidos].filter(Boolean).join(' ')}</p>
+                          {c.telefono && <p className="text-xs text-[#8a7a6a]">{c.telefono}</p>}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <button onClick={() => setModoManual(true)}
+                    className="mt-3 text-xs text-[#8a7a6a] underline underline-offset-2 hover:text-[#C9A84C] transition-colors">
+                    + Ingresar datos manualmente
+                  </button>
+                </div>
+              )}
+
+              {/* Cliente seleccionado */}
+              {clienteSel && (
+                <div className="px-4 py-3 bg-green-50 border border-green-200 rounded-xl flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-[#1a1a1a]">{clienteSel.nombre}</p>
+                    <p className="text-xs text-[#8a7a6a]">{clienteSel.telefono}</p>
+                  </div>
+                  <button onClick={() => setClienteSel(null)} className="text-gray-400 hover:text-gray-600">
+                    <X size={16} />
+                  </button>
+                </div>
+              )}
+
+              {/* Modo manual */}
+              {modoManual && !clienteSel && (
                 <div className="space-y-2">
-                  <input value={nombre} onChange={e => setNombre(e.target.value)}
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[#8a7a6a]">Datos de la clienta</p>
+                  <input value={nombreManual} onChange={e => setNombreManual(e.target.value)}
                     placeholder="Nombre y apellido"
                     className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-[#C9A84C]" />
-                  <input value={telefono} onChange={e => setTelefono(e.target.value)}
+                  <input value={telefonoManual} onChange={e => setTelefonoManual(e.target.value)}
                     placeholder="Teléfono (ej: 3001234567)" inputMode="tel"
                     className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-[#C9A84C]" />
+                  <button onClick={() => setModoManual(false)}
+                    className="text-xs text-[#8a7a6a] underline underline-offset-2 hover:text-[#C9A84C] transition-colors">
+                    ← Buscar cliente existente
+                  </button>
                 </div>
-              </div>
-            )}
+              )}
 
-            {error && <p className="text-sm text-red-500">Error: {error}</p>}
+              {error && <p className="text-sm text-red-500 bg-red-50 px-3 py-2 rounded-xl">⚠ {error}</p>}
 
-            {slotSel && nombre && telefono.replace(/\D/g,'').length >= 10 && (
-              <button onClick={crear} disabled={guardando}
-                className="w-full py-4 bg-[#C9A84C] text-white rounded-2xl font-medium text-sm flex items-center justify-center gap-2 disabled:opacity-60">
-                {guardando ? <><Loader2 size={16} className="animate-spin" /> Creando...</> : <><CheckCircle size={16} /> Confirmar · {slotSel.label}</>}
-              </button>
-            )}
-          </div>
-        )}
+              {clienteOk && (
+                <button onClick={crear} disabled={guardando}
+                  className="w-full py-4 bg-[#C9A84C] text-white rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 disabled:opacity-60 hover:bg-[#b8963e] transition-colors shadow-lg">
+                  {guardando
+                    ? <><Loader2 size={16} className="animate-spin" /> Agendando...</>
+                    : <><CheckCircle size={16} /> Confirmar cita</>}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
