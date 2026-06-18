@@ -355,6 +355,12 @@ export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
           <Lock size={16} /> Bloquear horario
         </button>
         <button
+          onClick={() => navigate('/venta', { state: { profesionalId, fromPro: true } })}
+          className="flex items-center gap-2 bg-white border border-gray-200 text-[#8a7a6a] px-4 py-3 rounded-2xl shadow-md text-sm font-medium hover:border-[#C9A84C] hover:text-[#C9A84C] transition-all"
+        >
+          <DollarSign size={16} /> Nueva venta
+        </button>
+        <button
           onClick={() => setModal('nueva_cita')}
           className="flex items-center gap-2 bg-[#C9A84C] text-white px-5 py-3 rounded-2xl shadow-lg text-sm font-medium hover:bg-[#b8963e] transition-all"
         >
