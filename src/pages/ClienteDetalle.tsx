@@ -53,7 +53,7 @@ export default function ClienteDetalle() {
   const [ventas, setVentas] = useState<Venta[]>([])
   const [abonos, setAbonos] = useState<Abono[]>([])
   const [ficha, setFicha] = useState<Ficha>({ notas: '', alergias: '', formula_color: '' })
-  const [fichaId, setFichaId] = useState<string | null>(null)
+  const [, setFichaId] = useState<string | null>(null)
   const [tab, setTab] = useState<'historial' | 'ficha' | 'abonos'>('historial')
   const [loading, setLoading] = useState(true)
   const [guardandoFicha, setGuardandoFicha] = useState(false)
