@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { SERVICIOS, CREAR_URL } from '../data/bookingData'
-import { LogOut, Plus, Lock, ChevronLeft, ChevronRight, Clock, User, X, CheckCircle, Loader2, Calendar, Trash2 } from 'lucide-react'
+import { LogOut, Plus, Lock, ChevronLeft, ChevronRight, Clock, User, X, CheckCircle, XCircle, Loader2, Calendar, Trash2 } from 'lucide-react'
+import { updateAppointmentStatus } from '../lib/ghl'
 
 interface Cita {
   id: string
@@ -98,6 +99,18 @@ export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
     } catch (e) {
       alert('Error al eliminar: ' + (e instanceof Error ? e.message : String(e)))
     }
+  }
+
+  async function marcarAsistio(id: string) {
+    await supabase.from('citas').update({ status: 'showed' }).eq('id', id)
+    updateAppointmentStatus(id, 'showed')
+    cargarCitas()
+  }
+
+  async function marcarNoShow(id: string) {
+    await supabase.from('citas').update({ status: 'noshow' }).eq('id', id)
+    updateAppointmentStatus(id, 'noshow')
+    cargarCitas()
   }
 
   async function cargarCitas() {
@@ -246,6 +259,32 @@ export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
                     </button>
                   )}
                 </div>
+                {(c.status === 'confirmed' || c.status === 'new') && (
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      onClick={() => marcarAsistio(c.id)}
+                      className="flex-1 flex items-center justify-center gap-1 py-2 bg-green-500 text-white rounded-xl text-xs font-medium hover:bg-green-600 transition-colors"
+                    >
+                      <CheckCircle size={13} /> Asistió
+                    </button>
+                    <button
+                      onClick={() => marcarNoShow(c.id)}
+                      className="flex-1 flex items-center justify-center gap-1 py-2 bg-red-50 text-red-400 rounded-xl text-xs font-medium hover:bg-red-100 transition-colors"
+                    >
+                      <XCircle size={13} /> No asistió
+                    </button>
+                  </div>
+                )}
+                {c.status === 'showed' && (
+                  <div className="mt-3 flex items-center justify-center gap-1 py-2 bg-green-50 rounded-xl text-xs font-medium text-green-600">
+                    <CheckCircle size={13} /> Asistió ✓
+                  </div>
+                )}
+                {c.status === 'noshow' && (
+                  <div className="mt-3 flex items-center justify-center gap-1 py-2 bg-red-50 rounded-xl text-xs font-medium text-red-400">
+                    <XCircle size={13} /> No asistió
+                  </div>
+                )}
               </div>
             ))}
           </div>
