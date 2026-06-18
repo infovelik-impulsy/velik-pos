@@ -36,9 +36,7 @@ export default function Agenda() {
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
 
-  useEffect(() => {
-    load()
-  }, [fecha])
+  useEffect(() => { load() }, [fecha])
 
   async function marcarNoShow(id: string) {
     await supabase.from('citas').update({ status: 'noshow' }).eq('id', id)
@@ -84,154 +82,178 @@ export default function Agenda() {
   const citasPorProfesional = PROFESIONALES.map(p => ({
     profesional: p,
     citas: citas.filter(c => c.profesional_id === p.id),
-  }))
+  })).filter(g => g.citas.length > 0)
 
   const totalDia = citas.length
+  const esHoy = format(fecha, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
 
   return (
-    <div className="p-4 max-w-2xl mx-auto pb-24">
-      {/* Date nav */}
-      <div className="flex items-center justify-between mb-4">
-        <button onClick={() => setFecha(d => subDays(d, 1))} className="p-2 rounded-xl hover:bg-white">
-          <ChevronLeft size={20} />
-        </button>
-        <div className="text-center">
-          <p className="font-medium capitalize">{format(fecha, "EEEE d 'de' MMMM", { locale: es })}</p>
-          <p className="text-xs text-[#8a7a6a]">{totalDia} cita{totalDia !== 1 ? 's' : ''} del día</p>
+    <div className="min-h-screen bg-[#f5f4f0] pb-24">
+
+      {/* Header de fecha */}
+      <div className="bg-white border-b border-gray-100 px-6 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <button onClick={() => setFecha(d => subDays(d, 1))} className="p-2 rounded-xl hover:bg-gray-100 transition-colors">
+            <ChevronLeft size={20} />
+          </button>
+          <div className="text-center">
+            <p className="font-semibold text-lg capitalize text-[#1a1a1a]">
+              {esHoy ? 'Hoy — ' : ''}{format(fecha, "EEEE d 'de' MMMM", { locale: es })}
+            </p>
+            <p className="text-xs text-[#8a7a6a] mt-0.5">{totalDia} cita{totalDia !== 1 ? 's' : ''} · {citasPorProfesional.length} profesional{citasPorProfesional.length !== 1 ? 'es' : ''}</p>
+          </div>
+          <button onClick={() => setFecha(d => addDays(d, 1))} className="p-2 rounded-xl hover:bg-gray-100 transition-colors">
+            <ChevronRight size={20} />
+          </button>
         </div>
-        <button onClick={() => setFecha(d => addDays(d, 1))} className="p-2 rounded-xl hover:bg-white">
-          <ChevronRight size={20} />
-        </button>
+
+        {/* Quick date chips */}
+        <div className="max-w-7xl mx-auto mt-3 flex gap-2 overflow-x-auto pb-1">
+          {[0, 1, 2, 3, 4, 5, 6].map(offset => {
+            const d = addDays(new Date(), offset)
+            const isActive = format(d, 'yyyy-MM-dd') === format(fecha, 'yyyy-MM-dd')
+            return (
+              <button
+                key={offset}
+                onClick={() => setFecha(d)}
+                className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-medium transition-all ${
+                  isActive ? 'bg-[#C9A84C] text-white' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200'
+                }`}
+              >
+                <span className="capitalize">{offset === 0 ? 'Hoy' : offset === 1 ? 'Mañana' : format(d, 'EEE d', { locale: es })}</span>
+              </button>
+            )
+          })}
+          <button
+            onClick={() => navigate('/nueva-cita')}
+            className="flex-shrink-0 ml-auto flex items-center gap-1.5 px-4 py-2 bg-[#1a1a1a] text-white rounded-xl text-xs font-medium hover:bg-black transition-colors"
+          >
+            <PlusCircle size={13} /> Nueva cita
+          </button>
+        </div>
       </div>
 
-      {/* Nueva cita button */}
-      <button
-        onClick={() => navigate('/nueva-cita')}
-        className="w-full mb-4 py-3 bg-[#1a1a1a] text-white rounded-2xl text-sm font-medium hover:bg-black transition-colors flex items-center justify-center gap-2"
-      >
-        <PlusCircle size={16} /> Nueva cita
-      </button>
+      {/* Contenido */}
+      <div className="max-w-7xl mx-auto px-4 pt-5">
+        {loading ? (
+          <div className="text-center py-16 text-[#8a7a6a]">
+            <div className="animate-pulse text-sm">Cargando citas...</div>
+          </div>
+        ) : citas.length === 0 ? (
+          <div className="text-center py-16 text-[#8a7a6a]">
+            <CalendarIcon />
+            <p className="mt-3 text-sm">Sin citas para este día</p>
+          </div>
+        ) : (
+          /* Grid: 1 columna en móvil, una por profesional en desktop */
+          <div className={`grid gap-5 ${
+            citasPorProfesional.length === 1 ? 'grid-cols-1 max-w-lg mx-auto' :
+            citasPorProfesional.length === 2 ? 'grid-cols-1 md:grid-cols-2' :
+            'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+          }`}>
+            {citasPorProfesional.map(({ profesional, citas: cs }) => (
+              <div key={profesional.id} className="min-w-0">
+                {/* Cabecera profesional */}
+                <div className="flex items-center gap-2 mb-3 px-1">
+                  <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: profesional.color }} />
+                  <h3 className="font-semibold text-sm text-[#1a1a1a]">{profesional.nombre}</h3>
+                  <span className="text-xs text-white px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: profesional.color }}>
+                    {cs.length}
+                  </span>
+                </div>
 
-      {/* Quick date chips */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
-        {[0, 1, 2, 3, 4, 5, 6].map(offset => {
-          const d = addDays(new Date(), offset)
-          const isActive = format(d, 'yyyy-MM-dd') === format(fecha, 'yyyy-MM-dd')
-          return (
-            <button
-              key={offset}
-              onClick={() => setFecha(d)}
-              className={`flex-shrink-0 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
-                isActive ? 'bg-[#C9A84C] text-white' : 'bg-white text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              <span className="capitalize">{offset === 0 ? 'Hoy' : offset === 1 ? 'Mañana' : format(d, 'EEE d', { locale: es })}</span>
-            </button>
-          )
-        })}
-      </div>
-
-      {loading ? (
-        <div className="text-center py-12 text-[#8a7a6a]">Cargando citas...</div>
-      ) : citas.length === 0 ? (
-        <div className="text-center py-12 text-[#8a7a6a]">
-          <CalendarIcon />
-          <p className="mt-2">Sin citas para este día</p>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {citasPorProfesional.filter(g => g.citas.length > 0).map(({ profesional, citas: cs }) => (
-            <div key={profesional.id}>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: profesional.color }} />
-                <h3 className="font-medium text-sm">{profesional.nombre}</h3>
-                <span className="text-xs text-gray-400">{cs.length} cita{cs.length !== 1 ? 's' : ''}</span>
-              </div>
-              <div className="space-y-2">
-                {cs.map(cita => {
-                  const st = STATUS_LABEL[cita.status] || { label: cita.status, cls: 'bg-gray-100 text-gray-600' }
-                  return (
-                    <div
-                      key={cita.id}
-                      className="bg-white rounded-2xl p-4 shadow-sm border border-gray-50"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Clock size={13} className="text-[#8a7a6a]" />
-                            <span className="text-sm font-medium">
-                              {format(new Date(cita.start_time), 'h:mm a')} – {format(new Date(cita.end_time), 'h:mm a')}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <User size={13} className="text-[#8a7a6a]" />
-                            <span className="text-sm">{cita.cliente_nombre}</span>
-                          </div>
-                          <div className="flex items-center gap-3 mt-1 ml-5">
-                            <p className="text-xs text-[#8a7a6a]">{cita.titulo}</p>
-                            {cita.precio && <span className="text-xs font-semibold text-[#C9A84C]">{cita.precio}</span>}
-                          </div>
-                        </div>
-                        <span className={`text-xs px-2 py-1 rounded-full ${st.cls}`}>{st.label}</span>
-                      </div>
-                      {cita.status === 'showed' ? (
-                        <div className="mt-3 space-y-2">
-                          <div className="flex items-center justify-center gap-1 py-2 bg-green-50 rounded-xl text-xs font-medium text-green-600">
-                            <CheckCircle size={14} /> Asistió ✓
-                          </div>
-                          {ventasIds.has(cita.id) ? (
-                            <div className="w-full flex items-center justify-center gap-1 py-2 bg-emerald-50 rounded-xl text-xs font-medium text-emerald-600 border border-emerald-200">
-                              <CheckCircle size={13} /> Venta registrada ✓
+                {/* Citas de esta profesional */}
+                <div className="space-y-2">
+                  {cs.map(cita => {
+                    const st = STATUS_LABEL[cita.status] || { label: cita.status, cls: 'bg-gray-100 text-gray-600' }
+                    return (
+                      <div
+                        key={cita.id}
+                        className={`bg-white rounded-2xl p-4 shadow-sm border-l-4 ${
+                          cita.status === 'showed' ? 'border-green-400' :
+                          cita.status === 'noshow' ? 'border-red-300' :
+                          'border-[#C9A84C]'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <Clock size={12} className="text-[#8a7a6a] flex-shrink-0" />
+                              <span className="text-xs font-semibold text-[#1a1a1a]">
+                                {format(new Date(cita.start_time), 'h:mm a')} – {format(new Date(cita.end_time), 'h:mm a')}
+                              </span>
                             </div>
-                          ) : (
-                            <button
-                              onClick={() => navigate('/venta', {
-                                state: {
-                                  appointmentId: cita.id,
-                                  contactId: cita.contact_id,
-                                  clienteNombre: cita.cliente_nombre,
-                                  clienteTelefono: cita.cliente_telefono,
-                                  profesionalId: cita.profesional_id,
-                                  servicioNombre: cita.titulo,
-                                  precioCita: cita.precio,
-                                }
-                              })}
-                              className="w-full flex items-center justify-center gap-1 py-2 bg-[#C9A84C] text-white rounded-xl text-xs font-medium hover:bg-[#b8963e] transition-colors"
-                            >
-                              💰 Registrar venta ({profesional.nombre})
-                            </button>
-                          )}
+                            <div className="flex items-center gap-1.5">
+                              <User size={12} className="text-[#8a7a6a] flex-shrink-0" />
+                              <span className="text-sm font-medium text-[#1a1a1a] truncate">{cita.cliente_nombre}</span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-1 ml-4">
+                              <p className="text-xs text-[#8a7a6a] truncate">{cita.titulo}</p>
+                              {cita.precio && <span className="text-xs font-bold text-[#C9A84C] flex-shrink-0">{cita.precio}</span>}
+                            </div>
+                          </div>
+                          <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 font-medium ${st.cls}`}>{st.label}</span>
                         </div>
-                      ) : cita.status === 'noshow' ? (
-                        <div className="mt-3 flex items-center justify-center gap-1 py-2 bg-red-50 rounded-xl text-xs font-medium text-red-400">
-                          <XCircle size={14} /> No asistió
-                        </div>
-                      ) : (
-                        <div className="mt-3 flex gap-2">
-                          <button
-                            onClick={() => marcarAsistio(cita.id)}
-                            className="flex-1 flex items-center justify-center gap-1 py-2 bg-green-500 text-white rounded-xl text-xs font-medium hover:bg-green-600 transition-colors"
-                          >
-                            <CheckCircle size={14} /> Asistió
-                          </button>
-                          <button
-                            onClick={() => marcarNoShow(cita.id)}
-                            className="flex-1 flex items-center justify-center gap-1 py-2 bg-red-50 text-red-400 rounded-xl text-xs font-medium hover:bg-red-100 transition-colors"
-                          >
-                            <XCircle size={14} /> No asistió
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
 
-      {/* FAB */}
+                        {cita.status === 'showed' ? (
+                          <div className="mt-3 space-y-1.5">
+                            <div className="flex items-center justify-center gap-1 py-1.5 bg-green-50 rounded-xl text-xs font-medium text-green-600">
+                              <CheckCircle size={12} /> Asistió ✓
+                            </div>
+                            {ventasIds.has(cita.id) ? (
+                              <div className="flex items-center justify-center gap-1 py-1.5 bg-emerald-50 rounded-xl text-xs font-medium text-emerald-600 border border-emerald-200">
+                                <CheckCircle size={12} /> Venta registrada ✓
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => navigate('/venta', {
+                                  state: {
+                                    appointmentId: cita.id,
+                                    contactId: cita.contact_id,
+                                    clienteNombre: cita.cliente_nombre,
+                                    clienteTelefono: cita.cliente_telefono,
+                                    profesionalId: cita.profesional_id,
+                                    servicioNombre: cita.titulo,
+                                    precioCita: cita.precio,
+                                  }
+                                })}
+                                className="w-full flex items-center justify-center gap-1 py-1.5 bg-[#C9A84C] text-white rounded-xl text-xs font-medium hover:bg-[#b8963e] transition-colors"
+                              >
+                                💰 Registrar venta
+                              </button>
+                            )}
+                          </div>
+                        ) : cita.status === 'noshow' ? (
+                          <div className="mt-3 flex items-center justify-center gap-1 py-1.5 bg-red-50 rounded-xl text-xs font-medium text-red-400">
+                            <XCircle size={12} /> No asistió
+                          </div>
+                        ) : (
+                          <div className="mt-3 flex gap-2">
+                            <button
+                              onClick={() => marcarAsistio(cita.id)}
+                              className="flex-1 flex items-center justify-center gap-1 py-2 bg-green-500 text-white rounded-xl text-xs font-medium hover:bg-green-600 transition-colors"
+                            >
+                              <CheckCircle size={12} /> Asistió
+                            </button>
+                            <button
+                              onClick={() => marcarNoShow(cita.id)}
+                              className="flex-1 flex items-center justify-center gap-1 py-2 bg-red-50 text-red-400 rounded-xl text-xs font-medium hover:bg-red-100 transition-colors"
+                            >
+                              <XCircle size={12} /> No asistió
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* FAB nueva venta */}
       <button
         onClick={() => navigate('/venta')}
         className="fixed bottom-20 right-4 bg-[#C9A84C] text-white rounded-full p-4 shadow-lg hover:bg-[#b8963e] transition-all active:scale-95"
