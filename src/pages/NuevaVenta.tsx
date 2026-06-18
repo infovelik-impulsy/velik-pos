@@ -136,7 +136,7 @@ export default function NuevaVenta() {
       pagado_efectivo: efectivo,
       pagado_digital: digital,
       comision_profesional: comision,
-      comision_velik: comision,
+      comision_velik: total - comision,
       notas,
     })
 

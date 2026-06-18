@@ -13,6 +13,7 @@ export interface ProfessionalMetrics {
   nombre: string
   total: number
   comision: number
+  comision_velik: number
   servicios_count: number
 }
 
@@ -75,7 +76,7 @@ export async function getProfessionalBreakdown(
 ): Promise<ProfessionalMetrics[]> {
   let query = supabase
     .from('ventas')
-    .select('profesional_id, profesional_nombre, total, comision_profesional')
+    .select('profesional_id, profesional_nombre, total, comision_profesional, metodo_pago')
 
   query = applyFilters(query, startDate, endDate, profesionalId)
   const { data, error } = await query
@@ -90,12 +91,17 @@ export async function getProfessionalBreakdown(
         nombre: row.profesional_nombre,
         total: 0,
         comision: 0,
+        comision_velik: 0,
         servicios_count: 0,
       })
     }
     const cur = grouped.get(key)!
-    cur.total += row.total || 0
-    cur.comision += row.comision_profesional || 0
+    const total = row.total || 0
+    const comPro = row.comision_profesional || 0
+    // Excluir "de la casa" del total real, pero sí contar la comisión profesional que se le paga
+    if (row.metodo_pago !== 'de_la_casa') cur.total += total
+    cur.comision += comPro
+    cur.comision_velik += total - comPro
     cur.servicios_count += 1
   })
 

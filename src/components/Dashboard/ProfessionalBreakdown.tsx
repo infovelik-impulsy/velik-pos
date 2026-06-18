@@ -64,7 +64,8 @@ export default function ProfessionalBreakdown({ data, loading }: ProfessionalBre
               <th className="pb-3 px-3">Profesional</th>
               <th className="pb-3 px-3 text-right">Servicios</th>
               <th className="pb-3 px-3 text-right">Total Ventas</th>
-              <th className="pb-3 px-3 text-right">Comisión</th>
+              <th className="pb-3 px-3 text-right">Comisión Prof.</th>
+              <th className="pb-3 px-3 text-right">Velik</th>
             </tr>
           </thead>
           <tbody>
@@ -78,9 +79,21 @@ export default function ProfessionalBreakdown({ data, loading }: ProfessionalBre
                 <td className="py-3 px-3 text-right text-[#C9A84C] font-semibold">
                   ${prof.comision.toLocaleString('es-CO')}
                 </td>
+                <td className="py-3 px-3 text-right text-[#1a1a1a] font-semibold">
+                  ${prof.comision_velik.toLocaleString('es-CO')}
+                </td>
               </tr>
             ))}
           </tbody>
+          <tfoot className="border-t-2 border-gray-300">
+            <tr className="font-bold text-[#1a1a1a]">
+              <td className="pt-3 px-3">TOTAL</td>
+              <td className="pt-3 px-3 text-right">{data.reduce((s, p) => s + p.servicios_count, 0)}</td>
+              <td className="pt-3 px-3 text-right">${data.reduce((s, p) => s + p.total, 0).toLocaleString('es-CO')}</td>
+              <td className="pt-3 px-3 text-right text-[#C9A84C]">${data.reduce((s, p) => s + p.comision, 0).toLocaleString('es-CO')}</td>
+              <td className="pt-3 px-3 text-right">${data.reduce((s, p) => s + p.comision_velik, 0).toLocaleString('es-CO')}</td>
+            </tr>
+          </tfoot>
         </table>
       </div>
     </div>

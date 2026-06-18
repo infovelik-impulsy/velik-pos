@@ -53,7 +53,13 @@ export default function ExportButtons({
     setExporting('pdf')
     try {
       const fileName = `Facturacion_${dateRange.desde}_a_${dateRange.hasta}`
-      await exportToPDF('dashboard-content', fileName, dateRange)
+      await exportToPDF('dashboard-content', fileName, dateRange, {
+        metrics,
+        professionals,
+        topServices,
+        paymentBreakdown,
+        dailySales,
+      })
     } catch (error) {
       console.error('Error exporting PDF:', error)
     } finally {
