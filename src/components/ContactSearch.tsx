@@ -41,7 +41,7 @@ export default function ContactSearch({ onSelect, selectedName }: ContactSearchP
       const { data, error } = await supabase
         .from('contactos')
         .select('*')
-        .ilike('nombres', `%${search}%`)
+        .or(`nombres.ilike.%${search}%,apellidos.ilike.%${search}%,telefono.ilike.%${search}%`)
         .limit(10)
 
       if (!error && data) {
