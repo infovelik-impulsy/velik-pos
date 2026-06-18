@@ -84,12 +84,17 @@ export default function ClienteDetalle() {
 
   async function guardarFicha() {
     setGuardandoFicha(true)
-    if (fichaId) {
-      await supabase.from('fichas_tecnicas').update({ ...ficha, updated_at: new Date().toISOString() }).eq('id', fichaId)
-    } else {
-      const { data } = await supabase.from('fichas_tecnicas').insert({ cliente_telefono: tel, cliente_nombre: nombre, ...ficha }).select().single()
-      if (data) setFichaId(data.id)
+    const { data, error } = await supabase
+      .from('fichas_tecnicas')
+      .upsert({ cliente_telefono: tel, cliente_nombre: nombre, ...ficha, updated_at: new Date().toISOString() }, { onConflict: 'cliente_telefono' })
+      .select()
+      .single()
+    if (error) {
+      alert('Error guardando ficha: ' + error.message)
+      setGuardandoFicha(false)
+      return
     }
+    if (data) setFichaId(data.id)
     setGuardandoFicha(false)
     setFichaGuardada(true)
     setTimeout(() => setFichaGuardada(false), 2000)
