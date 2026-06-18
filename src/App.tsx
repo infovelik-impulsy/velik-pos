@@ -22,6 +22,7 @@ export default function App() {
     return (
       <BrowserRouter>
         <Routes>
+          <Route path="/venta" element={<NuevaVenta />} />
           <Route path="*" element={<ProAgenda profesionalId={user.id} nombre={user.nombre} onLogout={() => setUser(null)} />} />
         </Routes>
       </BrowserRouter>

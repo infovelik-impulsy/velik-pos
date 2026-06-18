@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { SERVICIOS, CREAR_URL, type Servicio } from '../data/bookingData'
-import { LogOut, Plus, Lock, ChevronLeft, ChevronRight, Clock, User, X, CheckCircle, XCircle, Loader2, Calendar, Trash2 } from 'lucide-react'
+import { LogOut, Plus, Lock, ChevronLeft, ChevronRight, Clock, User, X, CheckCircle, XCircle, Loader2, Calendar, Trash2, DollarSign } from 'lucide-react'
 import { updateAppointmentStatus } from '../lib/ghl'
+import { useNavigate } from 'react-router-dom'
 
 interface Cita {
   id: string
@@ -51,6 +52,7 @@ export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
   const [loading, setLoading] = useState(false)
   const [modal, setModal] = useState<'nueva_cita' | 'bloquear' | null>(null)
   const [pushActivo, setPushActivo] = useState(false)
+  const navigate = useNavigate()
 
   useEffect(() => { cargarCitas() }, [fechaSeleccionada])
   useEffect(() => { registrarPush() }, [profesionalId])
@@ -280,8 +282,24 @@ export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
                   </div>
                 )}
                 {c.status === 'showed' && (
-                  <div className="mt-3 flex items-center justify-center gap-1 py-2 bg-green-50 rounded-xl text-xs font-medium text-green-600">
-                    <CheckCircle size={13} /> Asistió ✓
+                  <div className="mt-3 space-y-2">
+                    <div className="flex items-center justify-center gap-1 py-2 bg-green-50 rounded-xl text-xs font-medium text-green-600">
+                      <CheckCircle size={13} /> Asistió ✓
+                    </div>
+                    <button
+                      onClick={() => navigate('/venta', {
+                        state: {
+                          appointmentId: c.id,
+                          clienteNombre: c.cliente_nombre,
+                          clienteTelefono: c.cliente_telefono,
+                          profesionalId,
+                          servicioNombre: c.titulo,
+                        }
+                      })}
+                      className="w-full flex items-center justify-center gap-1 py-2 bg-[#C9A84C] text-white rounded-xl text-xs font-medium hover:bg-[#b8963e] transition-colors"
+                    >
+                      <DollarSign size={13} /> Registrar venta
+                    </button>
                   </div>
                 )}
                 {c.status === 'noshow' && (
