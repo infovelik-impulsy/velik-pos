@@ -147,7 +147,7 @@ export default function Agenda() {
                           <div className="flex items-center gap-2 mb-1">
                             <Clock size={13} className="text-[#8a7a6a]" />
                             <span className="text-sm font-medium">
-                              {format(new Date(cita.start_time), 'HH:mm')} – {format(new Date(cita.end_time), 'HH:mm')}
+                              {format(new Date(cita.start_time), 'h:mm a')} – {format(new Date(cita.end_time), 'h:mm a')}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">

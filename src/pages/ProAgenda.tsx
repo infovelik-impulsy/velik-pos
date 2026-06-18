@@ -120,6 +120,7 @@ export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
       .select('id, fecha, start_time, end_time, titulo, cliente_nombre, cliente_telefono, status, ghl_event_id')
       .eq('profesional_id', profesionalId)
       .eq('fecha', fechaSeleccionada)
+      .neq('status', 'cancelled')
       .order('start_time')
     setCitas(data || [])
     setLoading(false)
@@ -146,6 +147,7 @@ export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
 
   function statusColor(s: string) {
     if (s === 'showed') return 'bg-green-100 text-green-700'
+    if (s === 'noshow') return 'bg-red-100 text-red-500'
     if (s === 'cancelled') return 'bg-red-100 text-red-600'
     if (s === 'blocked') return 'bg-gray-100 text-gray-500'
     return 'bg-amber-50 text-amber-700'
@@ -153,9 +155,11 @@ export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
 
   function statusLabel(s: string) {
     if (s === 'showed') return 'Asistió'
+    if (s === 'noshow') return 'No asistió'
     if (s === 'cancelled') return 'Cancelada'
     if (s === 'blocked') return 'Bloqueado'
     if (s === 'confirmed') return 'Confirmada'
+    if (s === 'new') return 'Nueva'
     return s
   }
 
