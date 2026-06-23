@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { SERVICIOS, CREAR_URL, type Servicio } from '../data/bookingData'
-import { LogOut, Plus, Lock, ChevronLeft, ChevronRight, Clock, User, X, CheckCircle, XCircle, Loader2, Calendar, Trash2, DollarSign, Users } from 'lucide-react'
+import { LogOut, Plus, Lock, ChevronLeft, ChevronRight, Clock, User, X, CheckCircle, XCircle, Loader2, Calendar, Trash2, DollarSign, Users, Pencil } from 'lucide-react'
 import { updateAppointmentStatus } from '../lib/ghl'
 import { useNavigate } from 'react-router-dom'
 
@@ -20,6 +20,7 @@ interface Cita {
 interface Props {
   profesionalId: string
   nombre: string
+  rol: string
   onLogout: () => void
 }
 
@@ -46,7 +47,8 @@ function urlBase64ToUint8Array(base64String: string) {
   return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)))
 }
 
-export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
+export default function ProAgenda({ profesionalId, nombre, rol, onLogout }: Props) {
+  const puedeVerTelefono = rol === 'admin' || profesionalId === 'UzLj5T8ZOrJ8reSig5os'
   const [fechaSeleccionada, setFechaSeleccionada] = useState(fechaLocal(new Date()))
   const [citas, setCitas] = useState<Cita[]>([])
   const [ventasIds, setVentasIds] = useState<Set<string>>(new Set())
@@ -259,7 +261,7 @@ export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
                       <div className="flex items-center gap-1 mt-1 text-xs text-[#8a7a6a]">
                         <User size={11} />
                         <span>{c.cliente_nombre}</span>
-                        {c.cliente_telefono && <span>· {c.cliente_telefono}</span>}
+                        {puedeVerTelefono && c.cliente_telefono && <span>· {c.cliente_telefono}</span>}
                       </div>
                     )}
                   </div>
@@ -282,8 +284,7 @@ export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
                 {(c.status === 'confirmed' || c.status === 'new') && (
                   <div className="mt-3 space-y-2">
                     <button
-                      onClick={async () => {
-                        await marcarAsistio(c.id)
+                      onClick={() => {
                         const fechaCita = c.fecha
                         const co = toColombiaDate(new Date(c.start_time))
                         const horaCita = `${String(co.getHours()).padStart(2,'0')}:${String(co.getMinutes()).padStart(2,'0')}`
@@ -318,6 +319,12 @@ export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
                         <XCircle size={13} /> No asistió
                       </button>
                     </div>
+                    <button
+                      onClick={() => navigate('/editar-cita', { state: { citaId: c.id } })}
+                      className="w-full flex items-center justify-center gap-1 py-2 bg-gray-50 text-gray-500 rounded-xl text-xs font-medium hover:bg-gray-100 transition-colors border border-gray-200"
+                    >
+                      <Pencil size={11} /> Editar cita
+                    </button>
                   </div>
                 )}
                 {c.status === 'showed' && (
@@ -326,8 +333,17 @@ export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
                       <CheckCircle size={13} /> Asistió ✓
                     </div>
                     {ventasIds.has(c.id) ? (
-                      <div className="w-full flex items-center justify-center gap-1 py-2 bg-emerald-50 rounded-xl text-xs font-medium text-emerald-600 border border-emerald-200">
-                        <CheckCircle size={13} /> Venta registrada ✓
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 flex items-center justify-center gap-1 py-2 bg-emerald-50 rounded-xl text-xs font-medium text-emerald-600 border border-emerald-200">
+                          <CheckCircle size={13} /> Venta registrada ✓
+                        </div>
+                        <button
+                          onClick={() => navigate('/editar-venta', { state: { appointmentId: c.id, clienteNombre: c.cliente_nombre } })}
+                          className="p-2 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+                          title="Editar venta"
+                        >
+                          <Pencil size={13} className="text-gray-500" />
+                        </button>
                       </div>
                     ) : (
                       <button
@@ -356,8 +372,16 @@ export default function ProAgenda({ profesionalId, nombre, onLogout }: Props) {
                   </div>
                 )}
                 {c.status === 'noshow' && (
-                  <div className="mt-3 flex items-center justify-center gap-1 py-2 bg-red-50 rounded-xl text-xs font-medium text-red-400">
-                    <XCircle size={13} /> No asistió
+                  <div className="mt-3 space-y-2">
+                    <div className="flex items-center justify-center gap-1 py-2 bg-red-50 rounded-xl text-xs font-medium text-red-400">
+                      <XCircle size={13} /> No asistió
+                    </div>
+                    <button
+                      onClick={() => navigate('/editar-cita', { state: { citaId: c.id } })}
+                      className="w-full flex items-center justify-center gap-1 py-2 bg-gray-50 text-gray-500 rounded-xl text-xs font-medium hover:bg-gray-100 transition-colors border border-gray-200"
+                    >
+                      <Pencil size={11} /> Editar cita
+                    </button>
                   </div>
                 )}
               </div>

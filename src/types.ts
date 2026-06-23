@@ -5,8 +5,6 @@ export interface Profesional {
 }
 
 export const PROFESIONALES: Profesional[] = [
-  { id: 'Bn1QrO4ITpYI7wSohG9r', nombre: 'Carolina Paz', color: '#C9A84C' },
-  { id: 'DEeqUttYKgjjsfNaS1XY', nombre: 'Laura Vanessa', color: '#8B7355' },
   { id: 'UzLj5T8ZOrJ8reSig5os', nombre: 'Luz Aida', color: '#A0856C' },
   { id: 'saGMogKgCH3kmIhq4VlJ', nombre: 'Geraldine Berrio', color: '#B89B6E' },
 ]
@@ -60,8 +58,6 @@ export const METODOS_PAGO = [
 
 export const USUARIOS = [
   { id: 'UzLj5T8ZOrJ8reSig5os', nombre: 'Luz Aida (Admin)', pin: '1234', rol: 'admin' },
-  { id: 'Bn1QrO4ITpYI7wSohG9r', nombre: 'Carolina Paz',     pin: '1111', rol: 'profesional' },
-  { id: 'DEeqUttYKgjjsfNaS1XY', nombre: 'Laura Vanessa',    pin: '2222', rol: 'profesional' },
   { id: 'UzLj5T8ZOrJ8reSig5os', nombre: 'Luz Aida',         pin: '3333', rol: 'profesional' },
   { id: 'saGMogKgCH3kmIhq4VlJ', nombre: 'Geraldine Berrio', pin: '4444', rol: 'profesional' },
 ]

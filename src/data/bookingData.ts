@@ -26,8 +26,8 @@ const LV = "DEeqUttYKgjjsfNaS1XY"  // Laura Vanessa    — uñas, cabello, cejas
 const LA = "UzLj5T8ZOrJ8reSig5os"  // Luz Aida         — SOLO faciales, masajes, estrías y maquillaje
 const GB = "saGMogKgCH3kmIhq4VlJ"  // Geraldine Berrio — SOLO uñas (manicure, pedicure y combos)
 
-const NAILS = [CP, LV, GB]
-const HAIR = [CP, LV]
+const NAILS = [GB]
+const HAIR: string[] = []
 
 export const SERVICIOS: Record<string, Servicio[]> = {
   // ─── MANICURE ── Carolina, Laura y Geraldine ─────────────────────────────────
@@ -110,13 +110,13 @@ export const SERVICIOS: Record<string, Servicio[]> = {
     { nombre: "Lifting de Pestañas",                      calendarId: "Z7WKPMSF94iQoA8Mf9ne", duracion: 60, precio: "$120.000", profesionales: HAIR },
     { nombre: "Laminado de Cejas",                        calendarId: "JGZXM08wqm28dl4qfp9T", duracion: 50, precio: "$100.000", profesionales: HAIR },
     { nombre: "Laminado de Cejas y Lifting de Pestañas",  calendarId: "KuZ6tseSF1WIC3wmAwGj", duracion: 70, precio: "$220.000", profesionales: HAIR },
-    { nombre: "Extensión de Pestañas Efecto Clásica",     calendarId: "dry2VkC24zeouSdN4VEm", duracion: 70, precio: "$160.000", profesionales: [LV] },
-    { nombre: "Extensión de Pestañas Efecto Híbrido",     calendarId: "dbxPJAla6tTHNv73eo1l", duracion: 90, precio: "$180.000", profesionales: [LV] },
-    { nombre: "Extensión de Pestañas Efecto Tecnológico", calendarId: "4O1RVMdKaXEUaHqQqVP1", duracion: 90, precio: "$200.000", profesionales: [LV] },
-    { nombre: "Retoque Pestañas",                         calendarId: "yuikssBrbkVHsArQoe65", duracion: 60, precio: "$80.000",  profesionales: [LV] },
+    { nombre: "Extensión de Pestañas Efecto Clásica",     calendarId: "dry2VkC24zeouSdN4VEm", duracion: 70, precio: "$160.000", profesionales: [] },
+    { nombre: "Extensión de Pestañas Efecto Híbrido",     calendarId: "dbxPJAla6tTHNv73eo1l", duracion: 90, precio: "$180.000", profesionales: [] },
+    { nombre: "Extensión de Pestañas Efecto Tecnológico", calendarId: "4O1RVMdKaXEUaHqQqVP1", duracion: 90, precio: "$200.000", profesionales: [] },
+    { nombre: "Retoque Pestañas",                         calendarId: "yuikssBrbkVHsArQoe65", duracion: 60, precio: "$80.000",  profesionales: [] },
     { nombre: "Pestañas Punto a Punto",                   calendarId: "zT9oLreL1DCiwWDmO1Dx", duracion: 45, precio: "$50.000",  profesionales: HAIR },
     { nombre: "Depilación de Cejas con Cera",             calendarId: "VYpzK2GHuBJ63aO2lSaV", duracion: 10, precio: "$25.000",  profesionales: HAIR },
-    { nombre: "Depilación de Cejas con Hilo",             calendarId: "ozLRNZ5V55zBOpGxcygz", duracion: 15, precio: "$30.000",  profesionales: [CP] },
+    { nombre: "Depilación de Cejas con Hilo",             calendarId: "ozLRNZ5V55zBOpGxcygz", duracion: 15, precio: "$30.000",  profesionales: [] },
     { nombre: "Depilación de Cejas con Henna",            calendarId: "n49lc4VkUvtvdtCRcgTB", duracion: 10, precio: "$55.000",  profesionales: HAIR },
     { nombre: "Depilación Perfilado/Cuchilla Cejas",      calendarId: "GcGJ59uvGEDf3LZCyrg2", duracion: 25, precio: "$20.000",  profesionales: HAIR },
   ],
@@ -131,11 +131,11 @@ export const SERVICIOS: Record<string, Servicio[]> = {
     { nombre: "Depilación Espalda Baja",             calendarId: "9HqMBn6P9DBAsMqZmFit", duracion: 60, precio: "$50.000",  profesionales: HAIR },
     { nombre: "Depilación de Glúteos",               calendarId: "woQv67dSOZkRipYxGaXm", duracion: 20, precio: "$40.000",  profesionales: HAIR },
     { nombre: "Depilación Bigote",                   calendarId: "UKZG99bvj0QCeFJaLNk7", duracion: 10, precio: "$20.000",  profesionales: HAIR },
-    { nombre: "Depilación Bigote con Hilo",          calendarId: "eHXH3nwnTLLoacCnQKeh", duracion: 10, precio: "$25.000",  profesionales: [CP] },
-    { nombre: "Depilación Barbilla con Hilo",        calendarId: "9M1FFJKZmz9tPhwEitAb", duracion: 10, precio: "$20.000",  profesionales: [CP] },
+    { nombre: "Depilación Bigote con Hilo",          calendarId: "eHXH3nwnTLLoacCnQKeh", duracion: 10, precio: "$25.000",  profesionales: [] },
+    { nombre: "Depilación Barbilla con Hilo",        calendarId: "9M1FFJKZmz9tPhwEitAb", duracion: 10, precio: "$20.000",  profesionales: [] },
     { nombre: "Depilación Orejas",                   calendarId: "whI104AHCNJGaV35yii2", duracion: 20, precio: "$20.000",  profesionales: HAIR },
     { nombre: "Depilación Nariz",                    calendarId: "ZdfgP31Jmj4hWCEezhda", duracion: 20, precio: "$20.000",  profesionales: HAIR },
-    { nombre: "Depilación Rostro Completo con Hilo", calendarId: "hKENNyPe7hZhcz5HGHny", duracion: 30, precio: "$100.000", profesionales: [CP] },
+    { nombre: "Depilación Rostro Completo con Hilo", calendarId: "hKENNyPe7hZhcz5HGHny", duracion: 30, precio: "$100.000", profesionales: [] },
   ],
 
   // ─── MAQUILLAJE PROFESIONAL ── Luz (Baño de Novia: Carolina y Laura) ─────────
@@ -149,7 +149,7 @@ export const SERVICIOS: Record<string, Servicio[]> = {
   // ─── CORPORAL ── Luz (Piedras Volcánicas: Laura y Luz) ───────────────────────
   "Corporal": [
     { nombre: "Drenaje Linfático",                           calendarId: "wAwK46EAzP7OMVbVZ4Na", duracion: 60,  precio: "$100.000",   profesionales: [LA] },
-    { nombre: "Masaje Relajación Piedras Volcánicas + Velas",calendarId: "q2Iz4gfTyoB3JkRNZ4CZ", duracion: 60,  precio: "$140.000",   profesionales: [LV, LA] },
+    { nombre: "Masaje Relajación Piedras Volcánicas + Velas",calendarId: "q2Iz4gfTyoB3JkRNZ4CZ", duracion: 60,  precio: "$140.000",   profesionales: [LA] },
     { nombre: "Paquete 1 Masaje Reductor",                   calendarId: "kjgB0Whm8mjpYv8I075K", duracion: 45,  precio: "$450.000",   profesionales: [LA] },
     { nombre: "Paquete 2 Masaje Reductor",                   calendarId: "8iU9qGnCM5nT6816pEAh", duracion: 45,  precio: "$650.000",   profesionales: [LA] },
     { nombre: "Paquete 3 Masaje Reductor",                   calendarId: "uajeiWuAmnwZ9BPA4RlT", duracion: 45,  precio: "$850.000",   profesionales: [LA] },
@@ -162,8 +162,6 @@ export const SERVICIOS: Record<string, Servicio[]> = {
 }
 
 export const PROFESIONALES: Profesional[] = [
-  { nombre: "Carolina Paz",     userId: CP, especialidad: "Uñas & Manicure",      iniciales: "CP", foto: "/fotos/carolina.jpg" },
-  { nombre: "Laura Vanessa",    userId: LV, especialidad: "Cabello & Pestañas",   iniciales: "LV", foto: "/fotos/laura.jpg" },
   { nombre: "Luz Aida",         userId: LA, especialidad: "Facial & Corporal",    iniciales: "LA", foto: "/fotos/luz.jpg" },
   { nombre: "Geraldine Berrio", userId: GB, especialidad: "Uñas & Manicure",      iniciales: "GB", foto: "/fotos/geraldine.jpg" },
 ]

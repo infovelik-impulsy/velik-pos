@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { format, addDays, subDays } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight, Clock, User, CheckCircle, PlusCircle, XCircle } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Clock, User, CheckCircle, PlusCircle, XCircle, Pencil } from 'lucide-react'
 import { PROFESIONALES } from '../types'
 import { supabase } from '../lib/supabase'
 import { updateAppointmentStatus } from '../lib/ghl'
@@ -201,8 +201,17 @@ export default function Agenda() {
                               <CheckCircle size={12} /> Asistió ✓
                             </div>
                             {ventasIds.has(cita.id) ? (
-                              <div className="flex items-center justify-center gap-1 py-1.5 bg-emerald-50 rounded-xl text-xs font-medium text-emerald-600 border border-emerald-200">
-                                <CheckCircle size={12} /> Venta registrada ✓
+                              <div className="flex items-center gap-2">
+                                <div className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-emerald-50 rounded-xl text-xs font-medium text-emerald-600 border border-emerald-200">
+                                  <CheckCircle size={12} /> Venta registrada ✓
+                                </div>
+                                <button
+                                  onClick={() => navigate('/editar-venta', { state: { appointmentId: cita.id, clienteNombre: cita.cliente_nombre } })}
+                                  className="p-1.5 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+                                  title="Editar venta"
+                                >
+                                  <Pencil size={13} className="text-gray-500" />
+                                </button>
                               </div>
                             ) : (
                               <button
@@ -224,22 +233,39 @@ export default function Agenda() {
                             )}
                           </div>
                         ) : cita.status === 'noshow' ? (
-                          <div className="mt-3 flex items-center justify-center gap-1 py-1.5 bg-red-50 rounded-xl text-xs font-medium text-red-400">
-                            <XCircle size={12} /> No asistió
+                          <div className="mt-3 flex items-center gap-2">
+                            <div className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-red-50 rounded-xl text-xs font-medium text-red-400">
+                              <XCircle size={12} /> No asistió
+                            </div>
+                            <button
+                              onClick={() => navigate('/editar-cita', { state: { citaId: cita.id } })}
+                              className="p-1.5 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+                              title="Editar cita"
+                            >
+                              <Pencil size={13} className="text-gray-500" />
+                            </button>
                           </div>
                         ) : (
-                          <div className="mt-3 flex gap-2">
+                          <div className="mt-3 space-y-1.5">
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => marcarAsistio(cita.id)}
+                                className="flex-1 flex items-center justify-center gap-1 py-2 bg-green-500 text-white rounded-xl text-xs font-medium hover:bg-green-600 transition-colors"
+                              >
+                                <CheckCircle size={12} /> Asistió
+                              </button>
+                              <button
+                                onClick={() => marcarNoShow(cita.id)}
+                                className="flex-1 flex items-center justify-center gap-1 py-2 bg-red-50 text-red-400 rounded-xl text-xs font-medium hover:bg-red-100 transition-colors"
+                              >
+                                <XCircle size={12} /> No asistió
+                              </button>
+                            </div>
                             <button
-                              onClick={() => marcarAsistio(cita.id)}
-                              className="flex-1 flex items-center justify-center gap-1 py-2 bg-green-500 text-white rounded-xl text-xs font-medium hover:bg-green-600 transition-colors"
+                              onClick={() => navigate('/editar-cita', { state: { citaId: cita.id } })}
+                              className="w-full flex items-center justify-center gap-1 py-1.5 bg-gray-50 text-gray-500 rounded-xl text-xs font-medium hover:bg-gray-100 transition-colors border border-gray-200"
                             >
-                              <CheckCircle size={12} /> Asistió
-                            </button>
-                            <button
-                              onClick={() => marcarNoShow(cita.id)}
-                              className="flex-1 flex items-center justify-center gap-1 py-2 bg-red-50 text-red-400 rounded-xl text-xs font-medium hover:bg-red-100 transition-colors"
-                            >
-                              <XCircle size={12} /> No asistió
+                              <Pencil size={11} /> Editar cita
                             </button>
                           </div>
                         )}
@@ -253,9 +279,9 @@ export default function Agenda() {
         )}
       </div>
 
-      {/* FAB nueva venta */}
+      {/* FAB nueva cita */}
       <button
-        onClick={() => navigate('/venta')}
+        onClick={() => navigate('/nueva-cita')}
         className="fixed bottom-20 right-4 bg-[#C9A84C] text-white rounded-full p-4 shadow-lg hover:bg-[#b8963e] transition-all active:scale-95"
       >
         <PlusCircle size={24} />

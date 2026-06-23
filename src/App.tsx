@@ -13,6 +13,8 @@ import Liquidacion from './pages/Liquidacion'
 import Clientes from './pages/Clientes'
 import ClienteDetalle from './pages/ClienteDetalle'
 import ProAgenda from './pages/ProAgenda'
+import EditarVenta from './pages/EditarVenta'
+import EditarCita from './pages/EditarCita'
 
 export default function App() {
   const [user, setUser] = useState<{ id: string; nombre: string; rol: string } | null>(null)
@@ -26,9 +28,11 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/venta" element={<NuevaVenta />} />
+          <Route path="/editar-venta" element={<EditarVenta />} />
+          <Route path="/editar-cita" element={<EditarCita />} />
           <Route path="/clientes" element={<Clientes />} />
           <Route path="/clientes/:telefono" element={<ClienteDetalle />} />
-          <Route path="*" element={<ProAgenda profesionalId={user.id} nombre={user.nombre} onLogout={() => setUser(null)} />} />
+          <Route path="*" element={<ProAgenda profesionalId={user.id} nombre={user.nombre} rol={user.rol} onLogout={() => setUser(null)} />} />
         </Routes>
       </BrowserRouter>
     )
@@ -48,6 +52,8 @@ export default function App() {
           <Route path="/clientes/:telefono" element={<ClienteDetalle />} />
           <Route path="/cierre" element={<Cierre />} />
           <Route path="/resumen" element={<Resumen />} />
+          <Route path="/editar-venta" element={<EditarVenta />} />
+          <Route path="/editar-cita" element={<EditarCita />} />
         </Routes>
       </Layout>
     </BrowserRouter>
