@@ -80,7 +80,7 @@ export const SERVICIOS: Record<string, Servicio[]> = {
 
   // ─── CABELLO ── Carolina y Laura ─────────────────────────────────────────────
   "Cabello": [
-    { nombre: "Valoración de Cabello",                      calendarId: "yePA3PPHJC9Fdu6A6WMt", duracion: 30,  precio: "$30.000",  profesionales: [CP] },
+    { nombre: "Valoración de Cabello",                      calendarId: "yePA3PPHJC9Fdu6A6WMt", duracion: 30,  precio: "$30.000",  profesionales: [] },
     { nombre: "Alisado Natural Argán y Coco (Corto)",       calendarId: "tYgB9RKWsWnAY6yzHbzo", duracion: 300, precio: "$250.000", profesionales: HAIR },
     { nombre: "Alisado Natural Argán y Coco (Medio)",       calendarId: "YsyBC5BKtrnN8YQYRDBm", duracion: 300, precio: "$290.000", profesionales: HAIR },
     { nombre: "Alisado Natural Argán y/o Coco Largo",       calendarId: "aO1pbT4UQDyqLJwXnPqX", duracion: 300, precio: "$400.000", profesionales: HAIR },
