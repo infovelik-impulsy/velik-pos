@@ -30,8 +30,8 @@ export default function App() {
           <Route path="/venta" element={<NuevaVenta />} />
           <Route path="/editar-venta" element={<EditarVenta />} />
           <Route path="/editar-cita" element={<EditarCita />} />
-          <Route path="/clientes" element={<Clientes />} />
-          <Route path="/clientes/:telefono" element={<ClienteDetalle />} />
+          <Route path="/clientes" element={<Clientes rol={user.rol} />} />
+          <Route path="/clientes/:telefono" element={<ClienteDetalle rol={user.rol} />} />
           <Route path="*" element={<ProAgenda profesionalId={user.id} nombre={user.nombre} rol={user.rol} onLogout={() => setUser(null)} />} />
         </Routes>
       </BrowserRouter>
@@ -48,8 +48,8 @@ export default function App() {
           <Route path="/caja" element={<Caja />} />
           <Route path="/facturacion" element={<Facturacion />} />
           <Route path="/liquidacion" element={<Liquidacion />} />
-          <Route path="/clientes" element={<Clientes />} />
-          <Route path="/clientes/:telefono" element={<ClienteDetalle />} />
+          <Route path="/clientes" element={<Clientes rol={user.rol} />} />
+          <Route path="/clientes/:telefono" element={<ClienteDetalle rol={user.rol} />} />
           <Route path="/cierre" element={<Cierre />} />
           <Route path="/resumen" element={<Resumen />} />
           <Route path="/editar-venta" element={<EditarVenta />} />

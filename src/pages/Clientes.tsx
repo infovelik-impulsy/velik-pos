@@ -11,11 +11,12 @@ interface ClienteResumen {
   total_gastado: number
 }
 
-export default function Clientes() {
+export default function Clientes({ rol = 'admin' }: { rol?: string }) {
   const [clientes, setClientes] = useState<ClienteResumen[]>([])
   const [busqueda, setBusqueda] = useState('')
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
+  const esAdmin = rol === 'admin'
 
   useEffect(() => { cargar() }, [])
 
@@ -93,7 +94,7 @@ export default function Clientes() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm text-[#1a1a1a] truncate">{c.nombre}</p>
-                <p className="text-xs text-[#8a7a6a] mt-0.5">{c.telefono || '—'}</p>
+                {esAdmin && <p className="text-xs text-[#8a7a6a] mt-0.5">{c.telefono || '—'}</p>}
               </div>
               <div className="text-right flex-shrink-0 mr-1">
                 <p className="text-sm font-semibold text-[#C9A84C]">{c.visitas} {c.visitas === 1 ? 'visita' : 'visitas'}</p>

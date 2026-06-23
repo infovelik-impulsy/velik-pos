@@ -42,13 +42,14 @@ function fmtDate(d: string) {
   return `${day}/${m}/${y}`
 }
 
-export default function ClienteDetalle() {
+export default function ClienteDetalle({ rol = 'admin' }: { rol?: string }) {
   const { telefono } = useParams<{ telefono: string }>()
   const { state } = useLocation() as { state: { nombre: string; telefono: string; visitas: number; total_gastado: number } }
   const navigate = useNavigate()
 
   const tel = decodeURIComponent(telefono || '')
   const nombre = state?.nombre || tel
+  const esAdmin = rol === 'admin'
 
   const [ventas, setVentas] = useState<Venta[]>([])
   const [abonos, setAbonos] = useState<Abono[]>([])
@@ -133,7 +134,7 @@ export default function ClienteDetalle() {
         </button>
         <div className="flex-1">
           <h2 className="font-serif text-lg font-light">{nombre}</h2>
-          <p className="text-xs text-[#8a7a6a]">{tel}</p>
+          {esAdmin && <p className="text-xs text-[#8a7a6a]">{tel}</p>}
         </div>
       </div>
 
