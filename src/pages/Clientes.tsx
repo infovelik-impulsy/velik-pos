@@ -72,7 +72,7 @@ export default function Clientes({ rol = 'admin' }: { rol?: string }) {
           type="text"
           value={busqueda}
           onChange={e => setBusqueda(e.target.value)}
-          placeholder="Buscar por nombre o teléfono..."
+          placeholder={esAdmin ? "Buscar por nombre o teléfono..." : "Buscar por nombre..."}
           className="w-full pl-9 pr-4 py-3 bg-white rounded-2xl border border-gray-100 shadow-sm text-sm focus:outline-none focus:border-[#C9A84C]"
         />
       </div>
