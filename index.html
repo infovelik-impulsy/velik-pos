@@ -14,6 +14,17 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Limpiar todos los cachés y desregistrar service workers al cargar
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(regs => {
+          regs.forEach(r => r.unregister())
+        })
+      }
+      if ('caches' in window) {
+        caches.keys().then(keys => keys.forEach(k => caches.delete(k)))
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
