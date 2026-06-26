@@ -7,10 +7,11 @@ import ServiceSelector from '../components/ServiceSelector'
 import ProductoSelector from '../components/ProductoSelector'
 
 interface ProductoCarrito { nombre: string; precio: number }
-interface LocationState { appointmentId: string; clienteNombre?: string }
+interface LocationState { appointmentId?: string; ventaId?: string; clienteNombre?: string }
 
 export default function EditarVenta() {
-  const { state } = useLocation() as { state: LocationState }
+  const location = useLocation()
+  const state = (location.state || {}) as LocationState
   const navigate = useNavigate()
 
   const [loading, setLoading] = useState(true)
@@ -30,11 +31,18 @@ export default function EditarVenta() {
   useEffect(() => { loadVenta() }, [])
 
   async function loadVenta() {
-    const { data } = await supabase
-      .from('ventas')
-      .select('*')
-      .eq('appointment_id', state.appointmentId)
-      .maybeSingle()
+    if (!state.ventaId && !state.appointmentId) {
+      navigate('/')
+      return
+    }
+
+    let query = supabase.from('ventas').select('*')
+    if (state.ventaId) {
+      query = query.eq('id', state.ventaId)
+    } else if (state.appointmentId) {
+      query = query.eq('appointment_id', state.appointmentId)
+    }
+    const { data } = await query.maybeSingle()
     if (data) {
       setVentaId(data.id)
       setProfesionalId(data.profesional_id || '')
@@ -80,7 +88,7 @@ export default function EditarVenta() {
       notas,
     }).eq('id', ventaId)
 
-    if (!error) {
+    if (!error && state.appointmentId) {
       // Actualizar cita si existe
       const startISO = `${fechaCita}T${horaCita}:00-05:00`
       const endDate = new Date(`${fechaCita}T${horaCita}:00`)

@@ -8,7 +8,8 @@ import ServiceSelector from '../components/ServiceSelector'
 interface LocationState { citaId: string }
 
 export default function EditarCita() {
-  const { state } = useLocation() as { state: LocationState }
+  const location = useLocation()
+  const state = (location.state || {}) as LocationState
   const navigate = useNavigate()
 
   const [loading, setLoading] = useState(true)
@@ -24,6 +25,10 @@ export default function EditarCita() {
   useEffect(() => { loadCita() }, [])
 
   async function loadCita() {
+    if (!state.citaId) {
+      navigate('/')
+      return
+    }
     const { data } = await supabase.from('citas').select('*').eq('id', state.citaId).maybeSingle()
     if (data) {
       setFechaCita(data.fecha || '')
