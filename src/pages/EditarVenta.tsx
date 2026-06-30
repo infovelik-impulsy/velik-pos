@@ -18,7 +18,11 @@ export default function EditarVenta() {
   const [guardando, setGuardando] = useState(false)
   const [exito, setExito] = useState(false)
   const [ventaId, setVentaId] = useState('')
+  const [appointmentId, setAppointmentId] = useState<string | null>(null)
+  const [ghlEventId, setGhlEventId] = useState<string | null>(null)
 
+  const [clienteNombre, setClienteNombre] = useState('')
+  const [clienteTelefono, setClienteTelefono] = useState('')
   const [profesionalId, setProfesionalId] = useState('')
   const [fechaCita, setFechaCita] = useState('')
   const [horaCita, setHoraCita] = useState('')
@@ -45,6 +49,9 @@ export default function EditarVenta() {
     const { data } = await query.maybeSingle()
     if (data) {
       setVentaId(data.id)
+      setClienteNombre(data.cliente_nombre || state.clienteNombre || '')
+      setClienteTelefono(data.cliente_telefono || '')
+      setAppointmentId(data.appointment_id || state.appointmentId || null)
       setProfesionalId(data.profesional_id || '')
       setFechaCita(data.fecha_cita || '')
       setHoraCita(data.hora_cita || '')
@@ -53,6 +60,16 @@ export default function EditarVenta() {
       setMetodoPago(data.metodo_pago || 'efectivo')
       setPagadoEfectivo(data.pagado_efectivo || 0)
       setNotas(data.notas || '')
+
+      // Load GHL event ID from citas if appointment exists
+      if (data.appointment_id) {
+        const { data: cita } = await supabase
+          .from('citas')
+          .select('ghl_event_id')
+          .eq('id', data.appointment_id)
+          .maybeSingle()
+        if (cita?.ghl_event_id) setGhlEventId(cita.ghl_event_id)
+      }
     }
     setLoading(false)
   }
@@ -63,7 +80,10 @@ export default function EditarVenta() {
   const pagadoDigital = metodoPago === 'mixto' ? total - pagadoEfectivo : 0
 
   async function guardar() {
-    if (!profesionalId || !fechaCita || !horaCita || servicios.length === 0) return
+    if (!ventaId) { alert('Error: no se encontró la venta'); return }
+    if (!profesionalId) { alert('Selecciona una profesional'); return }
+    if (!fechaCita) { alert('Selecciona la fecha'); return }
+    if (servicios.length === 0) { alert('Agrega al menos un servicio'); return }
     setGuardando(true)
 
     const prof = PROFESIONALES.find(p => p.id === profesionalId)
@@ -73,10 +93,12 @@ export default function EditarVenta() {
     const digital = metodoPago === 'transferencia' || metodoPago === 'tarjeta' ? total : metodoPago === 'mixto' ? pagadoDigital : 0
 
     const { error } = await supabase.from('ventas').update({
+      cliente_nombre: clienteNombre,
+      cliente_telefono: clienteTelefono,
       profesional_id: profesionalId,
       profesional_nombre: prof?.nombre || '',
       fecha_cita: fechaCita,
-      hora_cita: horaCita,
+      ...(horaCita ? { hora_cita: horaCita } : {}),
       servicios,
       productos,
       total,
@@ -88,24 +110,52 @@ export default function EditarVenta() {
       notas,
     }).eq('id', ventaId)
 
-    if (!error && state.appointmentId) {
-      // Actualizar cita si existe
-      const startISO = `${fechaCita}T${horaCita}:00-05:00`
-      const endDate = new Date(`${fechaCita}T${horaCita}:00`)
-      endDate.setMinutes(endDate.getMinutes() + 30)
-      const endH = String(endDate.getHours()).padStart(2, '0')
-      const endM = String(endDate.getMinutes()).padStart(2, '0')
-      const endISO = `${fechaCita}T${endH}:${endM}:00-05:00`
-
-      await supabase.from('citas').update({
+    if (!error && appointmentId) {
+      const citaUpdate: Record<string, unknown> = {
         profesional_id: profesionalId,
         profesional_nombre: prof?.nombre || '',
-        fecha: fechaCita,
-        start_time: startISO,
-        end_time: endISO,
         titulo: servicios.map(s => s.nombre).join(', '),
         precio: total,
-      }).eq('id', state.appointmentId)
+      }
+      if (fechaCita) {
+        citaUpdate.fecha = fechaCita
+        if (horaCita) {
+          const startISO = `${fechaCita}T${horaCita}:00-05:00`
+          const endDate = new Date(`${fechaCita}T${horaCita}:00`)
+          endDate.setMinutes(endDate.getMinutes() + 30)
+          const endH = String(endDate.getHours()).padStart(2, '0')
+          const endM = String(endDate.getMinutes()).padStart(2, '0')
+          const endISO = `${fechaCita}T${endH}:${endM}:00-05:00`
+          citaUpdate.start_time = startISO
+          citaUpdate.end_time = endISO
+        }
+      }
+      await supabase.from('citas').update(citaUpdate).eq('id', appointmentId)
+
+      // Sync GHL calendar event
+      if (ghlEventId && fechaCita && horaCita) {
+        const startISO = `${fechaCita}T${horaCita}:00-05:00`
+        const endDate = new Date(`${fechaCita}T${horaCita}:00`)
+        endDate.setMinutes(endDate.getMinutes() + 30)
+        const endH = String(endDate.getHours()).padStart(2, '0')
+        const endM = String(endDate.getMinutes()).padStart(2, '0')
+        const endISO = `${fechaCita}T${endH}:${endM}:00-05:00`
+        await fetch(`https://services.leadconnectorhq.com/calendars/events/appointments/${ghlEventId}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${import.meta.env.VITE_GHL_API_KEY}`,
+            'Version': '2021-04-15',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            calendarId: undefined,
+            startTime: startISO,
+            endTime: endISO,
+            title: servicios.map(s => s.nombre).join(', '),
+            userId: profesionalId,
+          }),
+        }).catch(() => {})
+      }
     }
 
     setGuardando(false)
@@ -149,6 +199,25 @@ export default function EditarVenta() {
           {state.clienteNombre && <p className="text-xs text-[#8a7a6a]">{state.clienteNombre}</p>}
         </div>
       </div>
+
+      {/* Cliente */}
+      <section className="bg-white rounded-2xl p-4 mb-4 space-y-3">
+        <h3 className="text-xs font-medium uppercase tracking-widest text-[#8a7a6a]">Cliente</h3>
+        <input
+          type="text"
+          value={clienteNombre}
+          onChange={e => setClienteNombre(e.target.value)}
+          placeholder="Nombre del cliente"
+          className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#C9A84C]"
+        />
+        <input
+          type="tel"
+          value={clienteTelefono}
+          onChange={e => setClienteTelefono(e.target.value)}
+          placeholder="Teléfono (opcional)"
+          className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#C9A84C]"
+        />
+      </section>
 
       {/* Profesional */}
       <section className="bg-white rounded-2xl p-4 mb-4">
@@ -335,7 +404,7 @@ export default function EditarVenta() {
       )}
 
       <button onClick={guardar}
-        disabled={guardando || !profesionalId || servicios.length === 0}
+        disabled={guardando}
         className="w-full py-4 bg-[#C9A84C] text-white rounded-2xl font-medium text-sm disabled:opacity-40 hover:bg-[#b8963e] transition-all active:scale-[0.99]">
         {guardando ? 'Guardando...' : 'Guardar cambios'}
       </button>

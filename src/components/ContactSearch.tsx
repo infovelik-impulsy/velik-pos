@@ -13,9 +13,10 @@ interface Contact {
 interface ContactSearchProps {
   onSelect: (contact: Contact) => void
   selectedName?: string
+  ocultarTelefono?: boolean
 }
 
-export default function ContactSearch({ onSelect, selectedName }: ContactSearchProps) {
+export default function ContactSearch({ onSelect, selectedName, ocultarTelefono = false }: ContactSearchProps) {
   const [search, setSearch] = useState(selectedName || '')
   const [results, setResults] = useState<Contact[]>([])
   const [isOpen, setIsOpen] = useState(false)
@@ -230,9 +231,11 @@ export default function ContactSearch({ onSelect, selectedName }: ContactSearchP
                   <div className="font-semibold text-sm text-[#1a1a1a]">
                     {contact.nombres} {contact.apellidos || ''}
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    📱 {contact.telefono}
-                  </div>
+                  {!ocultarTelefono && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      📱 {contact.telefono}
+                    </div>
+                  )}
                   {contact.email && (
                     <div className="text-xs text-gray-400 mt-0.5">
                       {contact.email}

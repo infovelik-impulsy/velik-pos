@@ -1,22 +1,7 @@
 import { useState } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 
-const ALLOWED_HOST = 'velik-admin-sys.vercel.app'
-if (typeof window !== 'undefined' && window.location.hostname !== ALLOWED_HOST && window.location.hostname !== 'localhost') {
-  document.documentElement.innerHTML = `
-    <html><head><meta name="viewport" content="width=device-width,initial-scale=1"/><style>
-      *{margin:0;padding:0;box-sizing:border-box}
-      body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f5f4f0;font-family:sans-serif}
-      .box{text-align:center;padding:40px 24px}
-      h1{font-size:48px;margin-bottom:16px}
-      p{color:#8a7a6a;font-size:16px;line-height:1.6}
-    </style></head>
-    <body><div class="box">
-      <h1>🔒</h1>
-      <p>Esta aplicación<br/>ya no está disponible.</p>
-    </div></body></html>`
-  throw new Error('blocked')
-}
+
 
 import Login from './pages/Login'
 import Layout from './components/Layout'
@@ -45,7 +30,7 @@ export default function App() {
     return (
       <BrowserRouter>
         <Routes>
-          <Route path="/venta" element={<NuevaVenta />} />
+          <Route path="/venta" element={<NuevaVenta rol={user.rol} />} />
           <Route path="/editar-venta" element={<EditarVenta />} />
           <Route path="/editar-cita" element={<EditarCita />} />
           <Route path="/clientes" element={<Clientes rol={user.rol} />} />
@@ -61,9 +46,9 @@ export default function App() {
       <Layout userName={user.nombre} onLogout={() => setUser(null)}>
         <Routes>
           <Route path="/" element={<Agenda />} />
-          <Route path="/venta" element={<NuevaVenta />} />
-          <Route path="/nueva-cita" element={<NuevaCita />} />
-          <Route path="/caja" element={<Caja />} />
+          <Route path="/venta" element={<NuevaVenta rol={user.rol} />} />
+          <Route path="/nueva-cita" element={<NuevaCita rol={user.rol} />} />
+          <Route path="/caja" element={<Caja rol={user.rol} />} />
           <Route path="/facturacion" element={<Facturacion />} />
           <Route path="/liquidacion" element={<Liquidacion />} />
           <Route path="/clientes" element={<Clientes rol={user.rol} />} />

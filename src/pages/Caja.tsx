@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { Plus, Trash2, TrendingUp, TrendingDown, Wallet } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, Pencil } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { supabase, supabaseAdmin } from '../lib/supabase'
 import type { Venta, Gasto } from '../types'
 
-export default function Caja() {
+export default function Caja({ rol = 'admin' }: { rol?: string }) {
+  const navigate = useNavigate()
+  const puedeGestionar = rol === 'admin' || rol === 'recepcion'
   const hoy = format(new Date(), 'yyyy-MM-dd')
   const [ventas, setVentas] = useState<Venta[]>([])
   const [gastos, setGastos] = useState<Gasto[]>([])
@@ -36,7 +39,13 @@ export default function Caja() {
   }
 
   async function eliminarGasto(id: string) {
-    await supabase.from('gastos').delete().eq('id', id)
+    await supabaseAdmin.from('gastos').delete().eq('id', id)
+    load()
+  }
+
+  async function eliminarVenta(v: Venta) {
+    if (!confirm(`¿Eliminar venta de ${v.cliente_nombre} por $${v.total.toLocaleString('es-CO')}? Esta acción no se puede deshacer.`)) return
+    await supabaseAdmin.from('ventas').delete().eq('id', v.id)
     load()
   }
 
@@ -102,11 +111,31 @@ export default function Caja() {
           <div className="space-y-3">
             {ventas.map(v => (
               <div key={v.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                <div>
+                <div className="flex-1">
                   <p className="text-sm font-medium">{v.cliente_nombre}</p>
                   <p className="text-xs text-[#8a7a6a]">{v.profesional_nombre} · {v.metodo_pago}</p>
                 </div>
-                <span className="text-sm font-semibold text-[#C9A84C]">${v.total.toLocaleString('es-CO')}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-[#C9A84C]">${v.total.toLocaleString('es-CO')}</span>
+                  {puedeGestionar && (
+                    <>
+                      <button
+                        onClick={() => navigate('/editar-venta', { state: { ventaId: v.id, clienteNombre: v.cliente_nombre } })}
+                        className="p-1.5 text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                        title="Editar"
+                      >
+                        <Pencil size={14} />
+                      </button>
+                      <button
+                        onClick={() => eliminarVenta(v)}
+                        className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                        title="Eliminar"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
             ))}
           </div>

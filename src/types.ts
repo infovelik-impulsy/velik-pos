@@ -6,7 +6,7 @@ export interface Profesional {
 
 export const PROFESIONALES: Profesional[] = [
   { id: 'UzLj5T8ZOrJ8reSig5os', nombre: 'Luz Aida', color: '#A0856C' },
-  { id: 'saGMogKgCH3kmIhq4VlJ', nombre: 'Geraldine Berrio', color: '#B89B6E' },
+  { id: 'xUf32I3dzoylUW8VDH9z', nombre: 'Zuly Rojas', color: '#8A7B6E' },
 ]
 
 export function getProfesional(id: string): Profesional | undefined {
@@ -59,4 +59,6 @@ export const METODOS_PAGO = [
 export const USUARIOS = [
   { id: 'UzLj5T8ZOrJ8reSig5os', nombre: 'Luz Aida (Admin)', pin: '1900', rol: 'admin' },
   { id: 'UzLj5T8ZOrJ8reSig5os', nombre: 'Luz Aida (Admin)', pin: '1800', rol: 'admin' },
+  { id: 'xUf32I3dzoylUW8VDH9z', nombre: 'Zuly Rojas', pin: '0704', rol: 'profesional' },
+  { id: 'UzLj5T8ZOrJ8reSig5os', nombre: 'Manuela (Recepción)', pin: '0987', rol: 'recepcion' },
 ]

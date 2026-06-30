@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
-import { ChevronLeft, Save, Plus, Trash2, Loader2 } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { ChevronLeft, Save, Plus, Trash2, Loader2, Pencil } from 'lucide-react'
+import { supabase, supabaseAdmin } from '../lib/supabase'
 
 interface Venta {
   id: string
+  appointment_id?: string | null
   fecha_cita: string
   hora_cita: string
   servicios: { nombre: string; precio: number }[]
@@ -118,8 +119,14 @@ export default function ClienteDetalle({ rol = 'admin' }: { rol?: string }) {
   }
 
   async function eliminarAbono(id: string) {
-    await supabase.from('abonos').delete().eq('id', id)
+    await supabaseAdmin.from('abonos').delete().eq('id', id)
     setAbonos(prev => prev.filter(a => a.id !== id))
+  }
+
+  async function eliminarVenta(v: Venta) {
+    if (!confirm(`¿Eliminar venta del ${fmtDate(v.fecha_cita)} por $${(v.total || 0).toLocaleString('es-CO')}? Esta acción no se puede deshacer.`)) return
+    await supabaseAdmin.from('ventas').delete().eq('id', v.id)
+    setVentas(prev => prev.filter(x => x.id !== v.id))
   }
 
   const totalAbonos = abonos.reduce((s, a) => s + (a.monto || 0), 0)
@@ -177,13 +184,33 @@ export default function ClienteDetalle({ rol = 'admin' }: { rol?: string }) {
               ) : ventas.map(v => (
                 <div key={v.id} className="bg-white rounded-2xl p-4 shadow-sm">
                   <div className="flex justify-between items-start mb-2">
-                    <div>
+                    <div className="flex-1">
                       <p className="text-sm font-semibold text-[#1a1a1a]">{fmtDate(v.fecha_cita)} {v.hora_cita && `· ${v.hora_cita}`}</p>
                       <p className="text-xs text-[#8a7a6a]">{v.profesional_nombre} · {METODO_LABEL[v.metodo_pago] || v.metodo_pago}</p>
                     </div>
-                    <span className={`text-sm font-bold ${v.metodo_pago === 'de_la_casa' ? 'text-purple-500' : 'text-[#C9A84C]'}`}>
-                      ${(v.total || 0).toLocaleString('es-CO')}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-sm font-bold ${v.metodo_pago === 'de_la_casa' ? 'text-purple-500' : 'text-[#C9A84C]'}`}>
+                        ${(v.total || 0).toLocaleString('es-CO')}
+                      </span>
+                      {esAdmin && (
+                        <>
+                          <button
+                            onClick={() => navigate('/editar-venta', { state: { ventaId: v.id, clienteNombre: nombre } })}
+                            className="p-1.5 text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                            title="Editar venta"
+                          >
+                            <Pencil size={14} />
+                          </button>
+                          <button
+                            onClick={() => eliminarVenta(v)}
+                            className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                            title="Eliminar venta"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
                   <div className="space-y-1">
                     {(v.servicios || []).map((s, i) => (

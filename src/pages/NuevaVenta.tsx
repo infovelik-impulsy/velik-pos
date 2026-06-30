@@ -7,6 +7,7 @@ import { PROFESIONALES, METODOS_PAGO, type ServicioVendido } from '../types'
 import ContactSearch from '../components/ContactSearch'
 import ServiceSelector from '../components/ServiceSelector'
 import ProductoSelector from '../components/ProductoSelector'
+import CafeteriaSelector, { type ItemCafeteriaCarrito } from '../components/CafeteriaSelector'
 
 interface ProductoCarrito {
   nombre: string
@@ -31,7 +32,7 @@ function parsePrecio(p?: string): number {
   return Number(p.replace(/[$.\s]/g, '')) || 0
 }
 
-export default function NuevaVenta() {
+export default function NuevaVenta({ rol = 'admin' }: { rol?: string }) {
   const { state } = useLocation() as { state: LocationState | null }
   const navigate = useNavigate()
 
@@ -49,13 +50,15 @@ export default function NuevaVenta() {
   const [metodoPago, setMetodoPago] = useState<'efectivo' | 'transferencia' | 'tarjeta' | 'mixto' | 'de_la_casa'>('efectivo')
   const [pagadoEfectivo, setPagadoEfectivo] = useState(0)
   const [productos, setProductos] = useState<ProductoCarrito[]>([])
+  const [cafeteria, setCafeteria] = useState<ItemCafeteriaCarrito[]>([])
   const [notas, setNotas] = useState('')
   const [guardando, setGuardando] = useState(false)
   const [exito, setExito] = useState(false)
 
   const totalServicios = servicios.reduce((s, sv) => s + (sv.precio || 0), 0)
   const totalProductos = productos.reduce((s, p) => s + (p.precio || 0), 0)
-  const total = totalServicios + totalProductos
+  const totalCafeteria = cafeteria.reduce((s, c) => s + (c.precio * c.cantidad), 0)
+  const total = totalServicios + totalProductos + totalCafeteria
   const pagadoDigital = metodoPago === 'mixto' ? total - pagadoEfectivo : 0
 
   function removeServicio(i: number) {
@@ -120,6 +123,12 @@ export default function NuevaVenta() {
     // Si no viene de una cita agendada, generamos un ID para vincular venta ↔ cita nueva
     const appointmentId = state?.appointmentId || crypto.randomUUID()
 
+    // Merge cafeteria items into productos for storage
+    const productosConCafeteria = [
+      ...productos,
+      ...cafeteria.map(c => ({ nombre: `[Cafetería] ${c.nombre}${c.cantidad > 1 ? ` x${c.cantidad}` : ''}`, precio: c.precio * c.cantidad }))
+    ]
+
     const { error } = await supabase.from('ventas').insert({
       appointment_id: appointmentId,
       contact_id: state?.contactId,
@@ -130,7 +139,7 @@ export default function NuevaVenta() {
       fecha_cita: fechaCita,
       hora_cita: horaCita,
       servicios,
-      productos,
+      productos: productosConCafeteria,
       total,
       metodo_pago: metodoPago,
       pagado_efectivo: efectivo,
@@ -139,6 +148,13 @@ export default function NuevaVenta() {
       comision_velik: total - comision,
       notas,
     })
+
+    // Descontar stock cafetería
+    if (!error && cafeteria.length > 0) {
+      for (const item of cafeteria) {
+        try { await supabase.rpc('decrementar_stock_cafeteria', { item_id: item.id, cantidad: item.cantidad }) } catch {}
+      }
+    }
 
     setGuardando(false)
     if (error) {
@@ -208,6 +224,7 @@ export default function NuevaVenta() {
         <h3 className="text-xs font-medium uppercase tracking-widest text-[#8a7a6a]">Cliente *</h3>
         <ContactSearch
           selectedName={clienteNombre}
+          ocultarTelefono={rol !== 'admin'}
           onSelect={(contact) => {
             setClienteNombre(`${contact.nombres} ${contact.apellidos || ''}`.trim())
             setClienteTelefono(contact.telefono)
@@ -355,6 +372,70 @@ export default function NuevaVenta() {
         <div className="border-t border-gray-100 pt-4">
           <p className="text-xs text-[#8a7a6a] uppercase tracking-widest font-medium mb-3">Agregar producto</p>
           <ProductoSelector onSelect={p => setProductos(prev => [...prev, { nombre: p.nombre, precio: p.precio }])} />
+        </div>
+      </section>
+
+      {/* Cafetería */}
+      <section className="bg-white rounded-2xl p-4 mb-4">
+        <h3 className="text-xs font-medium uppercase tracking-widest text-[#4CAF50] mb-3">☕ Cafetería</h3>
+
+        {cafeteria.length > 0 && (
+          <div className="space-y-2 mb-4">
+            {cafeteria.map((item, i) => (
+              <div key={i} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                <div className="flex-1">
+                  <p className="font-medium text-sm">{item.nombre}</p>
+                  <div className="flex items-center gap-3 mt-1">
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-gray-400">Cant:</span>
+                      <button onClick={() => setCafeteria(prev => prev.map((c, idx) => idx === i ? { ...c, cantidad: Math.max(1, c.cantidad - 1) } : c))}
+                        className="w-5 h-5 rounded bg-gray-200 text-xs font-bold flex items-center justify-center">−</button>
+                      <span className="text-sm font-medium w-5 text-center">{item.cantidad}</span>
+                      <button onClick={() => setCafeteria(prev => prev.map((c, idx) => idx === i ? { ...c, cantidad: c.cantidad + 1 } : c))}
+                        className="w-5 h-5 rounded bg-gray-200 text-xs font-bold flex items-center justify-center">+</button>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-gray-400">$</span>
+                      <input type="text" inputMode="numeric"
+                        value={item.precio === 0 ? '' : item.precio.toLocaleString('es-CO')}
+                        onChange={e => {
+                          const raw = parseInt(e.target.value.replace(/\D/g, '')) || 0
+                          setCafeteria(prev => prev.map((c, idx) => idx === i ? { ...c, precio: raw } : c))
+                        }}
+                        placeholder="Precio"
+                        className="text-sm border-b border-[#4CAF50] bg-transparent px-1 py-0.5 w-24 focus:outline-none" />
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 ml-2">
+                  {item.precio > 0 && (
+                    <span className="text-[#4CAF50] font-semibold text-sm">
+                      ${(item.precio * item.cantidad).toLocaleString('es-CO')}
+                    </span>
+                  )}
+                  <button onClick={() => setCafeteria(prev => prev.filter((_, idx) => idx !== i))}
+                    className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
+                    <X size={16} />
+                  </button>
+                </div>
+              </div>
+            ))}
+            <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+              <span className="text-sm text-gray-500">Subtotal cafetería</span>
+              <span className="font-semibold text-[#4CAF50]">${totalCafeteria.toLocaleString('es-CO')}</span>
+            </div>
+          </div>
+        )}
+
+        <div className={cafeteria.length > 0 ? 'border-t border-gray-100 pt-4' : ''}>
+          {cafeteria.length > 0 && <p className="text-xs text-gray-400 uppercase tracking-widest font-medium mb-3">Agregar más</p>}
+          <CafeteriaSelector onSelect={item => {
+            setCafeteria(prev => {
+              const idx = prev.findIndex(c => c.id === item.id)
+              if (idx >= 0) return prev.map((c, i) => i === idx ? { ...c, cantidad: c.cantidad + 1 } : c)
+              return [...prev, item]
+            })
+          }} />
         </div>
       </section>
 

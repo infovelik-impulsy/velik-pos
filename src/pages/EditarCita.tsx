@@ -16,6 +16,8 @@ export default function EditarCita() {
   const [guardando, setGuardando] = useState(false)
   const [exito, setExito] = useState(false)
 
+  const [clienteNombre, setClienteNombre] = useState('')
+  const [clienteTelefono, setClienteTelefono] = useState('')
   const [fechaCita, setFechaCita] = useState('')
   const [horaCita, setHoraCita] = useState('')
   const [servicioNombre, setServicioNombre] = useState('')
@@ -31,6 +33,8 @@ export default function EditarCita() {
     }
     const { data } = await supabase.from('citas').select('*').eq('id', state.citaId).maybeSingle()
     if (data) {
+      setClienteNombre(data.cliente_nombre || '')
+      setClienteTelefono(data.cliente_telefono || '')
       setFechaCita(data.fecha || '')
       if (data.start_time) {
         const d = new Date(data.start_time)
@@ -57,6 +61,8 @@ export default function EditarCita() {
     const endISO = `${fechaCita}T${endH}:${endM}:00-05:00`
 
     const updates: Record<string, unknown> = {
+      cliente_nombre: clienteNombre,
+      cliente_telefono: clienteTelefono,
       fecha: fechaCita,
       start_time: startISO,
       end_time: endISO,
@@ -95,6 +101,17 @@ export default function EditarCita() {
         </button>
         <h2 className="font-serif text-2xl font-light">Editar Cita</h2>
       </div>
+
+      {/* Cliente */}
+      <section className="bg-white rounded-2xl p-4 mb-4 space-y-3">
+        <h3 className="text-xs font-medium uppercase tracking-widest text-[#8a7a6a]">Cliente</h3>
+        <input type="text" value={clienteNombre} onChange={e => setClienteNombre(e.target.value)}
+          placeholder="Nombre del cliente"
+          className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#C9A84C]" />
+        <input type="tel" value={clienteTelefono} onChange={e => setClienteTelefono(e.target.value)}
+          placeholder="Teléfono (opcional)"
+          className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#C9A84C]" />
+      </section>
 
       {/* Profesional */}
       <section className="bg-white rounded-2xl p-4 mb-4">

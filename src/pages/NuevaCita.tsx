@@ -7,7 +7,7 @@ import ContactSearch from '../components/ContactSearch'
 
 interface Slot { label: string; date: string; slot: string }
 
-export default function NuevaCita() {
+export default function NuevaCita({ rol = 'admin' }: { rol?: string }) {
   const navigate = useNavigate()
   const [categoria, setCategoria] = useState<string | null>(null)
   const [servicio, setServicio] = useState<Servicio | null>(null)
@@ -149,6 +149,7 @@ export default function NuevaCita() {
         <Seccion titulo={servicio?.precioEditable ? "6. Datos de la clienta" : "5. Datos de la clienta"}>
           <ContactSearch
             selectedName={nombre}
+            ocultarTelefono={rol !== 'admin'}
             onSelect={c => {
               setNombre(`${c.nombres} ${c.apellidos || ''}`.trim())
               setTelefono(c.telefono || '')
