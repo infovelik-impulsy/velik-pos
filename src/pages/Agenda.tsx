@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { format, addDays, subDays } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight, Clock, User, CheckCircle, PlusCircle, XCircle, Pencil } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Clock, User, CheckCircle, PlusCircle, XCircle, Pencil, Trash2 } from 'lucide-react'
 import { PROFESIONALES } from '../types'
 import { supabase } from '../lib/supabase'
 import { updateAppointmentStatus } from '../lib/ghl'
@@ -41,6 +41,13 @@ export default function Agenda() {
   async function marcarNoShow(id: string) {
     await supabase.from('citas').update({ status: 'noshow' }).eq('id', id)
     updateAppointmentStatus(id, 'noshow')
+    load()
+  }
+
+  async function cancelarCita(id: string) {
+    if (!window.confirm('¿Seguro que deseas cancelar esta cita? Esta acción no se puede deshacer.')) return
+    await supabase.from('citas').update({ status: 'cancelled' }).eq('id', id)
+    updateAppointmentStatus(id, 'cancelled')
     load()
   }
 
@@ -214,22 +221,31 @@ export default function Agenda() {
                                 </button>
                               </div>
                             ) : (
-                              <button
-                                onClick={() => navigate('/venta', {
-                                  state: {
-                                    appointmentId: cita.id,
-                                    contactId: cita.contact_id,
-                                    clienteNombre: cita.cliente_nombre,
-                                    clienteTelefono: cita.cliente_telefono,
-                                    profesionalId: cita.profesional_id,
-                                    servicioNombre: cita.titulo,
-                                    precioCita: cita.precio,
-                                  }
-                                })}
-                                className="w-full flex items-center justify-center gap-1 py-1.5 bg-[#C9A84C] text-white rounded-xl text-xs font-medium hover:bg-[#b8963e] transition-colors"
-                              >
-                                💰 Registrar venta
-                              </button>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => navigate('/venta', {
+                                    state: {
+                                      appointmentId: cita.id,
+                                      contactId: cita.contact_id,
+                                      clienteNombre: cita.cliente_nombre,
+                                      clienteTelefono: cita.cliente_telefono,
+                                      profesionalId: cita.profesional_id,
+                                      servicioNombre: cita.titulo,
+                                      precioCita: cita.precio,
+                                    }
+                                  })}
+                                  className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-[#C9A84C] text-white rounded-xl text-xs font-medium hover:bg-[#b8963e] transition-colors"
+                                >
+                                  💰 Registrar venta
+                                </button>
+                                <button
+                                  onClick={() => cancelarCita(cita.id)}
+                                  className="p-1.5 bg-red-50 hover:bg-red-100 rounded-xl transition-colors"
+                                  title="Cancelar cita"
+                                >
+                                  <Trash2 size={13} className="text-red-400" />
+                                </button>
+                              </div>
                             )}
                           </div>
                         ) : cita.status === 'noshow' ? (
@@ -243,6 +259,13 @@ export default function Agenda() {
                               title="Editar cita"
                             >
                               <Pencil size={13} className="text-gray-500" />
+                            </button>
+                            <button
+                              onClick={() => cancelarCita(cita.id)}
+                              className="p-1.5 bg-red-50 hover:bg-red-100 rounded-xl transition-colors"
+                              title="Cancelar cita"
+                            >
+                              <Trash2 size={13} className="text-red-400" />
                             </button>
                           </div>
                         ) : (
@@ -261,12 +284,21 @@ export default function Agenda() {
                                 <XCircle size={12} /> No asistió
                               </button>
                             </div>
-                            <button
-                              onClick={() => navigate('/editar-cita', { state: { citaId: cita.id } })}
-                              className="w-full flex items-center justify-center gap-1 py-1.5 bg-gray-50 text-gray-500 rounded-xl text-xs font-medium hover:bg-gray-100 transition-colors border border-gray-200"
-                            >
-                              <Pencil size={11} /> Editar cita
-                            </button>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => navigate('/editar-cita', { state: { citaId: cita.id } })}
+                                className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-gray-50 text-gray-500 rounded-xl text-xs font-medium hover:bg-gray-100 transition-colors border border-gray-200"
+                              >
+                                <Pencil size={11} /> Editar cita
+                              </button>
+                              <button
+                                onClick={() => cancelarCita(cita.id)}
+                                className="p-1.5 bg-red-50 hover:bg-red-100 rounded-xl transition-colors border border-red-100"
+                                title="Cancelar cita"
+                              >
+                                <Trash2 size={13} className="text-red-400" />
+                              </button>
+                            </div>
                           </div>
                         )}
                       </div>
