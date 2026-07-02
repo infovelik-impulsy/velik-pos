@@ -219,6 +219,13 @@ export default function Agenda() {
                                 >
                                   <Pencil size={13} className="text-gray-500" />
                                 </button>
+                                <button
+                                  onClick={() => cancelarCita(cita.id)}
+                                  className="p-1.5 bg-red-50 hover:bg-red-100 rounded-xl transition-colors"
+                                  title="Cancelar cita"
+                                >
+                                  <Trash2 size={13} className="text-red-400" />
+                                </button>
                               </div>
                             ) : (
                               <div className="flex gap-2">
