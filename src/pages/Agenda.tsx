@@ -45,7 +45,48 @@ export default function Agenda() {
   }
 
   async function cancelarCita(id: string) {
-    if (!window.confirm('¿Seguro que deseas cancelar esta cita? Esta acción no se puede deshacer.')) return
+    const cita = citas.find(c => c.id === id)
+    if (!cita) return
+
+    const ahora = new Date()
+    const inicioCita = new Date(cita.start_time)
+    const horasRestantes = (inicioCita.getTime() - ahora.getTime()) / (1000 * 60 * 60)
+    const esMenos24h = horasRestantes < 24 && horasRestantes > -48 // cita futura o reciente
+
+    if (esMenos24h) {
+      const registrar = window.confirm(
+        `⚠️ Esta cita se cancela con menos de 24 horas de anticipación.\n\n` +
+        `El depósito de $30.000 NO es reembolsable.\n\n` +
+        `¿Deseas registrar los $30.000 como ingreso del salón?`
+      )
+      if (registrar) {
+        const hoy = new Date().toISOString().split('T')[0]
+        const prof = PROFESIONALES.find(p => p.id === cita.profesional_id)
+        await supabase.from('ventas').insert({
+          appointment_id: id,
+          contact_id: cita.contact_id,
+          cliente_nombre: cita.cliente_nombre,
+          cliente_telefono: cita.cliente_telefono || '',
+          profesional_id: cita.profesional_id,
+          profesional_nombre: prof?.nombre || cita.profesional_nombre,
+          fecha_cita: cita.fecha || hoy,
+          servicios: [{ nombre: 'Depósito no reembolsable (cancelación -24h)', precio: 30000 }],
+          productos: [],
+          total: 30000,
+          metodo_pago: 'deposito',
+          pagado_efectivo: 0,
+          pagado_digital: 30000,
+          comision_profesional: 0,
+          comision_velik: 30000,
+          notas: 'Depósito retenido por cancelación con menos de 24 horas de anticipación',
+        })
+      } else if (!window.confirm('¿Cancelar la cita sin registrar el depósito?')) {
+        return
+      }
+    } else {
+      if (!window.confirm('¿Seguro que deseas cancelar esta cita?')) return
+    }
+
     await supabase.from('citas').update({ status: 'cancelled' }).eq('id', id)
     updateAppointmentStatus(id, 'cancelled')
     load()
