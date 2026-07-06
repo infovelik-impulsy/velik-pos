@@ -48,8 +48,8 @@ export default function Caja({ rol = 'admin' }: { rol?: string }) {
   }
 
   async function eliminarVenta(v: Venta) {
-    setErrorEliminar('Eliminando...')
     if (!v.id) { setErrorEliminar('Error: venta sin ID'); return }
+    setErrorEliminar('Eliminando ' + v.id.substring(0, 8) + '...')
     const SUPA_URL = 'https://aqoztzznsxhvczkanorr.supabase.co'
     const SK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxb3p0enpuc3hodmN6a2Fub3JyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDA1OTg3NSwiZXhwIjoyMDk1NjM1ODc1fQ.2Jxnj_q9ni2p8H4wuOP-u9QIDTYkkjdenaTPDjjQFmc'
     let res: Response
@@ -67,13 +67,15 @@ export default function Caja({ rol = 'admin' }: { rol?: string }) {
       setErrorEliminar('HTTP ' + res.status + ': ' + err)
       return
     }
+    // Remove from local state immediately, then reload
+    setVentas(prev => prev.filter(vt => vt.id !== v.id))
+    setConfirmEliminarId(null)
+    setErrorEliminar('OK ' + res.status + ' - eliminado')
     if (v.appointment_id) {
       await supabase.from('citas').update({ status: 'showed' }).eq('id', v.appointment_id)
       updateAppointmentStatus(v.appointment_id, 'showed')
     }
-    setConfirmEliminarId(null)
-    setErrorEliminar(null)
-    load()
+    setTimeout(() => { setErrorEliminar(null); load() }, 1500)
   }
 
   const totalVentas = ventas.reduce((s, v) => s + v.total, 0)
