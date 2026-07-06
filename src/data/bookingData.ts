@@ -21,11 +21,11 @@ export const CATEGORIAS = [
   "Maquillaje Profesional", "Corporal",
 ]
 
-const LA = "UzLj5T8ZOrJ8reSig5os"  // Luz Aida         — SOLO faciales, masajes, estrías y maquillaje
-const GB = "saGMogKgCH3kmIhq4VlJ"  // Geraldine Berrio — SOLO uñas (manicure, pedicure y combos)
-const ZR = "xUf32I3dzoylUW8VDH9z"  // Zuly Rojas       — SOLO uñas (manicure, pedicure y combos)
+const LA = "UzLj5T8ZOrJ8reSig5os"  // Luz Aida   — SOLO faciales, masajes, estrías y maquillaje
+const ZR = "xUf32I3dzoylUW8VDH9z"  // Zuly Rojas — SOLO uñas (manicure, pedicure y combos)
+const JU = "YCFWZJMJzmDEA1MJv27k"  // Juliana García Paz — SOLO uñas (manicure, pedicure y combos)
 
-const NAILS = [GB, ZR]
+const NAILS = [ZR, JU]
 const HAIR: string[] = []
 
 export const SERVICIOS: Record<string, Servicio[]> = {
@@ -161,9 +161,9 @@ export const SERVICIOS: Record<string, Servicio[]> = {
 }
 
 export const PROFESIONALES: Profesional[] = [
-  { nombre: "Luz Aida",         userId: LA, especialidad: "Facial & Corporal",    iniciales: "LA", foto: "/fotos/luz.jpg" },
-  { nombre: "Geraldine Berrio", userId: GB, especialidad: "Uñas & Manicure",      iniciales: "GB", foto: "/fotos/geraldine.jpg" },
-  { nombre: "Zuly Rojas",      userId: ZR, especialidad: "Uñas & Manicure",      iniciales: "ZR", foto: "/fotos/zuly.jpg" },
+  { nombre: "Luz Aida",       userId: LA, especialidad: "Facial & Corporal", iniciales: "LA", foto: "/fotos/luz.jpg" },
+  { nombre: "Zuly Rojas",     userId: ZR, especialidad: "Uñas & Manicure",   iniciales: "ZR", foto: "/fotos/zuly.jpg" },
+  { nombre: "Juliana García", userId: JU, especialidad: "Uñas & Manicure",   iniciales: "JG" },
 ]
 
 export const SLOTS_URL = "https://santiagon8nmejia.dominadoresia.com/webhook/booking/slots"
