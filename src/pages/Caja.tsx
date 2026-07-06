@@ -33,7 +33,12 @@ export default function Caja({ rol = 'admin' }: { rol?: string }) {
       fetch(`${SUPA_URL}/rest/v1/ventas?fecha=eq.${hoy}&order=created_at.desc`, { headers: h, cache: 'no-store' }),
       fetch(`${SUPA_URL}/rest/v1/gastos?fecha=eq.${hoy}&order=created_at.desc`, { headers: h, cache: 'no-store' }),
     ])
-    setVentas(vRes.ok ? await vRes.json() : [])
+    if (vRes.ok) {
+      setVentas(await vRes.json())
+    } else {
+      setVentas([])
+      setErrorEliminar('LOAD ' + vRes.status + ': ' + (await vRes.text()).substring(0, 200))
+    }
     setGastos(gRes.ok ? await gRes.json() : [])
     setLoading(false)
   }
