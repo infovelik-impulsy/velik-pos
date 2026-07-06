@@ -3,7 +3,7 @@ import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, Pencil } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { supabase, supabaseAdmin } from '../lib/supabase'
+import { supabase } from '../lib/supabase'
 import type { Venta, Gasto } from '../types'
 
 export default function Caja({ rol = 'admin' }: { rol?: string }) {
@@ -39,13 +39,21 @@ export default function Caja({ rol = 'admin' }: { rol?: string }) {
   }
 
   async function eliminarGasto(id: string) {
-    await supabaseAdmin.from('gastos').delete().eq('id', id)
+    const { error } = await supabase.from('gastos').delete().eq('id', id)
+    if (error) {
+      alert('Error al eliminar: ' + error.message)
+      return
+    }
     load()
   }
 
   async function eliminarVenta(v: Venta) {
     if (!confirm(`¿Eliminar venta de ${v.cliente_nombre} por $${v.total.toLocaleString('es-CO')}? Esta acción no se puede deshacer.`)) return
-    await supabaseAdmin.from('ventas').delete().eq('id', v.id)
+    const { error } = await supabase.from('ventas').delete().eq('id', v.id)
+    if (error) {
+      alert('Error al eliminar: ' + error.message)
+      return
+    }
     load()
   }
 
