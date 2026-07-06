@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { X, CheckCircle, ChevronLeft } from 'lucide-react'
+import { X, CheckCircle, ChevronLeft, FileText } from 'lucide-react'
+import { generarFacturaAlegra } from '../lib/alegra'
 import { supabase } from '../lib/supabase'
 import { updateAppointmentStatus } from '../lib/ghl'
 import { PROFESIONALES, METODOS_PAGO, type ServicioVendido } from '../types'
@@ -54,6 +55,13 @@ export default function NuevaVenta({ rol = 'admin' }: { rol?: string }) {
   const [notas, setNotas] = useState('')
   const [guardando, setGuardando] = useState(false)
   const [exito, setExito] = useState(false)
+  const [mostrarFactura, setMostrarFactura] = useState(false)
+  const [facturaDoc, setFacturaDoc] = useState('')
+  const [facturaTipo, setFacturaTipo] = useState<'CC' | 'NIT' | 'CE' | 'PA'>('CC')
+  const [facturaEmail, setFacturaEmail] = useState('')
+  const [facturaGenerando, setFacturaGenerando] = useState(false)
+  const [facturaNumero, setFacturaNumero] = useState('')
+  const [facturaError, setFacturaError] = useState('')
 
   const totalServicios = servicios.reduce((s, sv) => s + (sv.precio || 0), 0)
   const totalProductos = productos.reduce((s, p) => s + (p.precio || 0), 0)
@@ -94,7 +102,8 @@ export default function NuevaVenta({ rol = 'admin' }: { rol?: string }) {
   }
 
   async function guardar() {
-    if (!clienteNombre || !profesionalId || !fechaCita || !horaCita || servicios.some(s => !s.nombre || s.precio == null)) return
+    const hayItems = servicios.length > 0 || productos.length > 0 || cafeteria.length > 0
+    if (!clienteNombre || !profesionalId || !fechaCita || !horaCita || !hayItems) return
     setGuardando(true)
 
     // Verificar si ya existe una venta para esta cita agendada
@@ -112,8 +121,7 @@ export default function NuevaVenta({ rol = 'admin' }: { rol?: string }) {
     }
 
     const prof = PROFESIONALES.find(p => p.id === profesionalId)
-    const esGeraldine = profesionalId === 'saGMogKgCH3kmIhq4VlJ'
-    const comisionServicios = totalServicios * (esGeraldine ? 0.45 : 0.5)
+    const comisionServicios = totalServicios * (profesionalId === 'saGMogKgCH3kmIhq4VlJ' ? 0.45 : 0.5)
     const comisionProductos = totalProductos * 0.05
     const comision = comisionServicios + comisionProductos
 
@@ -195,15 +203,129 @@ export default function NuevaVenta({ rol = 'admin' }: { rol?: string }) {
     }
 
     setExito(true)
-    setTimeout(() => navigate('/'), 1500)
+  }
+
+  async function handleGenerarFactura() {
+    if (!facturaDoc.trim()) return
+    setFacturaGenerando(true)
+    setFacturaError('')
+    try {
+      const todosItems = [
+        ...servicios.map(s => ({ nombre: s.nombre, precio: s.precio })),
+        ...productos.map(p => ({ nombre: p.nombre, precio: p.precio })),
+        ...cafeteria.map(c => ({ nombre: c.nombre, precio: c.precio * c.cantidad })),
+      ]
+      const result = await generarFacturaAlegra({
+        clienteNombre,
+        clienteDoc: facturaDoc.trim(),
+        tipoDoc: facturaTipo,
+        clienteEmail: facturaEmail.trim() || undefined,
+        items: todosItems,
+        metodoPago,
+        fecha: fechaCita || new Date().toISOString().slice(0, 10),
+      })
+      setFacturaNumero(result.numero)
+    } catch (err: unknown) {
+      setFacturaError(err instanceof Error ? err.message : 'Error al generar factura')
+    } finally {
+      setFacturaGenerando(false)
+    }
   }
 
   if (exito) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center text-center p-8">
+      <div className="min-h-screen flex flex-col items-center justify-center text-center p-8 max-w-sm mx-auto">
         <CheckCircle size={64} className="text-[#C9A84C] mb-4" />
         <h2 className="font-serif text-3xl font-light mb-2">¡Venta registrada!</h2>
-        <p className="text-[#8a7a6a]">Total: <strong>${total.toLocaleString('es-CO')}</strong></p>
+        <p className="text-[#8a7a6a] mb-8">Total: <strong>${total.toLocaleString('es-CO')}</strong></p>
+
+        {/* Factura electrónica generada */}
+        {facturaNumero ? (
+          <div className="w-full bg-green-50 border border-green-200 rounded-2xl p-4 mb-6 text-center">
+            <CheckCircle size={28} className="text-green-500 mx-auto mb-2" />
+            <p className="font-semibold text-green-800">Factura electrónica generada</p>
+            <p className="text-green-700 text-lg font-mono mt-1">{facturaNumero}</p>
+            <p className="text-green-600 text-xs mt-1">
+              {facturaEmail ? `Enviada a ${facturaEmail}` : 'Enviada a la DIAN vía Alegra'}
+            </p>
+          </div>
+        ) : mostrarFactura ? (
+          <div className="w-full bg-white border border-[#e8ddd5] rounded-2xl p-5 mb-6 text-left">
+            <h3 className="font-semibold text-[#5c4a3a] mb-4 flex items-center gap-2">
+              <FileText size={18} /> Datos para la factura
+            </h3>
+            <p className="text-xs text-gray-400 mb-3">Si el cliente no necesita factura a su nombre, deja el documento en blanco — se emite a <strong>Consumidor Final</strong>.</p>
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                <div className="w-2/5">
+                  <label className="text-xs text-gray-500 mb-1 block">Tipo</label>
+                  <select
+                    value={facturaTipo}
+                    onChange={e => setFacturaTipo(e.target.value as 'CC' | 'NIT' | 'CE' | 'PA')}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#C9A84C]"
+                  >
+                    <option value="CC">CC</option>
+                    <option value="NIT">NIT</option>
+                    <option value="CE">CE</option>
+                    <option value="PA">Pasaporte</option>
+                  </select>
+                </div>
+                <div className="flex-1">
+                  <label className="text-xs text-gray-500 mb-1 block">Número (opcional)</label>
+                  <input
+                    type="text"
+                    placeholder="Ej: 1234567890"
+                    value={facturaDoc}
+                    onChange={e => setFacturaDoc(e.target.value)}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#C9A84C]"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">Email (opcional)</label>
+                <input
+                  type="email"
+                  placeholder="cliente@email.com"
+                  value={facturaEmail}
+                  onChange={e => setFacturaEmail(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#C9A84C]"
+                />
+              </div>
+            </div>
+            {facturaError && (
+              <p className="text-red-500 text-xs mt-3">{facturaError}</p>
+            )}
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={() => setMostrarFactura(false)}
+                className="flex-1 py-2 rounded-xl border border-gray-200 text-sm text-gray-500 hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleGenerarFactura}
+                disabled={facturaGenerando}
+                className="flex-1 py-2 rounded-xl bg-[#8A4B6F] text-white text-sm font-medium disabled:opacity-50"
+              >
+                {facturaGenerando ? 'Generando...' : 'Generar'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => setMostrarFactura(true)}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-[#8A4B6F] text-[#8A4B6F] font-medium mb-3 hover:bg-[#f9f3f6] transition-colors"
+          >
+            <FileText size={18} /> Generar Factura Electrónica
+          </button>
+        )}
+
+        <button
+          onClick={() => navigate('/')}
+          className="w-full py-3 rounded-2xl bg-[#C9A84C] text-white font-medium hover:bg-[#b8943d] transition-colors"
+        >
+          Volver al inicio
+        </button>
       </div>
     )
   }
@@ -503,9 +625,8 @@ export default function NuevaVenta({ rol = 'admin' }: { rol?: string }) {
 
       {/* Comisiones preview */}
       {total > 0 && (() => {
-        const esGeraldine = profesionalId === 'saGMogKgCH3kmIhq4VlJ'
-        const pctPro = esGeraldine ? 45 : 50
-        const pctVelik = esGeraldine ? 55 : 50
+        const pctPro = profesionalId === 'saGMogKgCH3kmIhq4VlJ' ? 45 : 50
+        const pctVelik = profesionalId === 'saGMogKgCH3kmIhq4VlJ' ? 55 : 50
         const comProServ = totalServicios * (pctPro / 100)
         const comVelikServ = totalServicios * (pctVelik / 100)
         const comProProd = totalProductos * 0.05
@@ -551,12 +672,19 @@ export default function NuevaVenta({ rol = 'admin' }: { rol?: string }) {
         )
       })()}
 
+      {guardando && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex flex-col items-center justify-center gap-4">
+          <div className="w-14 h-14 border-4 border-white border-t-[#C9A84C] rounded-full animate-spin" />
+          <p className="text-white font-medium text-lg">Registrando venta...</p>
+          <p className="text-white/70 text-sm">Por favor no cierres ni recargues</p>
+        </div>
+      )}
       <button
         onClick={guardar}
-        disabled={guardando || !clienteNombre || !profesionalId || servicios.length === 0 || servicios.some(s => !s.nombre || s.precio == null)}
-        className="w-full py-4 bg-[#C9A84C] text-white rounded-2xl font-medium text-sm disabled:opacity-40 hover:bg-[#b8963e] transition-all active:scale-[0.99]"
+        disabled={guardando || !clienteNombre || !profesionalId || (servicios.length === 0 && productos.length === 0 && cafeteria.length === 0)}
+        className="w-full py-4 bg-[#C9A84C] text-white rounded-2xl font-medium text-sm disabled:opacity-50 hover:bg-[#b8963e] transition-all active:scale-[0.99]"
       >
-        {guardando ? 'Guardando...' : 'Confirmar venta'}
+        {guardando ? 'Registrando...' : 'Confirmar venta'}
       </button>
     </div>
   )
