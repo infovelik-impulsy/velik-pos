@@ -4,7 +4,6 @@ import { es } from 'date-fns/locale'
 import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, Pencil } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { updateAppointmentStatus } from '../lib/ghl'
 import type { Venta, Gasto } from '../types'
 
 export default function Caja({ rol = 'admin' }: { rol?: string }) {
@@ -74,14 +73,10 @@ export default function Caja({ rol = 'admin' }: { rol?: string }) {
       setErrorEliminar('Error de red: ' + String(e))
       return
     }
-    // Optimistic remove from screen
+    // Solo quitar de pantalla. NO tocar la cita ni el webhook
+    // (eso re-creaba la venta y la volvía a poner en la agenda).
     setVentas(prev => prev.filter(vt => vt.id !== v.id))
     setConfirmEliminarId(null)
-    if (v.appointment_id) {
-      await supabase.from('citas').update({ status: 'showed' }).eq('id', v.appointment_id)
-      updateAppointmentStatus(v.appointment_id, 'showed')
-    }
-    load()
   }
 
   const totalVentas = ventas.reduce((s, v) => s + v.total, 0)
