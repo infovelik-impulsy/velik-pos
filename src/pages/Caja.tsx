@@ -23,14 +23,18 @@ export default function Caja({ rol = 'admin' }: { rol?: string }) {
 
   useEffect(() => { load() }, [])
 
+  const SUPA_URL = 'https://aqoztzznsxhvczkanorr.supabase.co'
+  const SK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxb3p0enpuc3hodmN6a2Fub3JyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDA1OTg3NSwiZXhwIjoyMDk1NjM1ODc1fQ.2Jxnj_q9ni2p8H4wuOP-u9QIDTYkkjdenaTPDjjQFmc'
+
   async function load() {
     setLoading(true)
-    const [{ data: v }, { data: g }] = await Promise.all([
-      supabase.from('ventas').select('*').eq('fecha', hoy).order('created_at', { ascending: false }),
-      supabase.from('gastos').select('*').eq('fecha', hoy).order('created_at', { ascending: false }),
+    const h = { 'apikey': SK, 'Authorization': `Bearer ${SK}` }
+    const [vRes, gRes] = await Promise.all([
+      fetch(`${SUPA_URL}/rest/v1/ventas?fecha=eq.${hoy}&order=created_at.desc`, { headers: h, cache: 'no-store' }),
+      fetch(`${SUPA_URL}/rest/v1/gastos?fecha=eq.${hoy}&order=created_at.desc`, { headers: h, cache: 'no-store' }),
     ])
-    setVentas(v || [])
-    setGastos(g || [])
+    setVentas(vRes.ok ? await vRes.json() : [])
+    setGastos(gRes.ok ? await gRes.json() : [])
     setLoading(false)
   }
 
@@ -49,33 +53,30 @@ export default function Caja({ rol = 'admin' }: { rol?: string }) {
 
   async function eliminarVenta(v: Venta) {
     if (!v.id) { setErrorEliminar('Error: venta sin ID'); return }
-    setErrorEliminar('Eliminando ' + v.id.substring(0, 8) + '...')
-    const SUPA_URL = 'https://aqoztzznsxhvczkanorr.supabase.co'
-    const SK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxb3p0enpuc3hodmN6a2Fub3JyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDA1OTg3NSwiZXhwIjoyMDk1NjM1ODc1fQ.2Jxnj_q9ni2p8H4wuOP-u9QIDTYkkjdenaTPDjjQFmc'
-    let res: Response
+    setErrorEliminar(null)
+    const h = { 'apikey': SK, 'Authorization': `Bearer ${SK}` }
     try {
-      res = await fetch(`${SUPA_URL}/rest/v1/ventas?id=eq.${v.id}`, {
+      const res = await fetch(`${SUPA_URL}/rest/v1/ventas?id=eq.${v.id}`, {
         method: 'DELETE',
-        headers: { 'apikey': SK, 'Authorization': `Bearer ${SK}` },
+        headers: h,
+        cache: 'no-store',
       })
+      if (!res.ok) {
+        setErrorEliminar('HTTP ' + res.status + ': ' + await res.text())
+        return
+      }
     } catch (e) {
       setErrorEliminar('Error de red: ' + String(e))
       return
     }
-    if (!res.ok) {
-      const err = await res.text()
-      setErrorEliminar('HTTP ' + res.status + ': ' + err)
-      return
-    }
-    // Remove from local state immediately, then reload
+    // Optimistic remove from screen
     setVentas(prev => prev.filter(vt => vt.id !== v.id))
     setConfirmEliminarId(null)
-    setErrorEliminar('OK ' + res.status + ' - eliminado')
     if (v.appointment_id) {
       await supabase.from('citas').update({ status: 'showed' }).eq('id', v.appointment_id)
       updateAppointmentStatus(v.appointment_id, 'showed')
     }
-    setTimeout(() => { setErrorEliminar(null); load() }, 1500)
+    load()
   }
 
   const totalVentas = ventas.reduce((s, v) => s + v.total, 0)
