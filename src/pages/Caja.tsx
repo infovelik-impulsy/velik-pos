@@ -49,9 +49,21 @@ export default function Caja({ rol = 'admin' }: { rol?: string }) {
 
   async function eliminarVenta(v: Venta) {
     setErrorEliminar(null)
-    const { error } = await supabase.from('ventas').delete().eq('id', v.id)
+    // Ensure session is active before delete
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      await supabase.auth.signInWithPassword({
+        email: import.meta.env.VITE_SUPABASE_APP_EMAIL,
+        password: import.meta.env.VITE_SUPABASE_APP_PASS,
+      })
+    }
+    const { error, count } = await supabase.from('ventas').delete({ count: 'exact' }).eq('id', v.id)
     if (error) {
       setErrorEliminar('Error: ' + error.message)
+      return
+    }
+    if (count === 0) {
+      setErrorEliminar('Sin permisos para eliminar esta venta (RLS). Contacta al admin.')
       return
     }
     if (v.appointment_id) {
