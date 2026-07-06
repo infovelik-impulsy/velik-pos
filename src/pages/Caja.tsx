@@ -3,7 +3,7 @@ import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, Pencil } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { supabase, supabaseAdmin } from '../lib/supabase'
 import { updateAppointmentStatus } from '../lib/ghl'
 import type { Venta, Gasto } from '../types'
 
@@ -49,21 +49,9 @@ export default function Caja({ rol = 'admin' }: { rol?: string }) {
 
   async function eliminarVenta(v: Venta) {
     setErrorEliminar(null)
-    // Ensure session is active before delete
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
-      await supabase.auth.signInWithPassword({
-        email: import.meta.env.VITE_SUPABASE_APP_EMAIL,
-        password: import.meta.env.VITE_SUPABASE_APP_PASS,
-      })
-    }
-    const { error, count } = await supabase.from('ventas').delete({ count: 'exact' }).eq('id', v.id)
+    const { error } = await supabaseAdmin.from('ventas').delete().eq('id', v.id)
     if (error) {
       setErrorEliminar('Error: ' + error.message)
-      return
-    }
-    if (count === 0) {
-      setErrorEliminar('Sin permisos para eliminar esta venta (RLS). Contacta al admin.')
       return
     }
     if (v.appointment_id) {
