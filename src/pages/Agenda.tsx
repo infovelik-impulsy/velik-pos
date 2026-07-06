@@ -287,6 +287,13 @@ export default function Agenda() {
                                   💰 Registrar venta
                                 </button>
                                 <button
+                                  onClick={() => navigate('/editar-cita', { state: { citaId: cita.id } })}
+                                  className="p-1.5 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+                                  title="Editar cita"
+                                >
+                                  <Pencil size={13} className="text-gray-500" />
+                                </button>
+                                <button
                                   onClick={() => cancelarCita(cita.id)}
                                   className="p-1.5 bg-red-50 hover:bg-red-100 rounded-xl transition-colors"
                                   title="Cancelar cita"
