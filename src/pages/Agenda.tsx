@@ -69,7 +69,7 @@ export default function Agenda() {
           cliente_telefono: cita.cliente_telefono || '',
           profesional_id: cita.profesional_id,
           profesional_nombre: prof?.nombre || cita.profesional_nombre,
-          fecha_cita: cita.fecha || hoy,
+          fecha_cita: cita.start_time ? cita.start_time.split('T')[0] : hoy,
           servicios: [{ nombre: 'Depósito no reembolsable (cancelación -24h)', precio: 30000 }],
           productos: [],
           total: 30000,
