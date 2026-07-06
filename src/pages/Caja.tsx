@@ -18,6 +18,7 @@ export default function Caja({ rol = 'admin' }: { rol?: string }) {
   const [gDesc, setGDesc] = useState('')
   const [gMonto, setGMonto] = useState('')
   const [gCat, setGCat] = useState('operativo')
+  const [confirmEliminarId, setConfirmEliminarId] = useState<string | null>(null)
 
   useEffect(() => { load() }, [])
 
@@ -58,7 +59,6 @@ export default function Caja({ rol = 'admin' }: { rol?: string }) {
   }
 
   async function eliminarVenta(v: Venta) {
-    if (!confirm(`¿Eliminar venta de ${v.cliente_nombre} por $${v.total.toLocaleString('es-CO')}? Esta acción no se puede deshacer.`)) return
     const SUPA_URL = import.meta.env.VITE_SUPABASE_URL
     const SERVICE_KEY = import.meta.env.VITE_SUPABASE_SERVICE_KEY
     const res = await fetch(`${SUPA_URL}/rest/v1/ventas?id=eq.${v.id}`, {
@@ -73,11 +73,11 @@ export default function Caja({ rol = 'admin' }: { rol?: string }) {
       alert('Error al eliminar: ' + res.status + ' ' + await res.text())
       return
     }
-    // Si la venta tenía cita vinculada, revertir estado a "showed"
     if (v.appointment_id) {
       await supabase.from('citas').update({ status: 'showed' }).eq('id', v.appointment_id)
       updateAppointmentStatus(v.appointment_id, 'showed')
     }
+    setConfirmEliminarId(null)
     load()
   }
 
@@ -142,32 +142,51 @@ export default function Caja({ rol = 'admin' }: { rol?: string }) {
         ) : (
           <div className="space-y-3">
             {ventas.map(v => (
-              <div key={v.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                <div className="flex-1">
-                  <p className="text-sm font-medium">{v.cliente_nombre}</p>
-                  <p className="text-xs text-[#8a7a6a]">{v.profesional_nombre} · {v.metodo_pago}</p>
+              <div key={v.id} className="py-2 border-b border-gray-50 last:border-0">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{v.cliente_nombre}</p>
+                    <p className="text-xs text-[#8a7a6a]">{v.profesional_nombre} · {v.metodo_pago}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-[#C9A84C]">${v.total.toLocaleString('es-CO')}</span>
+                    {puedeGestionar && (
+                      <>
+                        <button
+                          onClick={() => navigate('/editar-venta', { state: { ventaId: v.id, clienteNombre: v.cliente_nombre } })}
+                          className="p-1.5 text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                          title="Editar"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          onClick={() => setConfirmEliminarId(v.id)}
+                          className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                          title="Eliminar"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-[#C9A84C]">${v.total.toLocaleString('es-CO')}</span>
-                  {puedeGestionar && (
-                    <>
-                      <button
-                        onClick={() => navigate('/editar-venta', { state: { ventaId: v.id, clienteNombre: v.cliente_nombre } })}
-                        className="p-1.5 text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                        title="Editar"
-                      >
-                        <Pencil size={14} />
-                      </button>
-                      <button
-                        onClick={() => eliminarVenta(v)}
-                        className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                        title="Eliminar"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </>
-                  )}
-                </div>
+                {confirmEliminarId === v.id && (
+                  <div className="mt-2 flex items-center gap-2 bg-red-50 rounded-xl p-2">
+                    <p className="text-xs text-red-600 flex-1">¿Eliminar esta venta?</p>
+                    <button
+                      onClick={() => eliminarVenta(v)}
+                      className="px-3 py-1 bg-red-500 text-white text-xs rounded-lg font-medium"
+                    >
+                      Sí, eliminar
+                    </button>
+                    <button
+                      onClick={() => setConfirmEliminarId(null)}
+                      className="px-3 py-1 bg-gray-200 text-gray-600 text-xs rounded-lg font-medium"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
