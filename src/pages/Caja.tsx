@@ -49,9 +49,15 @@ export default function Caja({ rol = 'admin' }: { rol?: string }) {
 
   async function eliminarVenta(v: Venta) {
     setErrorEliminar(null)
-    const { error } = await supabaseAdmin.from('ventas').delete().eq('id', v.id)
-    if (error) {
-      setErrorEliminar('Error: ' + error.message)
+    const SUPA_URL = 'https://aqoztzznsxhvczkanorr.supabase.co'
+    const SK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxb3p0enpuc3hodmN6a2Fub3JyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDA1OTg3NSwiZXhwIjoyMDk1NjM1ODc1fQ.2Jxnj_q9ni2p8H4wuOP-u9QIDTYkkjdenaTPDjjQFmc'
+    const res = await fetch(`${SUPA_URL}/rest/v1/ventas?id=eq.${v.id}`, {
+      method: 'DELETE',
+      headers: { 'apikey': SK, 'Authorization': `Bearer ${SK}` },
+    })
+    if (!res.ok) {
+      const err = await res.text()
+      setErrorEliminar('Error ' + res.status + ': ' + err)
       return
     }
     if (v.appointment_id) {
