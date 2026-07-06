@@ -3,7 +3,7 @@ import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, Pencil } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { supabase, supabaseAdmin } from '../lib/supabase'
+import { supabase } from '../lib/supabase'
 import type { Venta, Gasto } from '../types'
 
 export default function Caja({ rol = 'admin' }: { rol?: string }) {
@@ -39,9 +39,18 @@ export default function Caja({ rol = 'admin' }: { rol?: string }) {
   }
 
   async function eliminarGasto(id: string) {
-    const { error } = await supabaseAdmin.from('gastos').delete().eq('id', id)
-    if (error) {
-      alert('Error al eliminar gasto: ' + error.message)
+    const SUPA_URL = import.meta.env.VITE_SUPABASE_URL
+    const SERVICE_KEY = import.meta.env.VITE_SUPABASE_SERVICE_KEY
+    const res = await fetch(`${SUPA_URL}/rest/v1/gastos?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: {
+        apikey: SERVICE_KEY,
+        Authorization: `Bearer ${SERVICE_KEY}`,
+        Prefer: 'return=minimal',
+      },
+    })
+    if (!res.ok) {
+      alert('Error al eliminar gasto: ' + res.status)
       return
     }
     load()
@@ -49,19 +58,18 @@ export default function Caja({ rol = 'admin' }: { rol?: string }) {
 
   async function eliminarVenta(v: Venta) {
     if (!confirm(`¿Eliminar venta de ${v.cliente_nombre} por $${v.total.toLocaleString('es-CO')}? Esta acción no se puede deshacer.`)) return
-    // Verify the row exists first
-    const { data: check, error: checkErr } = await supabaseAdmin.from('ventas').select('id').eq('id', v.id).maybeSingle()
-    if (checkErr) {
-      alert('Error al verificar: ' + checkErr.message)
-      return
-    }
-    if (!check) {
-      alert('Diagnóstico: la fila NO existe para el service key.\nID buscado: ' + v.id + '\nEsto confirma problema de permisos o tabla incorrecta.')
-      return
-    }
-    const { error } = await supabaseAdmin.from('ventas').delete().eq('id', v.id)
-    if (error) {
-      alert('Error al eliminar: ' + error.message + ' | código: ' + error.code)
+    const SUPA_URL = import.meta.env.VITE_SUPABASE_URL
+    const SERVICE_KEY = import.meta.env.VITE_SUPABASE_SERVICE_KEY
+    const res = await fetch(`${SUPA_URL}/rest/v1/ventas?id=eq.${v.id}`, {
+      method: 'DELETE',
+      headers: {
+        apikey: SERVICE_KEY,
+        Authorization: `Bearer ${SERVICE_KEY}`,
+        Prefer: 'return=minimal',
+      },
+    })
+    if (!res.ok) {
+      alert('Error al eliminar: ' + res.status + ' ' + await res.text())
       return
     }
     load()
