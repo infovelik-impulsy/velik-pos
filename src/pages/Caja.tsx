@@ -4,6 +4,7 @@ import { es } from 'date-fns/locale'
 import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, Pencil } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { updateAppointmentStatus } from '../lib/ghl'
 import type { Venta, Gasto } from '../types'
 
 export default function Caja({ rol = 'admin' }: { rol?: string }) {
@@ -71,6 +72,11 @@ export default function Caja({ rol = 'admin' }: { rol?: string }) {
     if (!res.ok) {
       alert('Error al eliminar: ' + res.status + ' ' + await res.text())
       return
+    }
+    // Si la venta tenía cita vinculada, revertir estado a "showed"
+    if (v.appointment_id) {
+      await supabase.from('citas').update({ status: 'showed' }).eq('id', v.appointment_id)
+      updateAppointmentStatus(v.appointment_id, 'showed')
     }
     load()
   }
