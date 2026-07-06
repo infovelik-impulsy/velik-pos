@@ -49,13 +49,19 @@ export default function Caja({ rol = 'admin' }: { rol?: string }) {
 
   async function eliminarVenta(v: Venta) {
     if (!confirm(`¿Eliminar venta de ${v.cliente_nombre} por $${v.total.toLocaleString('es-CO')}? Esta acción no se puede deshacer.`)) return
-    const { error, count } = await supabaseAdmin.from('ventas').delete({ count: 'exact' }).eq('id', v.id)
-    if (error) {
-      alert('Error al eliminar: ' + error.message + ' | código: ' + error.code)
+    // Verify the row exists first
+    const { data: check, error: checkErr } = await supabaseAdmin.from('ventas').select('id').eq('id', v.id).maybeSingle()
+    if (checkErr) {
+      alert('Error al verificar: ' + checkErr.message)
       return
     }
-    if (count === 0) {
-      alert('No se encontró la venta (id: ' + v.id + '). Puede ser un problema de permisos.')
+    if (!check) {
+      alert('Diagnóstico: la fila NO existe para el service key.\nID buscado: ' + v.id + '\nEsto confirma problema de permisos o tabla incorrecta.')
+      return
+    }
+    const { error } = await supabaseAdmin.from('ventas').delete().eq('id', v.id)
+    if (error) {
+      alert('Error al eliminar: ' + error.message + ' | código: ' + error.code)
       return
     }
     load()
