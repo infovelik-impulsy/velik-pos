@@ -19,6 +19,7 @@ export default function Caja({ rol = 'admin' }: { rol?: string }) {
   const [gMonto, setGMonto] = useState('')
   const [gCat, setGCat] = useState('operativo')
   const [confirmEliminarId, setConfirmEliminarId] = useState<string | null>(null)
+  const [errorEliminar, setErrorEliminar] = useState<string | null>(null)
 
   useEffect(() => { load() }, [])
 
@@ -59,26 +60,36 @@ export default function Caja({ rol = 'admin' }: { rol?: string }) {
   }
 
   async function eliminarVenta(v: Venta) {
-    const SUPA_URL = import.meta.env.VITE_SUPABASE_URL
-    const SERVICE_KEY = import.meta.env.VITE_SUPABASE_SERVICE_KEY
-    const res = await fetch(`${SUPA_URL}/rest/v1/ventas?id=eq.${v.id}`, {
-      method: 'DELETE',
-      headers: {
-        apikey: SERVICE_KEY,
-        Authorization: `Bearer ${SERVICE_KEY}`,
-        Prefer: 'return=minimal',
-      },
-    })
-    if (!res.ok) {
-      alert('Error al eliminar: ' + res.status + ' ' + await res.text())
-      return
+    setErrorEliminar(null)
+    try {
+      const SUPA_URL = import.meta.env.VITE_SUPABASE_URL
+      const SERVICE_KEY = import.meta.env.VITE_SUPABASE_SERVICE_KEY
+      if (!SUPA_URL || !SERVICE_KEY) {
+        setErrorEliminar('Error: variables de entorno no disponibles (URL=' + !!SUPA_URL + ' KEY=' + !!SERVICE_KEY + ')')
+        return
+      }
+      const res = await fetch(`${SUPA_URL}/rest/v1/ventas?id=eq.${v.id}`, {
+        method: 'DELETE',
+        headers: {
+          apikey: SERVICE_KEY,
+          Authorization: `Bearer ${SERVICE_KEY}`,
+          Prefer: 'return=minimal',
+        },
+      })
+      if (!res.ok) {
+        const txt = await res.text()
+        setErrorEliminar(`HTTP ${res.status}: ${txt}`)
+        return
+      }
+      if (v.appointment_id) {
+        await supabase.from('citas').update({ status: 'showed' }).eq('id', v.appointment_id)
+        updateAppointmentStatus(v.appointment_id, 'showed')
+      }
+      setConfirmEliminarId(null)
+      load()
+    } catch (e: unknown) {
+      setErrorEliminar('Excepción: ' + (e instanceof Error ? e.message : String(e)))
     }
-    if (v.appointment_id) {
-      await supabase.from('citas').update({ status: 'showed' }).eq('id', v.appointment_id)
-      updateAppointmentStatus(v.appointment_id, 'showed')
-    }
-    setConfirmEliminarId(null)
-    load()
   }
 
   const totalVentas = ventas.reduce((s, v) => s + v.total, 0)
@@ -137,6 +148,11 @@ export default function Caja({ rol = 'admin' }: { rol?: string }) {
         <h3 className="text-xs font-medium uppercase tracking-widest text-[#8a7a6a] mb-3">
           Ventas ({ventas.length})
         </h3>
+        {errorEliminar && (
+          <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 break-all">
+            ⚠️ {errorEliminar}
+          </div>
+        )}
         {ventas.length === 0 ? (
           <p className="text-sm text-gray-400 text-center py-2">Sin ventas registradas hoy</p>
         ) : (
