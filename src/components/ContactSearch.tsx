@@ -20,7 +20,6 @@ export default function ContactSearch({ onSelect, selectedName, ocultarTelefono 
   const [search, setSearch] = useState(selectedName || '')
   const [results, setResults] = useState<Contact[]>([])
   const [isOpen, setIsOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
 
   // Crear nuevo contacto
   const [creating, setCreating] = useState(false)
@@ -35,30 +34,39 @@ export default function ContactSearch({ onSelect, selectedName, ocultarTelefono 
   const [confirmDelId, setConfirmDelId] = useState<number | null>(null)
   const [eliminando, setEliminando] = useState(false)
 
+  // Todos los contactos (cache local para búsqueda sin acentos/mayúsculas)
+  const [allContacts, setAllContacts] = useState<Contact[]>([])
+
+  // Normaliza: minúsculas + sin acentos
+  const normalize = (s: string) =>
+    (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+
+  async function cargarContactos() {
+    const { data } = await supabase
+      .from('contactos')
+      .select('*')
+      .order('nombres', { ascending: true })
+      .limit(5000)
+    if (data) setAllContacts(data as Contact[])
+  }
+
+  useEffect(() => { cargarContactos() }, [])
+
   useEffect(() => {
     if (search.length < 2) {
       setResults([])
       return
     }
-
-    async function searchContacts() {
-      setLoading(true)
-      const { data, error } = await supabase
-        .from('contactos')
-        .select('*')
-        .or(`nombres.ilike.%${search}%,apellidos.ilike.%${search}%,telefono.ilike.%${search}%`)
-        .limit(10)
-
-      if (!error && data) {
-        setResults(data as Contact[])
-        setIsOpen(true)
-      }
-      setLoading(false)
-    }
-
-    const timer = setTimeout(searchContacts, 300)
-    return () => clearTimeout(timer)
-  }, [search])
+    const q = normalize(search)
+    const qDigits = search.replace(/\D/g, '')
+    const filtered = allContacts.filter(c => {
+      const nombre = normalize(`${c.nombres} ${c.apellidos || ''}`)
+      const tel = (c.telefono || '').replace(/\D/g, '')
+      return nombre.includes(q) || (qDigits.length >= 3 && tel.includes(qDigits))
+    }).slice(0, 15)
+    setResults(filtered)
+    setIsOpen(true)
+  }, [search, allContacts])
 
   const handleSelect = (contact: Contact) => {
     setSearch(`${contact.nombres} ${contact.apellidos || ''}`.trim())
@@ -81,6 +89,7 @@ export default function ContactSearch({ onSelect, selectedName, ocultarTelefono 
       return
     }
     setResults(prev => prev.filter(c => c.id !== id))
+    setAllContacts(prev => prev.filter(c => c.id !== id))
     setConfirmDelId(null)
   }
 
@@ -146,6 +155,7 @@ export default function ContactSearch({ onSelect, selectedName, ocultarTelefono 
     }
 
     const nuevo = data as Contact
+    setAllContacts(prev => [...prev, nuevo])
     setGuardando(false)
     setCreating(false)
     handleSelect(nuevo)
@@ -234,7 +244,7 @@ export default function ContactSearch({ onSelect, selectedName, ocultarTelefono 
         </button>
       </div>
 
-      {isOpen && (results.length > 0 || !loading) && search.length >= 2 && (
+      {isOpen && search.length >= 2 && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50">
           <div className="max-h-64 overflow-y-auto">
             {results.map((contact) => (
@@ -302,12 +312,6 @@ export default function ContactSearch({ onSelect, selectedName, ocultarTelefono 
               {results.length === 0 ? `Crear contacto "${search}"` : 'Crear nuevo contacto'}
             </button>
           </div>
-        </div>
-      )}
-
-      {isOpen && loading && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl p-4 text-center text-sm text-gray-500">
-          Buscando...
         </div>
       )}
     </div>
