@@ -19,7 +19,7 @@ export interface DatosFactura {
   fecha: string
 }
 
-export async function generarFacturaAlegra(datos: DatosFactura): Promise<{ numero: string; id: string; emailSent: boolean }> {
+export async function generarFacturaAlegra(datos: DatosFactura): Promise<{ numero: string; id: string; emailSent: boolean; emitida: boolean }> {
   let clienteId: number | string = CONSUMIDOR_FINAL_ID
 
   if (datos.clienteDoc?.trim()) {
@@ -61,12 +61,16 @@ export async function generarFacturaAlegra(datos: DatosFactura): Promise<{ numer
 
   const paymentForm = 'CASH'
 
+  // La DIAN solo permite emitir con la fecha actual, así que la factura
+  // siempre se crea con la fecha de hoy (zona horaria Colombia).
+  const hoy = new Date().toLocaleString('sv', { timeZone: 'America/Bogota' }).slice(0, 10)
+
   const res = await fetch(`${ALEGRA_BASE}/invoices`, {
     method: 'POST',
     headers: { Authorization: authHeader(), 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      date: datos.fecha,
-      dueDate: datos.fecha,
+      date: hoy,
+      dueDate: hoy,
       status: 'open',
       numberTemplate: { id: ALEGRA_TEMPLATE_ID },
       client: { id: clienteId },
@@ -92,6 +96,22 @@ export async function generarFacturaAlegra(datos: DatosFactura): Promise<{ numer
       ? `${data.numberTemplate.prefix}${data.numberTemplate.number}`
       : String(data.id))
 
+  // Emitir (timbrar) ante la DIAN automáticamente
+  let emitida = false
+  if (data.id) {
+    try {
+      const stampRes = await fetch(`${ALEGRA_BASE}/invoices/stamp`, {
+        method: 'POST',
+        headers: { Authorization: authHeader(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: [data.id] }),
+      })
+      const stampJson = await stampRes.json().catch(() => ({}))
+      emitida = stampRes.ok && Array.isArray(stampJson.data) && stampJson.data[0]?.success === true
+    } catch {
+      emitida = false
+    }
+  }
+
   // Enviar por email SIEMPRE. Si viene correo lo usa; si no, Alegra
   // usa el correo del cliente registrado en su contacto.
   let emailSent = false
@@ -109,5 +129,5 @@ export async function generarFacturaAlegra(datos: DatosFactura): Promise<{ numer
     }
   }
 
-  return { id: String(data.id), numero, emailSent }
+  return { id: String(data.id), numero, emailSent, emitida }
 }
