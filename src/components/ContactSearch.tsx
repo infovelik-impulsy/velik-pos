@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Search, X, UserPlus, Loader2 } from 'lucide-react'
+import { Search, X, UserPlus, Loader2, Trash2 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 interface Contact {
@@ -30,6 +30,10 @@ export default function ContactSearch({ onSelect, selectedName, ocultarTelefono 
   const [nuevoEmail, setNuevoEmail] = useState('')
   const [guardando, setGuardando] = useState(false)
   const [errorCrear, setErrorCrear] = useState('')
+
+  // Eliminar contacto
+  const [confirmDelId, setConfirmDelId] = useState<number | null>(null)
+  const [eliminando, setEliminando] = useState(false)
 
   useEffect(() => {
     if (search.length < 2) {
@@ -66,6 +70,18 @@ export default function ContactSearch({ onSelect, selectedName, ocultarTelefono 
     setSearch('')
     setResults([])
     setCreating(false)
+  }
+
+  async function eliminarContacto(id: number) {
+    setEliminando(true)
+    const { error } = await supabase.from('contactos').delete().eq('id', id)
+    setEliminando(false)
+    if (error) {
+      setErrorCrear('Error al eliminar: ' + error.message)
+      return
+    }
+    setResults(prev => prev.filter(c => c.id !== id))
+    setConfirmDelId(null)
   }
 
   function abrirCrear() {
@@ -222,30 +238,61 @@ export default function ContactSearch({ onSelect, selectedName, ocultarTelefono 
         <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50">
           <div className="max-h-64 overflow-y-auto">
             {results.map((contact) => (
-              <button
+              <div
                 key={contact.id}
-                onClick={() => handleSelect(contact)}
-                className="w-full px-4 py-3 text-left hover:bg-[#f9f6ee] border-b border-gray-100 last:border-0 transition-colors flex justify-between items-start"
+                className="px-4 py-3 hover:bg-[#f9f6ee] border-b border-gray-100 last:border-0 transition-colors"
               >
-                <div className="flex-1">
-                  <div className="font-semibold text-sm text-[#1a1a1a]">
-                    {contact.nombres} {contact.apellidos || ''}
+                <div className="flex justify-between items-start gap-2">
+                  <button onClick={() => handleSelect(contact)} className="flex-1 text-left">
+                    <div className="font-semibold text-sm text-[#1a1a1a]">
+                      {contact.nombres} {contact.apellidos || ''}
+                    </div>
+                    {!ocultarTelefono && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        📱 {contact.telefono}
+                      </div>
+                    )}
+                    {contact.email && (
+                      <div className="text-xs text-gray-400 mt-0.5">
+                        {contact.email}
+                      </div>
+                    )}
+                  </button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => handleSelect(contact)}
+                      className="text-xs bg-[#C9A84C] text-white px-2 py-1 rounded"
+                    >
+                      Seleccionar
+                    </button>
+                    <button
+                      onClick={() => setConfirmDelId(confirmDelId === contact.id ? null : contact.id)}
+                      title="Eliminar contacto"
+                      className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <Trash2 size={14} />
+                    </button>
                   </div>
-                  {!ocultarTelefono && (
-                    <div className="text-xs text-gray-500 mt-1">
-                      📱 {contact.telefono}
-                    </div>
-                  )}
-                  {contact.email && (
-                    <div className="text-xs text-gray-400 mt-0.5">
-                      {contact.email}
-                    </div>
-                  )}
                 </div>
-                <div className="text-xs bg-[#C9A84C] text-white px-2 py-1 rounded ml-2">
-                  Seleccionar
-                </div>
-              </button>
+                {confirmDelId === contact.id && (
+                  <div className="mt-2 flex items-center gap-2 bg-red-50 rounded-lg p-2">
+                    <p className="text-xs text-red-600 flex-1">¿Eliminar este contacto?</p>
+                    <button
+                      onClick={() => eliminarContacto(contact.id)}
+                      disabled={eliminando}
+                      className="px-2.5 py-1 bg-red-500 text-white text-xs rounded-lg font-medium disabled:opacity-60"
+                    >
+                      {eliminando ? '...' : 'Sí, eliminar'}
+                    </button>
+                    <button
+                      onClick={() => setConfirmDelId(null)}
+                      className="px-2.5 py-1 bg-gray-200 text-gray-600 text-xs rounded-lg font-medium"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                )}
+              </div>
             ))}
             <button
               onClick={abrirCrear}
