@@ -61,6 +61,7 @@ export default function NuevaVenta({ rol = 'admin' }: { rol?: string }) {
   const [facturaEmail, setFacturaEmail] = useState('')
   const [facturaGenerando, setFacturaGenerando] = useState(false)
   const [facturaNumero, setFacturaNumero] = useState('')
+  const [facturaEmailSent, setFacturaEmailSent] = useState(false)
   const [facturaError, setFacturaError] = useState('')
 
   const totalServicios = servicios.reduce((s, sv) => s + (sv.precio || 0), 0)
@@ -225,6 +226,7 @@ export default function NuevaVenta({ rol = 'admin' }: { rol?: string }) {
         fecha: fechaCita || new Date().toISOString().slice(0, 10),
       })
       setFacturaNumero(result.numero)
+      setFacturaEmailSent(result.emailSent)
     } catch (err: unknown) {
       setFacturaError(err instanceof Error ? err.message : 'Error al generar factura')
     } finally {
@@ -246,7 +248,9 @@ export default function NuevaVenta({ rol = 'admin' }: { rol?: string }) {
             <p className="font-semibold text-green-800">Factura electrónica generada</p>
             <p className="text-green-700 text-lg font-mono mt-1">{facturaNumero}</p>
             <p className="text-green-600 text-xs mt-1">
-              {facturaEmail ? `Enviada a ${facturaEmail}` : 'Enviada a la DIAN vía Alegra'}
+              {facturaEmailSent
+                ? `Correo enviado${facturaEmail ? ` a ${facturaEmail}` : ' al cliente'}`
+                : '⚠️ Factura creada, pero no se pudo enviar el correo'}
             </p>
           </div>
         ) : mostrarFactura ? (

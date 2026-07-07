@@ -19,7 +19,7 @@ export interface DatosFactura {
   fecha: string
 }
 
-export async function generarFacturaAlegra(datos: DatosFactura): Promise<{ numero: string; id: string }> {
+export async function generarFacturaAlegra(datos: DatosFactura): Promise<{ numero: string; id: string; emailSent: boolean }> {
   let clienteId: number | string = CONSUMIDOR_FINAL_ID
 
   if (datos.clienteDoc?.trim()) {
@@ -92,15 +92,22 @@ export async function generarFacturaAlegra(datos: DatosFactura): Promise<{ numer
       ? `${data.numberTemplate.prefix}${data.numberTemplate.number}`
       : String(data.id))
 
-  // Enviar por email si hay correo
-  const email = datos.clienteEmail?.trim()
-  if (email && data.id) {
-    await fetch(`${ALEGRA_BASE}/invoices/${data.id}/email`, {
-      method: 'POST',
-      headers: { Authorization: authHeader(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ emails: [email] }),
-    }).catch(() => {})
+  // Enviar por email SIEMPRE. Si viene correo lo usa; si no, Alegra
+  // usa el correo del cliente registrado en su contacto.
+  let emailSent = false
+  if (data.id) {
+    const email = datos.clienteEmail?.trim()
+    try {
+      const mailRes = await fetch(`${ALEGRA_BASE}/invoices/${data.id}/email`, {
+        method: 'POST',
+        headers: { Authorization: authHeader(), 'Content-Type': 'application/json' },
+        body: JSON.stringify(email ? { emails: [email] } : {}),
+      })
+      emailSent = mailRes.ok
+    } catch {
+      emailSent = false
+    }
   }
 
-  return { id: String(data.id), numero }
+  return { id: String(data.id), numero, emailSent }
 }
