@@ -52,3 +52,70 @@ export async function getContactAppointments(contactId: string) {
   const data = await r.json()
   return data.events || []
 }
+
+// ── Creación forzada (salta validación de slot / hora) ───────────────────────
+// Permite agendar en cualquier hora libre (incluida hoy, aunque ya pasó la hora
+// o no cabría antes del cierre), a diferencia del webhook booking/crear que sí
+// valida disponibilidad. Escribe directo en el calendario de GHL.
+
+async function ghlPost(path: string, body: unknown): Promise<{ ok: boolean; status: number; data: Record<string, unknown> }> {
+  const params = new URLSearchParams({ path })
+  const r = await fetch(`${PROXY}?${params}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  const data = await r.json().catch(() => ({}))
+  return { ok: r.ok, status: r.status, data }
+}
+
+async function upsertContactoGHL(nombre: string, telefono: string): Promise<string | null> {
+  const tel = telefono.startsWith('+') ? telefono : '+57' + telefono.replace(/\D/g, '')
+  const [firstName, ...rest] = nombre.trim().split(/\s+/)
+  const res = await ghlPost('contacts/upsert', {
+    locationId: LOC,
+    firstName,
+    lastName: rest.join(' '),
+    phone: tel,
+    source: 'POS - Velik Beauty',
+  })
+  const contact = res.data?.contact as { id?: string } | undefined
+  return contact?.id || null
+}
+
+export interface CrearCitaForzadaInput {
+  calendarId: string
+  userId: string
+  startISO: string   // ej: 2026-07-08T17:30:00-05:00 (conservar offset -05:00)
+  endISO: string
+  titulo: string
+  nombre: string
+  telefono: string
+  contactId?: string // si ya se conoce el contactId de GHL, se evita el upsert
+  status?: 'confirmed' | 'showed'
+}
+
+export async function crearCitaForzada(input: CrearCitaForzadaInput): Promise<{ id: string; contactId: string }> {
+  let contactId = input.contactId
+  if (!contactId) {
+    contactId = (await upsertContactoGHL(input.nombre, input.telefono)) || undefined
+  }
+  if (!contactId) throw new Error('No se pudo obtener/crear el contacto en GHL')
+
+  const res = await ghlPost('calendars/events/appointments', {
+    calendarId: input.calendarId,
+    locationId: LOC,
+    contactId,
+    startTime: input.startISO,
+    endTime: input.endISO,
+    title: input.titulo,
+    appointmentStatus: input.status || 'confirmed',
+    assignedUserId: input.userId,
+    ignoreDateRange: true,
+    ignoreFreeSlotValidation: true,
+    toNotify: false,
+  })
+  const id = res.data?.id as string | undefined
+  if (!res.ok || !id) throw new Error((res.data?.message as string) || `GHL appointment ${res.status}`)
+  return { id, contactId }
+}

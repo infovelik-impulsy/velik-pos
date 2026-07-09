@@ -3,8 +3,22 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { X, CheckCircle, ChevronLeft, FileText } from 'lucide-react'
 import { generarFacturaAlegra } from '../lib/alegra'
 import { supabase } from '../lib/supabase'
-import { updateAppointmentStatus } from '../lib/ghl'
+import { updateAppointmentStatus, crearCitaForzada } from '../lib/ghl'
+import { SERVICIOS } from '../data/bookingData'
 import { PROFESIONALES, METODOS_PAGO, type ServicioVendido } from '../types'
+
+// Índice nombre-de-servicio → calendario de GHL (para poder crear la cita en GHL
+// desde una venta directa; los servicios de la venta no traen calendarId propio).
+const CAL_INDEX: Record<string, { calendarId: string; duracion: number }> = (() => {
+  const idx: Record<string, { calendarId: string; duracion: number }> = {}
+  Object.values(SERVICIOS).flat().forEach(s => {
+    idx[s.nombre.toLowerCase().trim()] = { calendarId: s.calendarId, duracion: s.duracion }
+  })
+  return idx
+})()
+function buscarCalendario(nombre: string) {
+  return CAL_INDEX[nombre.toLowerCase().trim()] || null
+}
 import ContactSearch from '../components/ContactSearch'
 import ServiceSelector from '../components/ServiceSelector'
 import ProductoSelector from '../components/ProductoSelector'
@@ -130,8 +144,41 @@ export default function NuevaVenta({ rol = 'admin' }: { rol?: string }) {
     const efectivo = metodoPago === 'efectivo' ? total : metodoPago === 'mixto' ? pagadoEfectivo : 0
     const digital = metodoPago === 'transferencia' || metodoPago === 'tarjeta' ? total : metodoPago === 'mixto' ? pagadoDigital : 0
 
-    // Si no viene de una cita agendada, generamos un ID para vincular venta ↔ cita nueva
-    const appointmentId = state?.appointmentId || crypto.randomUUID()
+    // Si no viene de una cita agendada, creamos la cita en GHL (forzada) para que
+    // quede también en el calendario oficial, y usamos su id para vincular venta ↔ cita.
+    let ghlId: string | null = null
+    let ghlContactId: string | undefined = state?.contactId
+    if (!state?.appointmentId && servicios.length > 0 && fechaCita && horaCita) {
+      const cal = buscarCalendario(servicios[0].nombre)
+      if (cal) {
+        try {
+          const startISO = `${fechaCita}T${horaCita}:00-05:00`
+          const endD = new Date(`${fechaCita}T${horaCita}:00`)
+          endD.setMinutes(endD.getMinutes() + (cal.duracion || 30))
+          const pad = (x: number) => String(x).padStart(2, '0')
+          const endISO = `${fechaCita}T${pad(endD.getHours())}:${pad(endD.getMinutes())}:00-05:00`
+          const res = await crearCitaForzada({
+            calendarId: cal.calendarId,
+            userId: profesionalId,
+            startISO,
+            endISO,
+            titulo: `${servicios.map(s => s.nombre).join(', ')} - ${clienteNombre}`,
+            nombre: clienteNombre,
+            telefono: clienteTelefono,
+            contactId: state?.contactId,
+            status: 'showed',
+          })
+          ghlId = res.id
+          ghlContactId = res.contactId
+        } catch (e) {
+          // No bloquea la venta: si GHL falla, la cita queda solo en el POS
+          console.error('No se pudo crear la cita en GHL (se guarda solo en el POS):', e)
+        }
+      }
+    }
+
+    // Si no viene de una cita agendada, usamos el id de GHL (o uno local de respaldo)
+    const appointmentId = state?.appointmentId || ghlId || crypto.randomUUID()
 
     // Merge cafeteria items into productos for storage
     const productosConCafeteria = [
@@ -196,11 +243,14 @@ export default function NuevaVenta({ rol = 'admin' }: { rol?: string }) {
         titulo: servicios.map(s => s.nombre).join(', '),
         cliente_nombre: clienteNombre,
         cliente_telefono: clienteTelefono,
+        contact_id: ghlContactId,
         profesional_id: profesionalId,
         profesional_nombre: prof?.nombre || '',
+        calendar_id: buscarCalendario(servicios[0]?.nombre || '')?.calendarId,
         status: 'showed',
         precio: total,
         origen: 'venta_directa',
+        ghl_event_id: ghlId,
       })
     }
 

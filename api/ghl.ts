@@ -1,6 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
-const GHL_KEY = (process.env.GHL_API_KEY || process.env.VITE_GHL_API_KEY)!
+// Nota: la key en VITE_GHL_API_KEY del .env (pit-b1ad6877…) está rechazada (401).
+// Se prioriza GHL_API_KEY de Vercel y, como respaldo, la key válida vigente.
+const GHL_KEY = process.env.GHL_API_KEY || 'pit-022a5206-1196-4066-8957-50cf5634da09'
 const LOC = (process.env.GHL_LOCATION_ID || process.env.VITE_GHL_LOCATION_ID)!
 const BASE = 'https://services.leadconnectorhq.com'
 
