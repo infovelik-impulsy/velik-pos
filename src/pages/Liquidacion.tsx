@@ -167,7 +167,7 @@ export default function Liquidacion() {
                       <th className="text-left pb-2">Profesional</th>
                       <th className="text-right pb-2">Servicios</th>
                       <th className="text-right pb-2">Total ventas</th>
-                      <th className="text-right pb-2 text-[#C9A84C]">A pagar (50%)</th>
+                      <th className="text-right pb-2 text-[#C9A84C]">A pagar</th>
                     </tr>
                   </thead>
                   <tbody>
