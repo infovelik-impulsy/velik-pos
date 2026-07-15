@@ -137,7 +137,7 @@ export default function NuevaVenta({ rol = 'admin' }: { rol?: string }) {
     }
 
     const prof = PROFESIONALES.find(p => p.id === profesionalId)
-    const comisionServicios = totalServicios * (profesionalId === 'saGMogKgCH3kmIhq4VlJ' ? 0.45 : 0.5)
+    const comisionServicios = totalServicios * 0.4
     const comisionProductos = totalProductos * 0.05
     const comision = comisionServicios + comisionProductos
 
@@ -684,8 +684,8 @@ export default function NuevaVenta({ rol = 'admin' }: { rol?: string }) {
 
       {/* Comisiones preview */}
       {total > 0 && (() => {
-        const pctPro = profesionalId === 'saGMogKgCH3kmIhq4VlJ' ? 45 : 50
-        const pctVelik = profesionalId === 'saGMogKgCH3kmIhq4VlJ' ? 55 : 50
+        const pctPro = 40
+        const pctVelik = 60
         const comProServ = totalServicios * (pctPro / 100)
         const comVelikServ = totalServicios * (pctVelik / 100)
         const comProProd = totalProductos * 0.05

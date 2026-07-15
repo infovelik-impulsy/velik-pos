@@ -87,8 +87,7 @@ export default function EditarVenta() {
     setGuardando(true)
 
     const prof = PROFESIONALES.find(p => p.id === profesionalId)
-    const esGeraldine = profesionalId === 'saGMogKgCH3kmIhq4VlJ'
-    const comision = totalServicios * (esGeraldine ? 0.45 : 0.5) + totalProductos * 0.05
+    const comision = totalServicios * 0.4 + totalProductos * 0.05
     const efectivo = metodoPago === 'efectivo' ? total : metodoPago === 'mixto' ? pagadoEfectivo : 0
     const digital = metodoPago === 'transferencia' || metodoPago === 'tarjeta' ? total : metodoPago === 'mixto' ? pagadoDigital : 0
 
@@ -178,9 +177,8 @@ export default function EditarVenta() {
     </div>
   )
 
-  const esGeraldine = profesionalId === 'saGMogKgCH3kmIhq4VlJ'
-  const pctPro = esGeraldine ? 45 : 50
-  const pctVelik = esGeraldine ? 55 : 50
+  const pctPro = 40
+  const pctVelik = 60
   const comProServ = totalServicios * (pctPro / 100)
   const comVelikServ = totalServicios * (pctVelik / 100)
   const comProProd = totalProductos * 0.05
