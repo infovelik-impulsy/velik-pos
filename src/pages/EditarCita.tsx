@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { CheckCircle, ChevronLeft, Loader2, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { updateAppointmentInGHL } from '../lib/ghl'
 import { PROFESIONALES } from '../types'
 import ServiceSelector from '../components/ServiceSelector'
 
@@ -73,6 +74,20 @@ export default function EditarCita() {
     if (servicioPrecio > 0) updates.precio = `$${servicioPrecio.toLocaleString('es-CO')}`
 
     const { error } = await supabase.from('citas').update(updates).eq('id', state.citaId)
+
+    if (!error) {
+      try {
+        await updateAppointmentInGHL(state.citaId, {
+          assignedUserId: profesionalId,
+          startTime: startISO,
+          endTime: endISO,
+          title: servicioNombre || undefined,
+        })
+      } catch (e) {
+        // No bloquea el guardado en el POS: si GHL falla, queda solo actualizado ahí
+        console.error('No se pudo sincronizar el cambio con GHL:', e)
+      }
+    }
 
     setGuardando(false)
     if (error) { alert('Error: ' + error.message); return }

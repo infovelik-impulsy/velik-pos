@@ -58,15 +58,33 @@ export async function getContactAppointments(contactId: string) {
 // o no cabría antes del cierre), a diferencia del webhook booking/crear que sí
 // valida disponibilidad. Escribe directo en el calendario de GHL.
 
-async function ghlPost(path: string, body: unknown): Promise<{ ok: boolean; status: number; data: Record<string, unknown> }> {
+async function ghlRequest(method: string, path: string, body?: unknown): Promise<{ ok: boolean; status: number; data: Record<string, unknown> }> {
   const params = new URLSearchParams({ path })
   const r = await fetch(`${PROXY}?${params}`, {
-    method: 'POST',
+    method,
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+    body: body !== undefined ? JSON.stringify(body) : undefined,
   })
   const data = await r.json().catch(() => ({}))
   return { ok: r.ok, status: r.status, data }
+}
+
+async function ghlPost(path: string, body: unknown) {
+  return ghlRequest('POST', path, body)
+}
+
+// Sincroniza a GHL los cambios hechos en "Editar Cita" del POS (profesional,
+// fecha/hora, título). Sin esto, editar una cita solo actualiza Supabase y el
+// calendario de GHL queda desactualizado (causa real de un caso real: la
+// profesional aparecía distinta en GHL vs POS tras reasignar desde el POS).
+export async function updateAppointmentInGHL(appointmentId: string, updates: {
+  assignedUserId?: string
+  startTime?: string // ISO con offset -05:00
+  endTime?: string
+  title?: string
+}): Promise<{ ok: boolean }> {
+  const res = await ghlRequest('PUT', `calendars/events/appointments/${appointmentId}`, updates)
+  return { ok: res.ok }
 }
 
 async function upsertContactoGHL(nombre: string, telefono: string): Promise<string | null> {
