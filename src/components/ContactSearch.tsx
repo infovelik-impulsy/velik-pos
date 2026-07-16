@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Search, X, UserPlus, Loader2, Trash2 } from 'lucide-react'
+import { Search, X, UserPlus, Loader2, Trash2, Pencil, Check } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 interface Contact {
@@ -33,6 +33,15 @@ export default function ContactSearch({ onSelect, selectedName, ocultarTelefono 
   // Eliminar contacto
   const [confirmDelId, setConfirmDelId] = useState<number | null>(null)
   const [eliminando, setEliminando] = useState(false)
+
+  // Editar contacto
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [editNombres, setEditNombres] = useState('')
+  const [editApellidos, setEditApellidos] = useState('')
+  const [editTelefono, setEditTelefono] = useState('')
+  const [editEmail, setEditEmail] = useState('')
+  const [guardandoEdit, setGuardandoEdit] = useState(false)
+  const [errorEditar, setErrorEditar] = useState('')
 
   // Todos los contactos (cache local para búsqueda sin acentos/mayúsculas)
   const [allContacts, setAllContacts] = useState<Contact[]>([])
@@ -91,6 +100,71 @@ export default function ContactSearch({ onSelect, selectedName, ocultarTelefono 
     setResults(prev => prev.filter(c => c.id !== id))
     setAllContacts(prev => prev.filter(c => c.id !== id))
     setConfirmDelId(null)
+  }
+
+  function abrirEditar(contact: Contact) {
+    setEditingId(contact.id)
+    setEditNombres(contact.nombres)
+    setEditApellidos(contact.apellidos || '')
+    setEditTelefono(contact.telefono)
+    setEditEmail(contact.email || '')
+    setErrorEditar('')
+    setConfirmDelId(null)
+  }
+
+  async function guardarEdicion(id: number) {
+    const tel = editTelefono.replace(/\D/g, '')
+    if (!editNombres.trim() || tel.length < 10) {
+      setErrorEditar('Nombre y teléfono (10 dígitos) son obligatorios')
+      return
+    }
+    setGuardandoEdit(true)
+    setErrorEditar('')
+
+    const telefono = editTelefono.startsWith('+') ? editTelefono : '+57' + tel
+
+    const { data, error } = await supabase
+      .from('contactos')
+      .update({
+        nombres: editNombres.trim(),
+        apellidos: editApellidos.trim() || null,
+        telefono,
+        email: editEmail.trim() || null,
+      })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) {
+      setErrorEditar('Error al guardar: ' + error.message)
+      setGuardandoEdit(false)
+      return
+    }
+
+    try {
+      await fetch('https://api.leadconnectorhq.com/contacts/upsert', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer pit-022a5206-1196-4066-8957-50cf5634da09',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName: editNombres.trim(),
+          lastName: editApellidos.trim(),
+          phone: telefono,
+          ...(editEmail.trim() ? { email: editEmail.trim() } : {}),
+          source: 'POS - Velik Beauty',
+        }),
+      })
+    } catch (err) {
+      console.error('Error actualizando contacto en GHL:', err)
+    }
+
+    const actualizado = data as Contact
+    setAllContacts(prev => prev.map(c => c.id === id ? actualizado : c))
+    setResults(prev => prev.map(c => c.id === id ? actualizado : c))
+    setGuardandoEdit(false)
+    setEditingId(null)
   }
 
   function abrirCrear() {
@@ -252,55 +326,114 @@ export default function ContactSearch({ onSelect, selectedName, ocultarTelefono 
                 key={contact.id}
                 className="px-4 py-3 hover:bg-[#f9f6ee] border-b border-gray-100 last:border-0 transition-colors"
               >
-                <div className="flex justify-between items-start gap-2">
-                  <button onClick={() => handleSelect(contact)} className="flex-1 text-left">
-                    <div className="font-semibold text-sm text-[#1a1a1a]">
-                      {contact.nombres} {contact.apellidos || ''}
+                {editingId === contact.id ? (
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        value={editNombres}
+                        onChange={e => setEditNombres(e.target.value)}
+                        placeholder="Nombres *"
+                        className="px-2.5 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#C9A84C]"
+                      />
+                      <input
+                        value={editApellidos}
+                        onChange={e => setEditApellidos(e.target.value)}
+                        placeholder="Apellidos"
+                        className="px-2.5 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#C9A84C]"
+                      />
                     </div>
-                    {!ocultarTelefono && (
-                      <div className="text-xs text-gray-500 mt-1">
-                        📱 {contact.telefono}
+                    <input
+                      value={editTelefono}
+                      onChange={e => setEditTelefono(e.target.value)}
+                      placeholder="Teléfono *"
+                      inputMode="tel"
+                      className="w-full px-2.5 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#C9A84C]"
+                    />
+                    <input
+                      value={editEmail}
+                      onChange={e => setEditEmail(e.target.value)}
+                      placeholder="Email (opcional)"
+                      inputMode="email"
+                      className="w-full px-2.5 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#C9A84C]"
+                    />
+                    {errorEditar && <p className="text-xs text-red-500">{errorEditar}</p>}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => guardarEdicion(contact.id)}
+                        disabled={guardandoEdit}
+                        className="flex-1 flex items-center justify-center gap-1 py-2 bg-[#C9A84C] text-white rounded-lg text-xs font-medium disabled:opacity-60"
+                      >
+                        {guardandoEdit ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
+                        Guardar
+                      </button>
+                      <button
+                        onClick={() => setEditingId(null)}
+                        className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex justify-between items-start gap-2">
+                      <button onClick={() => handleSelect(contact)} className="flex-1 text-left">
+                        <div className="font-semibold text-sm text-[#1a1a1a]">
+                          {contact.nombres} {contact.apellidos || ''}
+                        </div>
+                        {!ocultarTelefono && (
+                          <div className="text-xs text-gray-500 mt-1">
+                            📱 {contact.telefono}
+                          </div>
+                        )}
+                        {contact.email && (
+                          <div className="text-xs text-gray-400 mt-0.5">
+                            {contact.email}
+                          </div>
+                        )}
+                      </button>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={() => handleSelect(contact)}
+                          className="text-xs bg-[#C9A84C] text-white px-2 py-1 rounded"
+                        >
+                          Seleccionar
+                        </button>
+                        <button
+                          onClick={() => abrirEditar(contact)}
+                          title="Editar contacto"
+                          className="p-1.5 text-gray-300 hover:text-[#C9A84C] hover:bg-[#faf6ee] rounded-lg transition-colors"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          onClick={() => setConfirmDelId(confirmDelId === contact.id ? null : contact.id)}
+                          title="Eliminar contacto"
+                          className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                    {confirmDelId === contact.id && (
+                      <div className="mt-2 flex items-center gap-2 bg-red-50 rounded-lg p-2">
+                        <p className="text-xs text-red-600 flex-1">¿Eliminar este contacto?</p>
+                        <button
+                          onClick={() => eliminarContacto(contact.id)}
+                          disabled={eliminando}
+                          className="px-2.5 py-1 bg-red-500 text-white text-xs rounded-lg font-medium disabled:opacity-60"
+                        >
+                          {eliminando ? '...' : 'Sí, eliminar'}
+                        </button>
+                        <button
+                          onClick={() => setConfirmDelId(null)}
+                          className="px-2.5 py-1 bg-gray-200 text-gray-600 text-xs rounded-lg font-medium"
+                        >
+                          Cancelar
+                        </button>
                       </div>
                     )}
-                    {contact.email && (
-                      <div className="text-xs text-gray-400 mt-0.5">
-                        {contact.email}
-                      </div>
-                    )}
-                  </button>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      onClick={() => handleSelect(contact)}
-                      className="text-xs bg-[#C9A84C] text-white px-2 py-1 rounded"
-                    >
-                      Seleccionar
-                    </button>
-                    <button
-                      onClick={() => setConfirmDelId(confirmDelId === contact.id ? null : contact.id)}
-                      title="Eliminar contacto"
-                      className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </div>
-                {confirmDelId === contact.id && (
-                  <div className="mt-2 flex items-center gap-2 bg-red-50 rounded-lg p-2">
-                    <p className="text-xs text-red-600 flex-1">¿Eliminar este contacto?</p>
-                    <button
-                      onClick={() => eliminarContacto(contact.id)}
-                      disabled={eliminando}
-                      className="px-2.5 py-1 bg-red-500 text-white text-xs rounded-lg font-medium disabled:opacity-60"
-                    >
-                      {eliminando ? '...' : 'Sí, eliminar'}
-                    </button>
-                    <button
-                      onClick={() => setConfirmDelId(null)}
-                      className="px-2.5 py-1 bg-gray-200 text-gray-600 text-xs rounded-lg font-medium"
-                    >
-                      Cancelar
-                    </button>
-                  </div>
+                  </>
                 )}
               </div>
             ))}
