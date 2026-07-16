@@ -18,6 +18,7 @@ import ClienteDetalle from './pages/ClienteDetalle'
 import ProAgenda from './pages/ProAgenda'
 import EditarVenta from './pages/EditarVenta'
 import EditarCita from './pages/EditarCita'
+import BloquearHorario from './pages/BloquearHorario'
 
 export default function App() {
   const [user, setUser] = useState<{ id: string; nombre: string; rol: string } | null>(null)
@@ -57,6 +58,7 @@ export default function App() {
           <Route path="/resumen" element={<Resumen />} />
           <Route path="/editar-venta" element={<EditarVenta />} />
           <Route path="/editar-cita" element={<EditarCita />} />
+          <Route path="/bloquear-horario" element={<BloquearHorario />} />
         </Routes>
       </Layout>
     </BrowserRouter>

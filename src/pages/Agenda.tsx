@@ -5,7 +5,7 @@ import { es } from 'date-fns/locale'
 import { ChevronLeft, ChevronRight, Clock, User, CheckCircle, PlusCircle, XCircle, Pencil, Trash2, Ban } from 'lucide-react'
 import { PROFESIONALES } from '../types'
 import { supabase } from '../lib/supabase'
-import { updateAppointmentStatus, bloquearHorarioGHL, eliminarBloqueoGHL } from '../lib/ghl'
+import { updateAppointmentStatus, eliminarBloqueoGHL } from '../lib/ghl'
 
 const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
   confirmed: { label: 'Confirmada', cls: 'bg-blue-100 text-blue-700' },
@@ -36,52 +36,9 @@ export default function Agenda() {
   const [citas, setCitas] = useState<CitaEnriquecida[]>([])
   const [ventasIds, setVentasIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
-  const [mostrarBloqueo, setMostrarBloqueo] = useState(false)
-  const [bloqProfesionalId, setBloqProfesionalId] = useState(PROFESIONALES[0]?.id || '')
-  const [bloqHoraInicio, setBloqHoraInicio] = useState('12:00')
-  const [bloqHoraFin, setBloqHoraFin] = useState('13:00')
-  const [bloqMotivo, setBloqMotivo] = useState('Almuerzo')
-  const [guardandoBloqueo, setGuardandoBloqueo] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => { load() }, [fecha])
-
-  async function crearBloqueo() {
-    if (!bloqProfesionalId || !bloqHoraInicio || !bloqHoraFin) return
-    setGuardandoBloqueo(true)
-    try {
-      const fechaStr = format(fecha, 'yyyy-MM-dd')
-      const startISO = `${fechaStr}T${bloqHoraInicio}:00-05:00`
-      const endISO = `${fechaStr}T${bloqHoraFin}:00-05:00`
-      const prof = PROFESIONALES.find(p => p.id === bloqProfesionalId)
-      const { id: ghlEventId } = await bloquearHorarioGHL({
-        userId: bloqProfesionalId,
-        startISO,
-        endISO,
-        motivo: bloqMotivo || 'Bloqueado',
-      })
-      await supabase.from('citas').insert({
-        id: ghlEventId,
-        fecha: fechaStr,
-        start_time: startISO,
-        end_time: endISO,
-        titulo: bloqMotivo || 'Bloqueado',
-        cliente_nombre: bloqMotivo || 'Bloqueado',
-        contact_id: '',
-        profesional_id: bloqProfesionalId,
-        profesional_nombre: prof?.nombre || '',
-        status: 'blocked',
-        origen: 'bloqueo_manual',
-        ghl_event_id: ghlEventId,
-      })
-      setMostrarBloqueo(false)
-      setBloqMotivo('Almuerzo')
-      load()
-    } catch (e) {
-      alert('No se pudo bloquear el horario: ' + (e instanceof Error ? e.message : String(e)))
-    }
-    setGuardandoBloqueo(false)
-  }
 
   async function eliminarBloqueo(cita: CitaEnriquecida) {
     if (!window.confirm('¿Quitar este bloqueo de horario?')) return
@@ -237,7 +194,7 @@ export default function Agenda() {
             )
           })}
           <button
-            onClick={() => setMostrarBloqueo(true)}
+            onClick={() => navigate('/bloquear-horario')}
             className="flex-shrink-0 ml-auto flex items-center gap-1.5 px-4 py-2 bg-gray-100 text-gray-600 rounded-xl text-xs font-medium hover:bg-gray-200 transition-colors border border-gray-200"
           >
             <Ban size={13} /> Bloquear horario
@@ -250,62 +207,6 @@ export default function Agenda() {
           </button>
         </div>
       </div>
-
-      {/* Modal bloquear horario */}
-      {mostrarBloqueo && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-5 w-full max-w-sm">
-            <h3 className="font-semibold text-sm mb-4">Bloquear horario — {format(fecha, "d 'de' MMMM", { locale: es })}</h3>
-            <div className="space-y-3">
-              <div>
-                <p className="text-xs text-[#8a7a6a] mb-1">Profesional</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {PROFESIONALES.map(p => (
-                    <button
-                      key={p.id}
-                      onClick={() => setBloqProfesionalId(p.id)}
-                      className={`py-2 px-2 rounded-xl text-xs font-medium text-center transition-all ${
-                        bloqProfesionalId === p.id ? 'text-white' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-                      }`}
-                      style={bloqProfesionalId === p.id ? { backgroundColor: p.color } : {}}
-                    >
-                      {p.nombre.split(' ')[0]}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <p className="text-xs text-[#8a7a6a] mb-1">Desde</p>
-                  <input type="time" value={bloqHoraInicio} onChange={e => setBloqHoraInicio(e.target.value)}
-                    className="w-full p-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#C9A84C]" />
-                </div>
-                <div>
-                  <p className="text-xs text-[#8a7a6a] mb-1">Hasta</p>
-                  <input type="time" value={bloqHoraFin} onChange={e => setBloqHoraFin(e.target.value)}
-                    className="w-full p-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#C9A84C]" />
-                </div>
-              </div>
-              <div>
-                <p className="text-xs text-[#8a7a6a] mb-1">Motivo</p>
-                <input type="text" value={bloqMotivo} onChange={e => setBloqMotivo(e.target.value)}
-                  placeholder="Ej: Almuerzo, permiso personal..."
-                  className="w-full p-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#C9A84C]" />
-              </div>
-            </div>
-            <div className="flex gap-2 mt-5">
-              <button onClick={() => setMostrarBloqueo(false)}
-                className="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">
-                Cancelar
-              </button>
-              <button onClick={crearBloqueo} disabled={guardandoBloqueo}
-                className="flex-1 py-2.5 bg-[#1a1a1a] text-white rounded-xl text-sm font-medium hover:bg-black transition-colors disabled:opacity-40">
-                {guardandoBloqueo ? 'Bloqueando...' : 'Bloquear'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Contenido */}
       <div className="max-w-7xl mx-auto px-4 pt-5">

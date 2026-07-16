@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { CalendarDays, PlusCircle, Wallet, TrendingUp, BarChart3, LogOut, BarChart2, DollarSign, Users } from 'lucide-react'
+import { CalendarDays, PlusCircle, Wallet, TrendingUp, BarChart3, LogOut, BarChart2, DollarSign, Users, Ban } from 'lucide-react'
 
 interface Props {
   children: React.ReactNode
@@ -14,6 +14,7 @@ const nav = [
   { to: '/facturacion', icon: BarChart2, label: 'Facturación' },
   { to: '/clientes', icon: Users, label: 'Clientes' },
   { to: '/liquidacion', icon: DollarSign, label: 'Liquidación' },
+  { to: '/bloquear-horario', icon: Ban, label: 'Bloquear Horario' },
   { to: '/resumen', icon: TrendingUp, label: 'Resumen' },
   { to: '/cierre', icon: BarChart3, label: 'Cierre' },
 ]
