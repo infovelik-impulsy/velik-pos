@@ -127,7 +127,15 @@ export default function Agenda() {
     setLoading(false)
   }
 
-  const citasPorProfesional = PROFESIONALES.map(p => ({
+  const idsActivos = new Set(PROFESIONALES.map(p => p.id))
+  const idsInactivos = Array.from(new Set(
+    citas.filter(c => !idsActivos.has(c.profesional_id)).map(c => c.profesional_id)
+  ))
+  const profesionalesInactivos = idsInactivos.map(id => {
+    const cita = citas.find(c => c.profesional_id === id)
+    return { id, nombre: cita?.profesional_nombre || 'Sin asignar', color: '#9a8b7a' }
+  })
+  const citasPorProfesional = [...PROFESIONALES, ...profesionalesInactivos].map(p => ({
     profesional: p,
     citas: citas.filter(c => c.profesional_id === p.id),
   })).filter(g => g.citas.length > 0)
