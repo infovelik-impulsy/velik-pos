@@ -19,6 +19,7 @@ import ProAgenda from './pages/ProAgenda'
 import EditarVenta from './pages/EditarVenta'
 import EditarCita from './pages/EditarCita'
 import BloquearHorario from './pages/BloquearHorario'
+import CalendarioVista from './pages/CalendarioVista'
 
 export default function App() {
   const [user, setUser] = useState<{ id: string; nombre: string; rol: string } | null>(null)
@@ -59,6 +60,7 @@ export default function App() {
           <Route path="/editar-venta" element={<EditarVenta />} />
           <Route path="/editar-cita" element={<EditarCita />} />
           <Route path="/bloquear-horario" element={<BloquearHorario />} />
+          <Route path="/calendario" element={<CalendarioVista />} />
         </Routes>
       </Layout>
     </BrowserRouter>
