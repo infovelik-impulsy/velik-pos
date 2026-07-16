@@ -65,7 +65,15 @@ export default function Resumen() {
   const totalProfesionales = ventas.reduce((s, v) => s + (v.comision_profesional || 0), 0)
   const totalVelik = ventas.reduce((s, v) => s + (v.comision_velik || 0), 0)
 
-  const porProfesional = PROFESIONALES.map(p => {
+  const idsActivos = new Set(PROFESIONALES.map(p => p.id))
+  const idsHistoricos = Array.from(new Set(
+    ventas.filter(v => !idsActivos.has(v.profesional_id)).map(v => v.profesional_id)
+  ))
+  const profesionalesHistoricos = idsHistoricos.map(id => {
+    const venta = ventas.find(v => v.profesional_id === id)
+    return { id, nombre: venta?.profesional_nombre || 'Desconocido', color: '#9a8b7a' }
+  })
+  const porProfesional = [...PROFESIONALES, ...profesionalesHistoricos].map(p => {
     const pVentas = ventas.filter(v => v.profesional_id === p.id)
     const total = pVentas.reduce((s, v) => s + (v.total || 0), 0)
     const aPagar = pVentas.reduce((s, v) => s + (v.comision_profesional || 0), 0)
