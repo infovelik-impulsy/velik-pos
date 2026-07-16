@@ -13,13 +13,11 @@ export default function Facturacion() {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
-  const tomorrow = new Date(today)
-  tomorrow.setDate(tomorrow.getDate() + 1)
   const toDateString = (d: Date) => d.toISOString().split('T')[0]
 
   const [dateRange, setDateRange] = useState({
     desde: toDateString(monthStart),
-    hasta: toDateString(tomorrow),
+    hasta: toDateString(today),
   })
   const [profesionalId, setProfesionalId] = useState<string>('')
 

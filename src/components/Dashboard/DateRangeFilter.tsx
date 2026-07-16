@@ -19,57 +19,58 @@ interface DateRange {
 }
 
 function getDateRange(period: PeriodType): DateRange {
+  // El filtro de Supabase usa .gte(desde).lte(hasta), ambos limites inclusive,
+  // asi que "hasta" debe ser el ultimo dia real del rango (nunca el dia siguiente,
+  // o se cuelan ventas del periodo que sigue).
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-  const tomorrow = new Date(today)
-  tomorrow.setDate(tomorrow.getDate() + 1)
 
   const toDateString = (d: Date) => d.toISOString().split('T')[0]
 
   switch (period) {
     case 'today':
-      return { desde: toDateString(today), hasta: toDateString(tomorrow) }
+      return { desde: toDateString(today), hasta: toDateString(today) }
     case 'yesterday': {
       const yesterday = new Date(today)
       yesterday.setDate(yesterday.getDate() - 1)
-      return { desde: toDateString(yesterday), hasta: toDateString(today) }
+      return { desde: toDateString(yesterday), hasta: toDateString(yesterday) }
     }
     case 'last7': {
       const last7 = new Date(today)
       last7.setDate(last7.getDate() - 7)
-      return { desde: toDateString(last7), hasta: toDateString(tomorrow) }
+      return { desde: toDateString(last7), hasta: toDateString(today) }
     }
     case 'thisWeek': {
       const weekStart = new Date(today)
       const day = weekStart.getDay()
       weekStart.setDate(weekStart.getDate() - (day === 0 ? 6 : day - 1))
-      return { desde: toDateString(weekStart), hasta: toDateString(tomorrow) }
+      return { desde: toDateString(weekStart), hasta: toDateString(today) }
     }
     case 'lastWeek': {
       const weekStart = new Date(today)
       const day = weekStart.getDay()
       weekStart.setDate(weekStart.getDate() - (day === 0 ? 6 : day - 1) - 7)
       const weekEnd = new Date(weekStart)
-      weekEnd.setDate(weekEnd.getDate() + 7)
+      weekEnd.setDate(weekEnd.getDate() + 6)
       return { desde: toDateString(weekStart), hasta: toDateString(weekEnd) }
     }
     case 'thisMonth': {
       const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
-      return { desde: toDateString(monthStart), hasta: toDateString(tomorrow) }
+      return { desde: toDateString(monthStart), hasta: toDateString(today) }
     }
     case 'lastMonth': {
       const monthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1)
-      const monthEnd = new Date(today.getFullYear(), today.getMonth(), 1)
+      const monthEnd = new Date(today.getFullYear(), today.getMonth(), 0)
       return { desde: toDateString(monthStart), hasta: toDateString(monthEnd) }
     }
     case 'last90': {
       const last90 = new Date(today)
       last90.setDate(last90.getDate() - 90)
-      return { desde: toDateString(last90), hasta: toDateString(tomorrow) }
+      return { desde: toDateString(last90), hasta: toDateString(today) }
     }
     case 'thisYear': {
       const yearStart = new Date(today.getFullYear(), 0, 1)
-      return { desde: toDateString(yearStart), hasta: toDateString(tomorrow) }
+      return { desde: toDateString(yearStart), hasta: toDateString(today) }
     }
     case 'custom':
       return { desde: '', hasta: '' }
