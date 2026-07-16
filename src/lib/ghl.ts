@@ -113,6 +113,33 @@ export interface CrearCitaForzadaInput {
   status?: 'confirmed' | 'showed'
 }
 
+export interface BloquearHorarioInput {
+  userId: string
+  startISO: string // ej: 2026-07-20T13:00:00-05:00 (conservar offset -05:00)
+  endISO: string
+  motivo: string
+}
+
+// Bloquea un rango de horas para una profesional en GHL (ej: almuerzo, permiso
+// personal) sin asociarlo a un calendario específico — no queda disponible ni
+// para Eli ni para la web de agendamiento durante ese rango.
+export async function bloquearHorarioGHL(input: BloquearHorarioInput): Promise<{ id: string }> {
+  const res = await ghlPost('calendars/events/block-slots', {
+    locationId: LOC,
+    startTime: input.startISO,
+    endTime: input.endISO,
+    title: input.motivo || 'Bloqueado',
+    assignedUserId: input.userId,
+  })
+  const id = res.data?.id as string | undefined
+  if (!res.ok || !id) throw new Error((res.data?.message as string) || `GHL block-slot ${res.status}`)
+  return { id }
+}
+
+export async function eliminarBloqueoGHL(eventId: string): Promise<void> {
+  await ghlRequest('DELETE', `calendars/events/${eventId}`)
+}
+
 export async function crearCitaForzada(input: CrearCitaForzadaInput): Promise<{ id: string; contactId: string }> {
   let contactId = input.contactId
   if (!contactId) {
