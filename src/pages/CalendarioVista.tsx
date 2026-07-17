@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import FullCalendar from '@fullcalendar/react'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
@@ -27,18 +27,21 @@ interface CitaRow {
 }
 
 // Vista piloto tipo Google Calendar. No reemplaza la Agenda actual — es una
-// vista adicional. Usa la version gratuita de FullCalendar: una sola columna
-// (las columnas lado-a-lado por profesional son una funcion premium de pago),
-// diferenciando profesionales por color + filtro.
+// vista adicional. Usa la version gratuita de FullCalendar: en vez de la
+// funcion de "recursos" (columnas por profesional, que es premium de pago),
+// se dibuja un calendario independiente y gratuito por cada profesional,
+// puestos en fila — visualmente equivalente, sin costo de licencia.
+const PALETA = ['#C9A84C', '#8A7B6E', '#B89A7E']
+
 export default function CalendarioVista() {
   const [fecha, setFecha] = useState(new Date())
   const [citas, setCitas] = useState<CitaRow[]>([])
   const [filtroProfesionalId, setFiltroProfesionalId] = useState('')
   const [loading, setLoading] = useState(true)
-  const calRef = useRef<FullCalendar | null>(null)
 
   const [modalAbierto, setModalAbierto] = useState(false)
   const [modalInicio, setModalInicio] = useState<Date | null>(null)
+  const [profesionalColumna, setProfesionalColumna] = useState<Profesional | null>(null)
   const [categoria, setCategoria] = useState<string | null>(null)
   const [servicio, setServicio] = useState<Servicio | null>(null)
   const [profesional, setProfesional] = useState<Profesional | null>(null)
@@ -61,31 +64,31 @@ export default function CalendarioVista() {
     setLoading(false)
   }
 
-  const citasVisibles = filtroProfesionalId
-    ? citas.filter(c => c.profesional_id === filtroProfesionalId)
-    : citas
-
-  const events = citasVisibles.map(c => {
-    const prof = PROFESIONALES.find(p => p.userId === c.profesional_id)
-    const color = c.status === 'blocked' ? '#9a8b7a' : (prof?.especialidad ? colorPorId(c.profesional_id) : '#C9A84C')
-    const editable = c.status !== 'blocked' && c.status !== 'showed' && c.status !== 'cancelled' && c.status !== 'noshow'
-    return {
-      id: c.id,
-      title: `${c.cliente_nombre}${prof ? ' · ' + prof.nombre.split(' ')[0] : ''}`,
-      start: c.start_time,
-      end: c.end_time,
-      backgroundColor: color,
-      borderColor: color,
-      editable,
-      durationEditable: editable,
-      startEditable: editable,
-    }
-  })
+  const profesionalesAMostrar = filtroProfesionalId
+    ? PROFESIONALES.filter(p => p.userId === filtroProfesionalId)
+    : PROFESIONALES
 
   function colorPorId(id: string) {
     const idx = PROFESIONALES.findIndex(p => p.userId === id)
-    const palette = ['#C9A84C', '#8A7B6E', '#B89A7E']
-    return idx >= 0 ? palette[idx % palette.length] : '#9a8b7a'
+    return idx >= 0 ? PALETA[idx % PALETA.length] : '#9a8b7a'
+  }
+
+  function eventosDe(profesionalId: string) {
+    return citas.filter(c => c.profesional_id === profesionalId).map(c => {
+      const color = c.status === 'blocked' ? '#9a8b7a' : colorPorId(profesionalId)
+      const editable = c.status !== 'blocked' && c.status !== 'showed' && c.status !== 'cancelled' && c.status !== 'noshow'
+      return {
+        id: c.id,
+        title: c.cliente_nombre,
+        start: c.start_time,
+        end: c.end_time,
+        backgroundColor: color,
+        borderColor: color,
+        editable,
+        durationEditable: editable,
+        startEditable: editable,
+      }
+    })
   }
 
   async function handleEventDrop(arg: EventDropArg) {
@@ -123,14 +126,21 @@ export default function CalendarioVista() {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00-05:00`
   }
 
-  function abrirModalCrear(inicio: Date) {
+  function abrirModalCrear(inicio: Date, prof?: Profesional) {
     setModalInicio(inicio)
+    setProfesionalColumna(prof || null)
     setCategoria(null)
     setServicio(null)
-    setProfesional(null)
+    setProfesional(prof || null)
     setCliente(null)
     setErrorModal('')
     setModalAbierto(true)
+  }
+
+  function elegirServicio(s: Servicio) {
+    setServicio(s)
+    const elegible = profesionalColumna && (!s.profesionales || s.profesionales.includes(profesionalColumna.userId))
+    setProfesional(elegible ? profesionalColumna : null)
   }
 
   const profesionalesDisponibles = servicio
@@ -230,35 +240,46 @@ export default function CalendarioVista() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 pt-5">
+      <div className="max-w-7xl mx-auto px-4 pt-5">
         {loading ? (
           <div className="text-center py-16 text-[#8a7a6a]">
             <div className="animate-pulse text-sm">Cargando...</div>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl p-3 shadow-sm">
-            <FullCalendar
-              ref={calRef}
-              plugins={[timeGridPlugin, interactionPlugin]}
-              initialView="timeGridDay"
-              initialDate={fecha}
-              headerToolbar={false}
-              locale="es"
-              allDaySlot={false}
-              slotMinTime="08:00:00"
-              slotMaxTime="20:00:00"
-              slotDuration="00:15:00"
-              height="auto"
-              nowIndicator
-              editable
-              eventResizableFromStart={false}
-              selectable
-              select={(arg) => abrirModalCrear(arg.start)}
-              dateClick={(arg) => abrirModalCrear(arg.date)}
-              events={events}
-              eventDrop={handleEventDrop}
-              eventResize={handleEventResize}
-            />
+          <div className={`grid gap-4 ${
+            profesionalesAMostrar.length === 1 ? 'grid-cols-1 max-w-lg mx-auto' :
+            profesionalesAMostrar.length === 2 ? 'grid-cols-1 md:grid-cols-2' :
+            'grid-cols-1 md:grid-cols-3'
+          }`}>
+            {profesionalesAMostrar.map((p, i) => (
+              <div key={p.userId} className="bg-white rounded-2xl p-3 shadow-sm min-w-0">
+                <div className="flex items-center gap-2 mb-2 px-1">
+                  <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: PALETA[i % 3] }} />
+                  <h3 className="font-semibold text-sm text-[#1a1a1a]">{p.nombre}</h3>
+                </div>
+                <FullCalendar
+                  plugins={[timeGridPlugin, interactionPlugin]}
+                  initialView="timeGridDay"
+                  initialDate={fecha}
+                  headerToolbar={false}
+                  locale="es"
+                  allDaySlot={false}
+                  slotMinTime="08:00:00"
+                  slotMaxTime="20:00:00"
+                  slotDuration="00:15:00"
+                  height="auto"
+                  nowIndicator
+                  editable
+                  eventResizableFromStart={false}
+                  selectable
+                  select={(arg) => abrirModalCrear(arg.start, p)}
+                  dateClick={(arg) => abrirModalCrear(arg.date, p)}
+                  events={eventosDe(p.userId)}
+                  eventDrop={handleEventDrop}
+                  eventResize={handleEventResize}
+                />
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -300,7 +321,7 @@ export default function CalendarioVista() {
                     {(SERVICIOS[categoria] || []).map(s => (
                       <button
                         key={s.nombre}
-                        onClick={() => { setServicio(s); setProfesional(null) }}
+                        onClick={() => elegirServicio(s)}
                         className={`w-full text-left px-3 py-2 rounded-lg text-xs border transition-all ${
                           servicio?.nombre === s.nombre ? 'border-[#C9A84C] bg-[#faf6ee]' : 'border-gray-200 hover:border-gray-300'
                         }`}
