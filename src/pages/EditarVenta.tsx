@@ -9,6 +9,14 @@ import ProductoSelector from '../components/ProductoSelector'
 interface ProductoCarrito { nombre: string; precio: number }
 interface LocationState { appointmentId?: string; ventaId?: string; clienteNombre?: string }
 
+const METODO_ICONO: Record<string, string> = {
+  efectivo: '💵',
+  transferencia: '🏦',
+  tarjeta: '💳',
+  mixto: '🔀',
+  de_la_casa: '🏠',
+}
+
 export default function EditarVenta() {
   const location = useLocation()
   const state = (location.state || {}) as LocationState
@@ -321,12 +329,13 @@ export default function EditarVenta() {
       {/* Pago */}
       <section className="bg-white rounded-2xl p-4 mb-4">
         <h3 className="text-xs font-medium uppercase tracking-widest text-[#8a7a6a] mb-3">Método de pago *</h3>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-3">
           {METODOS_PAGO.filter(m => m.value !== 'de_la_casa').map(m => (
             <button key={m.value} onClick={() => setMetodoPago(m.value as typeof metodoPago)}
-              className={`py-2.5 rounded-xl text-sm font-medium transition-all ${
-                metodoPago === m.value ? 'bg-[#C9A84C] text-white' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+              className={`flex flex-col items-center justify-center gap-1 py-4 rounded-xl text-sm font-medium transition-all border-2 ${
+                metodoPago === m.value ? 'bg-[#C9A84C] text-white border-[#C9A84C]' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border-transparent'
               }`}>
+              <span className="text-lg leading-none">{METODO_ICONO[m.value]}</span>
               {m.label}
             </button>
           ))}

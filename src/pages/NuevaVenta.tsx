@@ -42,6 +42,14 @@ interface LocationState {
   fromPro?: boolean
 }
 
+const METODO_ICONO: Record<string, string> = {
+  efectivo: '💵',
+  transferencia: '🏦',
+  tarjeta: '💳',
+  mixto: '🔀',
+  de_la_casa: '🏠',
+}
+
 function parsePrecio(p?: string): number {
   if (!p) return 0
   return Number(p.replace(/[$.\s]/g, '')) || 0
@@ -623,17 +631,18 @@ export default function NuevaVenta({ rol = 'admin' }: { rol?: string }) {
       {/* Pago */}
       <section className="bg-white rounded-2xl p-4 mb-4">
         <h3 className="text-xs font-medium uppercase tracking-widest text-[#8a7a6a] mb-3">Método de pago *</h3>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-3">
           {METODOS_PAGO.filter(m => m.value !== 'de_la_casa').map(m => (
             <button
               key={m.value}
               onClick={() => setMetodoPago(m.value as typeof metodoPago)}
-              className={`py-2.5 rounded-xl text-sm font-medium transition-all ${
+              className={`flex flex-col items-center justify-center gap-1 py-4 rounded-xl text-sm font-medium transition-all border-2 ${
                 metodoPago === m.value
-                  ? 'bg-[#C9A84C] text-white'
-                  : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                  ? 'bg-[#C9A84C] text-white border-[#C9A84C]'
+                  : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border-transparent'
               }`}
             >
+              <span className="text-lg leading-none">{METODO_ICONO[m.value]}</span>
               {m.label}
             </button>
           ))}
