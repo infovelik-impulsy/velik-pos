@@ -3,9 +3,22 @@ import { useNavigate } from 'react-router-dom'
 import { format, addDays, subDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { ChevronLeft, ChevronRight, Clock, User, CheckCircle, PlusCircle, XCircle, Pencil, Trash2, Ban } from 'lucide-react'
-import { PROFESIONALES } from '../types'
+import { PROFESIONALES, METODOS_PAGO } from '../types'
 import { supabase } from '../lib/supabase'
 import { updateAppointmentStatus, eliminarBloqueoGHL } from '../lib/ghl'
+
+const METODO_ICONO: Record<string, string> = {
+  efectivo: '💵',
+  transferencia: '🏦',
+  tarjeta: '💳',
+  mixto: '🔀',
+  de_la_casa: '🏠',
+}
+
+function parsePrecio(p?: string): number {
+  if (!p) return 0
+  return Number(p.replace(/[$.\s]/g, '')) || 0
+}
 
 const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
   confirmed: { label: 'Confirmada', cls: 'bg-blue-100 text-blue-700' },
@@ -37,6 +50,11 @@ export default function Agenda() {
   const [ventasIds, setVentasIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [citaACancelar, setCitaACancelar] = useState<CitaEnriquecida | null>(null)
+  const [citaVentaRapida, setCitaVentaRapida] = useState<CitaEnriquecida | null>(null)
+  const [metodoPagoRapido, setMetodoPagoRapido] = useState<'efectivo' | 'transferencia' | 'tarjeta' | 'mixto' | 'de_la_casa'>('efectivo')
+  const [precioRapido, setPrecioRapido] = useState(0)
+  const [pagadoEfectivoRapido, setPagadoEfectivoRapido] = useState(0)
+  const [guardandoVentaRapida, setGuardandoVentaRapida] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => { load() }, [fecha])
@@ -109,6 +127,55 @@ export default function Agenda() {
   async function marcarAsistio(id: string) {
     await supabase.from('citas').update({ status: 'showed' }).eq('id', id)
     updateAppointmentStatus(id, 'showed')
+    load()
+  }
+
+  function abrirVentaRapida(cita: CitaEnriquecida) {
+    setCitaVentaRapida(cita)
+    setMetodoPagoRapido('efectivo')
+    setPrecioRapido(parsePrecio(cita.precio))
+    setPagadoEfectivoRapido(0)
+  }
+
+  async function confirmarVentaRapida() {
+    if (!citaVentaRapida || precioRapido <= 0) return
+    setGuardandoVentaRapida(true)
+    const cita = citaVentaRapida
+    const prof = PROFESIONALES.find(p => p.id === cita.profesional_id)
+    const total = precioRapido
+    const comision = total * 0.4
+    const efectivo = metodoPagoRapido === 'efectivo' ? total : metodoPagoRapido === 'mixto' ? pagadoEfectivoRapido : 0
+    const digital = metodoPagoRapido === 'transferencia' || metodoPagoRapido === 'tarjeta' ? total : metodoPagoRapido === 'mixto' ? (total - pagadoEfectivoRapido) : 0
+
+    const { error } = await supabase.from('ventas').insert({
+      appointment_id: cita.id,
+      contact_id: cita.contact_id,
+      cliente_nombre: cita.cliente_nombre,
+      cliente_telefono: cita.cliente_telefono || '',
+      profesional_id: cita.profesional_id,
+      profesional_nombre: prof?.nombre || cita.profesional_nombre,
+      fecha_cita: cita.start_time ? cita.start_time.split('T')[0] : format(fecha, 'yyyy-MM-dd'),
+      hora_cita: format(new Date(cita.start_time), 'HH:mm'),
+      servicios: [{ nombre: cita.titulo, precio: total }],
+      productos: [],
+      total,
+      metodo_pago: metodoPagoRapido,
+      pagado_efectivo: efectivo,
+      pagado_digital: digital,
+      comision_profesional: comision,
+      comision_velik: total - comision,
+    })
+
+    if (error) {
+      alert('Error al registrar la venta: ' + error.message)
+      setGuardandoVentaRapida(false)
+      return
+    }
+
+    await supabase.from('citas').update({ status: 'showed', precio: `$${total.toLocaleString('es-CO')}` }).eq('id', cita.id)
+    updateAppointmentStatus(cita.id, 'showed')
+    setCitaVentaRapida(null)
+    setGuardandoVentaRapida(false)
     load()
   }
 
@@ -375,11 +442,79 @@ export default function Agenda() {
                               <Trash2 size={13} className="text-red-400" />
                             </button>
                           </div>
+                        ) : citaVentaRapida?.id === cita.id ? (
+                          <div className="mt-3 space-y-2 bg-[#faf6ee] rounded-xl p-3 border border-[#e8dfc8]">
+                            <p className="text-xs font-medium text-[#8a7a6a]">Registrar venta y marcar asistió</p>
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs text-[#8a7a6a]">$</span>
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                value={precioRapido === 0 ? '' : precioRapido.toLocaleString('es-CO')}
+                                onChange={e => setPrecioRapido(parseInt(e.target.value.replace(/\D/g, '')) || 0)}
+                                placeholder="Precio del servicio"
+                                className="text-sm border-b border-[#C9A84C] bg-transparent px-1 py-0.5 flex-1 focus:outline-none"
+                              />
+                            </div>
+                            <div className="grid grid-cols-2 gap-1.5">
+                              {METODOS_PAGO.filter(m => m.value !== 'de_la_casa').map(m => (
+                                <button
+                                  key={m.value}
+                                  onClick={() => setMetodoPagoRapido(m.value as typeof metodoPagoRapido)}
+                                  className={`py-1.5 rounded-lg text-xs font-medium border-2 transition-all ${
+                                    metodoPagoRapido === m.value ? 'bg-[#C9A84C] text-white border-[#C9A84C]' : 'bg-white text-gray-600 border-transparent hover:bg-gray-50'
+                                  }`}
+                                >
+                                  {METODO_ICONO[m.value]} {m.label}
+                                </button>
+                              ))}
+                            </div>
+                            <button
+                              onClick={() => setMetodoPagoRapido('de_la_casa')}
+                              className={`w-full py-1.5 rounded-lg text-xs font-medium transition-all ${
+                                metodoPagoRapido === 'de_la_casa' ? 'bg-purple-500 text-white' : 'bg-purple-50 text-purple-600 hover:bg-purple-100'
+                              }`}
+                            >
+                              🏠 De la casa
+                            </button>
+                            {metodoPagoRapido === 'mixto' && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-gray-500 flex-shrink-0">Efectivo $</span>
+                                <input
+                                  type="number"
+                                  value={pagadoEfectivoRapido || ''}
+                                  onChange={e => setPagadoEfectivoRapido(Number(e.target.value))}
+                                  className="flex-1 border border-gray-200 rounded-lg px-2 py-1 text-xs focus:outline-none"
+                                />
+                              </div>
+                            )}
+                            <div className="flex gap-1.5 pt-1">
+                              <button
+                                onClick={() => setCitaVentaRapida(null)}
+                                className="flex-1 py-1.5 bg-gray-100 text-gray-500 rounded-lg text-xs font-medium hover:bg-gray-200 transition-colors"
+                              >
+                                Volver
+                              </button>
+                              <button
+                                onClick={confirmarVentaRapida}
+                                disabled={guardandoVentaRapida || precioRapido <= 0}
+                                className="flex-[2] py-1.5 bg-green-500 text-white rounded-lg text-xs font-medium hover:bg-green-600 transition-colors disabled:opacity-50"
+                              >
+                                {guardandoVentaRapida ? 'Guardando...' : '✓ Confirmar venta'}
+                              </button>
+                            </div>
+                            <button
+                              onClick={() => { marcarAsistio(cita.id); setCitaVentaRapida(null) }}
+                              className="w-full text-center text-[11px] text-[#8a7a6a] underline hover:text-[#5c4a3a] pt-0.5"
+                            >
+                              Marcar asistió sin registrar venta ahora
+                            </button>
+                          </div>
                         ) : (
                           <div className="mt-3 space-y-1.5">
                             <div className="flex gap-2">
                               <button
-                                onClick={() => marcarAsistio(cita.id)}
+                                onClick={() => abrirVentaRapida(cita)}
                                 className="flex-1 flex items-center justify-center gap-1 py-2 bg-green-500 text-white rounded-xl text-xs font-medium hover:bg-green-600 transition-colors"
                               >
                                 <CheckCircle size={12} /> Asistió

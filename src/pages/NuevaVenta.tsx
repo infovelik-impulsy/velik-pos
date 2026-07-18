@@ -144,6 +144,32 @@ export default function NuevaVenta({ rol = 'admin' }: { rol?: string }) {
       }
     }
 
+    // Venta directa (sin cita previa): si esta misma clienta ya tiene otra venta
+    // registrada hoy hace poco, es probable que sea el mismo servicio/visita y se
+    // deba agregar como otro servicio a esa venta en vez de crear una cita/venta
+    // nueva por separado (evita duplicar el valor en Facturacion).
+    if (!state?.appointmentId && fechaCita) {
+      const { data: recientes } = await supabase
+        .from('ventas')
+        .select('id, created_at, total')
+        .eq('cliente_nombre', clienteNombre)
+        .eq('fecha_cita', fechaCita)
+        .order('created_at', { ascending: false })
+        .limit(1)
+      const ultima = recientes?.[0]
+      if (ultima) {
+        const minutos = (Date.now() - new Date(ultima.created_at).getTime()) / 60000
+        if (minutos < 180) {
+          const continuar = window.confirm(
+            `⚠️ ${clienteNombre} ya tiene una venta registrada hace ${Math.round(minutos)} minutos (hoy).\n\n` +
+            `Si es el mismo servicio/visita, cancela esto y agrégalo en "Editar Venta" de esa venta en vez de crear una nueva — así no se duplica en Facturación.\n\n` +
+            `¿Seguro que quieres crear una venta NUEVA y SEPARADA para ${clienteNombre}?`
+          )
+          if (!continuar) { setGuardando(false); return }
+        }
+      }
+    }
+
     const prof = PROFESIONALES.find(p => p.id === profesionalId)
     const comisionServicios = totalServicios * 0.4
     const comisionProductos = totalProductos * 0.05

@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import FullCalendar from '@fullcalendar/react'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
-import type { EventDropArg } from '@fullcalendar/core'
+import type { EventClickArg, EventDropArg } from '@fullcalendar/core'
 import type { EventResizeDoneArg } from '@fullcalendar/interaction'
-import { ChevronLeft, ChevronRight, X, Loader2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, X, Loader2, Clock, User, CheckCircle, XCircle, Pencil, Trash2 } from 'lucide-react'
 import { format, addDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { PROFESIONALES, CATEGORIAS, SERVICIOS } from '../data/bookingData'
 import type { Servicio, Profesional } from '../data/bookingData'
 import { supabase } from '../lib/supabase'
-import { crearCitaForzada, updateAppointmentInGHL } from '../lib/ghl'
+import { crearCitaForzada, updateAppointmentInGHL, updateAppointmentStatus } from '../lib/ghl'
 import ContactSearch from '../components/ContactSearch'
 
 interface CitaRow {
@@ -34,10 +35,13 @@ interface CitaRow {
 const PALETA = ['#C9A84C', '#8A7B6E', '#B89A7E', '#C9A084']
 
 export default function CalendarioVista() {
+  const navigate = useNavigate()
   const [fecha, setFecha] = useState(new Date())
   const [citas, setCitas] = useState<CitaRow[]>([])
+  const [ventasIds, setVentasIds] = useState<Set<string>>(new Set())
   const [filtroProfesionalId, setFiltroProfesionalId] = useState('')
   const [loading, setLoading] = useState(true)
+  const [citaSeleccionada, setCitaSeleccionada] = useState<CitaRow | null>(null)
 
   const [modalAbierto, setModalAbierto] = useState(false)
   const [modalInicio, setModalInicio] = useState<Date | null>(null)
@@ -60,8 +64,43 @@ export default function CalendarioVista() {
       .eq('fecha', fechaStr)
       .neq('status', 'cancelled')
       .order('start_time', { ascending: true })
-    setCitas(data || [])
+    const citasList = data || []
+    setCitas(citasList)
+
+    if (citasList.length > 0) {
+      const ids = citasList.map(c => c.id)
+      const { data: ventas } = await supabase
+        .from('ventas')
+        .select('appointment_id')
+        .in('appointment_id', ids)
+      setVentasIds(new Set((ventas || []).map(v => v.appointment_id)))
+    } else {
+      setVentasIds(new Set())
+    }
     setLoading(false)
+  }
+
+  async function marcarAsistio(id: string) {
+    await supabase.from('citas').update({ status: 'showed' }).eq('id', id)
+    updateAppointmentStatus(id, 'showed')
+    setCitaSeleccionada(null)
+    cargar()
+  }
+
+  async function marcarNoShow(id: string) {
+    await supabase.from('citas').update({ status: 'noshow' }).eq('id', id)
+    updateAppointmentStatus(id, 'noshow')
+    setCitaSeleccionada(null)
+    cargar()
+  }
+
+  function cancelarCita(id: string) {
+    if (!window.confirm('¿Seguro que deseas cancelar esta cita?')) return
+    supabase.from('citas').update({ status: 'cancelled' }).eq('id', id).then(() => {
+      updateAppointmentStatus(id, 'cancelled')
+      setCitaSeleccionada(null)
+      cargar()
+    })
   }
 
   const profesionalesAMostrar = filtroProfesionalId
@@ -89,6 +128,12 @@ export default function CalendarioVista() {
         startEditable: editable,
       }
     })
+  }
+
+  function handleEventClick(arg: EventClickArg) {
+    const cita = citas.find(c => c.id === arg.event.id)
+    if (!cita || cita.status === 'blocked') return
+    setCitaSeleccionada(cita)
   }
 
   async function handleEventDrop(arg: EventDropArg) {
@@ -275,6 +320,7 @@ export default function CalendarioVista() {
                   select={(arg) => abrirModalCrear(arg.start, p)}
                   dateClick={(arg) => abrirModalCrear(arg.date, p)}
                   events={eventosDe(p.userId)}
+                  eventClick={handleEventClick}
                   eventDrop={handleEventDrop}
                   eventResize={handleEventResize}
                 />
@@ -377,6 +423,103 @@ export default function CalendarioVista() {
                 {guardando ? 'Creando...' : 'Crear cita'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {citaSeleccionada && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => setCitaSeleccionada(null)}>
+          <div className="bg-white rounded-2xl p-5 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-1.5">
+                <Clock size={13} className="text-[#8a7a6a]" />
+                <span className="text-xs font-semibold text-[#1a1a1a]">
+                  {format(new Date(citaSeleccionada.start_time), 'h:mm a')} – {format(new Date(citaSeleccionada.end_time), 'h:mm a')}
+                </span>
+              </div>
+              <button onClick={() => setCitaSeleccionada(null)} className="text-gray-400 hover:text-gray-600">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="flex items-center gap-1.5 mb-1">
+              <User size={13} className="text-[#8a7a6a]" />
+              <span className="text-sm font-medium text-[#1a1a1a]">{citaSeleccionada.cliente_nombre}</span>
+            </div>
+            <p className="text-xs text-[#8a7a6a] mb-4 ml-5">{citaSeleccionada.titulo} · {citaSeleccionada.profesional_nombre}</p>
+
+            {citaSeleccionada.status === 'showed' ? (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-center gap-1 py-1.5 bg-green-50 rounded-xl text-xs font-medium text-green-600">
+                  <CheckCircle size={12} /> Asistió ✓
+                </div>
+                {ventasIds.has(citaSeleccionada.id) ? (
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-emerald-50 rounded-xl text-xs font-medium text-emerald-600 border border-emerald-200">
+                      <CheckCircle size={12} /> Venta registrada ✓
+                    </div>
+                    <button
+                      onClick={() => navigate('/editar-venta', { state: { appointmentId: citaSeleccionada.id, clienteNombre: citaSeleccionada.cliente_nombre } })}
+                      className="p-1.5 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+                      title="Editar venta"
+                    >
+                      <Pencil size={13} className="text-gray-500" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => navigate('/venta', {
+                      state: {
+                        appointmentId: citaSeleccionada.id,
+                        contactId: citaSeleccionada.contact_id,
+                        clienteNombre: citaSeleccionada.cliente_nombre,
+                        clienteTelefono: citaSeleccionada.cliente_telefono,
+                        profesionalId: citaSeleccionada.profesional_id,
+                        servicioNombre: citaSeleccionada.titulo,
+                      }
+                    })}
+                    className="w-full flex items-center justify-center gap-1 py-2 bg-[#C9A84C] text-white rounded-xl text-xs font-medium hover:bg-[#b8963e] transition-colors"
+                  >
+                    💰 Registrar venta
+                  </button>
+                )}
+              </div>
+            ) : citaSeleccionada.status === 'noshow' ? (
+              <div className="flex items-center gap-2">
+                <div className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-red-50 rounded-xl text-xs font-medium text-red-400">
+                  <XCircle size={12} /> No asistió
+                </div>
+                <button
+                  onClick={() => cancelarCita(citaSeleccionada.id)}
+                  className="p-1.5 bg-red-50 hover:bg-red-100 rounded-xl transition-colors"
+                  title="Cancelar cita"
+                >
+                  <Trash2 size={13} className="text-red-400" />
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => marcarAsistio(citaSeleccionada.id)}
+                    className="flex-1 flex items-center justify-center gap-1 py-2 bg-green-500 text-white rounded-xl text-xs font-medium hover:bg-green-600 transition-colors"
+                  >
+                    <CheckCircle size={12} /> Asistió
+                  </button>
+                  <button
+                    onClick={() => marcarNoShow(citaSeleccionada.id)}
+                    className="flex-1 flex items-center justify-center gap-1 py-2 bg-red-50 text-red-400 rounded-xl text-xs font-medium hover:bg-red-100 transition-colors"
+                  >
+                    <XCircle size={12} /> No asistió
+                  </button>
+                </div>
+                <button
+                  onClick={() => cancelarCita(citaSeleccionada.id)}
+                  className="w-full flex items-center justify-center gap-1 py-1.5 bg-gray-50 text-gray-500 rounded-xl text-xs font-medium hover:bg-gray-100 transition-colors border border-gray-200"
+                >
+                  <Trash2 size={11} /> Cancelar cita
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
