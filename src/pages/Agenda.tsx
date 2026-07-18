@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import { format, addDays, subDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { ChevronLeft, ChevronRight, Clock, User, CheckCircle, PlusCircle, XCircle, Pencil, Trash2, Ban } from 'lucide-react'
-import { PROFESIONALES, METODOS_PAGO } from '../types'
+import { PROFESIONALES, METODOS_PAGO, type ServicioVendido } from '../types'
 import { supabase } from '../lib/supabase'
 import { updateAppointmentStatus, eliminarBloqueoGHL } from '../lib/ghl'
+import ServiceSelector from '../components/ServiceSelector'
 
 const METODO_ICONO: Record<string, string> = {
   efectivo: '💵',
@@ -52,7 +53,8 @@ export default function Agenda() {
   const [citaACancelar, setCitaACancelar] = useState<CitaEnriquecida | null>(null)
   const [citaVentaRapida, setCitaVentaRapida] = useState<CitaEnriquecida | null>(null)
   const [metodoPagoRapido, setMetodoPagoRapido] = useState<'efectivo' | 'transferencia' | 'tarjeta' | 'mixto' | 'de_la_casa'>('efectivo')
-  const [precioRapido, setPrecioRapido] = useState(0)
+  const [serviciosRapidos, setServiciosRapidos] = useState<ServicioVendido[]>([])
+  const [mostrarSelectorRapido, setMostrarSelectorRapido] = useState(false)
   const [pagadoEfectivoRapido, setPagadoEfectivoRapido] = useState(0)
   const [guardandoVentaRapida, setGuardandoVentaRapida] = useState(false)
   const navigate = useNavigate()
@@ -133,16 +135,25 @@ export default function Agenda() {
   function abrirVentaRapida(cita: CitaEnriquecida) {
     setCitaVentaRapida(cita)
     setMetodoPagoRapido('efectivo')
-    setPrecioRapido(parsePrecio(cita.precio))
+    setServiciosRapidos([{ nombre: cita.titulo, precio: parsePrecio(cita.precio) }])
+    setMostrarSelectorRapido(false)
     setPagadoEfectivoRapido(0)
   }
 
+  function actualizarPrecioServicioRapido(i: number, precio: number) {
+    setServiciosRapidos(s => s.map((sv, idx) => idx === i ? { ...sv, precio } : sv))
+  }
+
+  function quitarServicioRapido(i: number) {
+    setServiciosRapidos(s => s.filter((_, idx) => idx !== i))
+  }
+
   async function confirmarVentaRapida() {
-    if (!citaVentaRapida || precioRapido <= 0) return
+    const total = serviciosRapidos.reduce((s, sv) => s + (sv.precio || 0), 0)
+    if (!citaVentaRapida || serviciosRapidos.length === 0 || total <= 0) return
     setGuardandoVentaRapida(true)
     const cita = citaVentaRapida
     const prof = PROFESIONALES.find(p => p.id === cita.profesional_id)
-    const total = precioRapido
     const comision = total * 0.4
     const efectivo = metodoPagoRapido === 'efectivo' ? total : metodoPagoRapido === 'mixto' ? pagadoEfectivoRapido : 0
     const digital = metodoPagoRapido === 'transferencia' || metodoPagoRapido === 'tarjeta' ? total : metodoPagoRapido === 'mixto' ? (total - pagadoEfectivoRapido) : 0
@@ -156,7 +167,7 @@ export default function Agenda() {
       profesional_nombre: prof?.nombre || cita.profesional_nombre,
       fecha_cita: cita.start_time ? cita.start_time.split('T')[0] : format(fecha, 'yyyy-MM-dd'),
       hora_cita: format(new Date(cita.start_time), 'HH:mm'),
-      servicios: [{ nombre: cita.titulo, precio: total }],
+      servicios: serviciosRapidos,
       productos: [],
       total,
       metodo_pago: metodoPagoRapido,
@@ -454,16 +465,55 @@ export default function Agenda() {
                         ) : citaVentaRapida?.id === cita.id ? (
                           <div className="mt-3 space-y-2 bg-[#faf6ee] rounded-xl p-3 border border-[#e8dfc8]">
                             <p className="text-xs font-medium text-[#8a7a6a]">Registrar venta y marcar asistió</p>
-                            <div className="flex items-center gap-1">
-                              <span className="text-xs text-[#8a7a6a]">$</span>
-                              <input
-                                type="text"
-                                inputMode="numeric"
-                                value={precioRapido === 0 ? '' : precioRapido.toLocaleString('es-CO')}
-                                onChange={e => setPrecioRapido(parseInt(e.target.value.replace(/\D/g, '')) || 0)}
-                                placeholder="Precio del servicio"
-                                className="text-sm border-b border-[#C9A84C] bg-transparent px-1 py-0.5 flex-1 focus:outline-none"
-                              />
+                            <div className="space-y-1.5">
+                              {serviciosRapidos.map((sv, i) => (
+                                <div key={i} className="flex items-center gap-2 bg-white rounded-lg px-2 py-1.5 border border-gray-100">
+                                  <span className="text-xs text-gray-600 flex-1 truncate">{sv.nombre}</span>
+                                  <span className="text-xs text-[#8a7a6a]">$</span>
+                                  <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    value={sv.precio === 0 ? '' : sv.precio.toLocaleString('es-CO')}
+                                    onChange={e => actualizarPrecioServicioRapido(i, parseInt(e.target.value.replace(/\D/g, '')) || 0)}
+                                    placeholder="Precio"
+                                    className="text-sm border-b border-[#C9A84C] bg-transparent px-1 py-0.5 w-24 focus:outline-none"
+                                  />
+                                  {serviciosRapidos.length > 1 && (
+                                    <button onClick={() => quitarServicioRapido(i)} className="text-red-400 hover:text-red-600 p-0.5" title="Quitar servicio">
+                                      <XCircle size={14} />
+                                    </button>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                            {mostrarSelectorRapido ? (
+                              <div className="bg-white rounded-lg border border-gray-100 p-2 max-h-64 overflow-y-auto">
+                                <ServiceSelector
+                                  onSelect={(s) => {
+                                    setServiciosRapidos(prev => [...prev, { nombre: s.nombre, precio: s.precio }])
+                                    setMostrarSelectorRapido(false)
+                                  }}
+                                />
+                                <button
+                                  onClick={() => setMostrarSelectorRapido(false)}
+                                  className="w-full mt-2 py-1 text-xs text-gray-400 hover:text-gray-600"
+                                >
+                                  Cancelar
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setMostrarSelectorRapido(true)}
+                                className="w-full py-1.5 rounded-lg text-xs font-medium text-[#C9A84C] border border-dashed border-[#C9A84C] hover:bg-[#faf6ee] transition-colors"
+                              >
+                                + Agregar otro servicio
+                              </button>
+                            )}
+                            <div className="flex justify-between items-center pt-1 border-t border-[#e8dfc8]">
+                              <span className="text-xs text-[#8a7a6a]">Total</span>
+                              <span className="text-sm font-semibold text-[#C9A84C]">
+                                ${serviciosRapidos.reduce((s, sv) => s + (sv.precio || 0), 0).toLocaleString('es-CO')}
+                              </span>
                             </div>
                             <div className="grid grid-cols-2 gap-1.5">
                               {METODOS_PAGO.filter(m => m.value !== 'de_la_casa').map(m => (
@@ -506,7 +556,7 @@ export default function Agenda() {
                               </button>
                               <button
                                 onClick={confirmarVentaRapida}
-                                disabled={guardandoVentaRapida || precioRapido <= 0}
+                                disabled={guardandoVentaRapida || serviciosRapidos.reduce((s, sv) => s + (sv.precio || 0), 0) <= 0}
                                 className="flex-[2] py-1.5 bg-green-500 text-white rounded-lg text-xs font-medium hover:bg-green-600 transition-colors disabled:opacity-50"
                               >
                                 {guardandoVentaRapida ? 'Guardando...' : '✓ Confirmar venta'}
