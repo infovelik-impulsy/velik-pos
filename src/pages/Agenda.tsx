@@ -36,6 +36,7 @@ export default function Agenda() {
   const [citas, setCitas] = useState<CitaEnriquecida[]>([])
   const [ventasIds, setVentasIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
+  const [citaACancelar, setCitaACancelar] = useState<CitaEnriquecida | null>(null)
   const navigate = useNavigate()
 
   useEffect(() => { load() }, [fecha])
@@ -57,7 +58,7 @@ export default function Agenda() {
     load()
   }
 
-  async function cancelarCita(id: string) {
+  function pedirCancelarCita(id: string) {
     const cita = citas.find(c => c.id === id)
     if (!cita) return
 
@@ -67,41 +68,41 @@ export default function Agenda() {
     const esMenos24h = horasRestantes < 24 && horasRestantes > -48 // cita futura o reciente
 
     if (esMenos24h) {
-      const registrar = window.confirm(
-        `⚠️ Esta cita se cancela con menos de 24 horas de anticipación.\n\n` +
-        `El depósito de $30.000 NO es reembolsable.\n\n` +
-        `¿Deseas registrar los $30.000 como ingreso del salón?`
-      )
-      if (registrar) {
-        const hoy = new Date().toISOString().split('T')[0]
-        const prof = PROFESIONALES.find(p => p.id === cita.profesional_id)
-        await supabase.from('ventas').insert({
-          appointment_id: id,
-          contact_id: cita.contact_id,
-          cliente_nombre: cita.cliente_nombre,
-          cliente_telefono: cita.cliente_telefono || '',
-          profesional_id: cita.profesional_id,
-          profesional_nombre: prof?.nombre || cita.profesional_nombre,
-          fecha_cita: cita.start_time ? cita.start_time.split('T')[0] : hoy,
-          servicios: [{ nombre: 'Depósito no reembolsable (cancelación -24h)', precio: 30000 }],
-          productos: [],
-          total: 30000,
-          metodo_pago: 'deposito',
-          pagado_efectivo: 0,
-          pagado_digital: 30000,
-          comision_profesional: 0,
-          comision_velik: 30000,
-          notas: 'Depósito retenido por cancelación con menos de 24 horas de anticipación',
-        })
-      } else if (!window.confirm('¿Cancelar la cita sin registrar el depósito?')) {
-        return
-      }
+      setCitaACancelar(cita)
     } else {
       if (!window.confirm('¿Seguro que deseas cancelar esta cita?')) return
+      confirmarCancelacion(id, false)
+    }
+  }
+
+  async function confirmarCancelacion(id: string, registrarDeposito: boolean) {
+    const cita = citas.find(c => c.id === id)
+    if (registrarDeposito && cita) {
+      const hoy = new Date().toISOString().split('T')[0]
+      const prof = PROFESIONALES.find(p => p.id === cita.profesional_id)
+      await supabase.from('ventas').insert({
+        appointment_id: id,
+        contact_id: cita.contact_id,
+        cliente_nombre: cita.cliente_nombre,
+        cliente_telefono: cita.cliente_telefono || '',
+        profesional_id: cita.profesional_id,
+        profesional_nombre: prof?.nombre || cita.profesional_nombre,
+        fecha_cita: cita.start_time ? cita.start_time.split('T')[0] : hoy,
+        servicios: [{ nombre: 'Depósito no reembolsable (cancelación -24h)', precio: 30000 }],
+        productos: [],
+        total: 30000,
+        metodo_pago: 'deposito',
+        pagado_efectivo: 0,
+        pagado_digital: 30000,
+        comision_profesional: 0,
+        comision_velik: 30000,
+        notas: 'Depósito retenido por cancelación con menos de 24 horas de anticipación',
+      })
     }
 
     await supabase.from('citas').update({ status: 'cancelled' }).eq('id', id)
     updateAppointmentStatus(id, 'cancelled')
+    setCitaACancelar(null)
     load()
   }
 
@@ -312,7 +313,7 @@ export default function Agenda() {
                                   <Pencil size={13} className="text-gray-500" />
                                 </button>
                                 <button
-                                  onClick={() => cancelarCita(cita.id)}
+                                  onClick={() => pedirCancelarCita(cita.id)}
                                   className="p-1.5 bg-red-50 hover:bg-red-100 rounded-xl transition-colors"
                                   title="Cancelar cita"
                                 >
@@ -345,7 +346,7 @@ export default function Agenda() {
                                   <Pencil size={13} className="text-gray-500" />
                                 </button>
                                 <button
-                                  onClick={() => cancelarCita(cita.id)}
+                                  onClick={() => pedirCancelarCita(cita.id)}
                                   className="p-1.5 bg-red-50 hover:bg-red-100 rounded-xl transition-colors"
                                   title="Cancelar cita"
                                 >
@@ -367,7 +368,7 @@ export default function Agenda() {
                               <Pencil size={13} className="text-gray-500" />
                             </button>
                             <button
-                              onClick={() => cancelarCita(cita.id)}
+                              onClick={() => pedirCancelarCita(cita.id)}
                               className="p-1.5 bg-red-50 hover:bg-red-100 rounded-xl transition-colors"
                               title="Cancelar cita"
                             >
@@ -398,7 +399,7 @@ export default function Agenda() {
                                 <Pencil size={11} /> Editar cita
                               </button>
                               <button
-                                onClick={() => cancelarCita(cita.id)}
+                                onClick={() => pedirCancelarCita(cita.id)}
                                 className="p-1.5 bg-red-50 hover:bg-red-100 rounded-xl transition-colors border border-red-100"
                                 title="Cancelar cita"
                               >
@@ -424,6 +425,44 @@ export default function Agenda() {
       >
         <PlusCircle size={24} />
       </button>
+
+      {/* Modal cancelar cita con menos de 24h */}
+      {citaACancelar && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-5 w-full max-w-sm">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-lg">⚠️</span>
+              <h3 className="font-semibold text-sm">Cancelación con menos de 24 horas</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-1">
+              <strong>{citaACancelar.cliente_nombre}</strong> — {citaACancelar.titulo}
+            </p>
+            <p className="text-xs text-gray-500 mb-4">
+              Si la clienta pagó un depósito de $30.000, no es reembolsable y debe registrarse como ingreso. Si nunca abonó nada, cancela sin registrar nada.
+            </p>
+            <div className="space-y-2">
+              <button
+                onClick={() => confirmarCancelacion(citaACancelar.id, true)}
+                className="w-full py-3 bg-[#C9A84C] text-white rounded-xl text-sm font-medium hover:bg-[#b8963e] transition-colors"
+              >
+                Sí pagó depósito — cancelar y registrar $30.000
+              </button>
+              <button
+                onClick={() => confirmarCancelacion(citaACancelar.id, false)}
+                className="w-full py-3 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
+              >
+                No pagó nada — cancelar sin registrar
+              </button>
+              <button
+                onClick={() => setCitaACancelar(null)}
+                className="w-full py-2.5 text-gray-400 text-sm font-medium hover:text-gray-600 transition-colors"
+              >
+                No cancelar, volver
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
