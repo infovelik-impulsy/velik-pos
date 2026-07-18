@@ -167,6 +167,15 @@ export default function Agenda() {
     })
 
     if (error) {
+      if (error.code === '23505' || error.message.includes('ventas_appointment_id_unique')) {
+        alert('Esta cita ya tenía una venta registrada (probablemente desde otra pantalla). No se duplicó — actualizando la ficha.')
+        await supabase.from('citas').update({ status: 'showed' }).eq('id', cita.id)
+        updateAppointmentStatus(cita.id, 'showed')
+        setCitaVentaRapida(null)
+        setGuardandoVentaRapida(false)
+        load()
+        return
+      }
       alert('Error al registrar la venta: ' + error.message)
       setGuardandoVentaRapida(false)
       return
