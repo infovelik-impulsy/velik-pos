@@ -31,7 +31,7 @@ interface CitaRow {
 // funcion de "recursos" (columnas por profesional, que es premium de pago),
 // se dibuja un calendario independiente y gratuito por cada profesional,
 // puestos en fila — visualmente equivalente, sin costo de licencia.
-const PALETA = ['#C9A84C', '#8A7B6E', '#B89A7E']
+const PALETA = ['#C9A84C', '#8A7B6E', '#B89A7E', '#C9A084']
 
 export default function CalendarioVista() {
   const [fecha, setFecha] = useState(new Date())
@@ -231,9 +231,9 @@ export default function CalendarioVista() {
               className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                 filtroProfesionalId === p.userId ? 'text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
-              style={filtroProfesionalId === p.userId ? { backgroundColor: ['#C9A84C', '#8A7B6E', '#B89A7E'][i % 3] } : {}}
+              style={filtroProfesionalId === p.userId ? { backgroundColor: PALETA[i % PALETA.length] } : {}}
             >
-              <span className="inline-block w-2 h-2 rounded-full mr-1.5 align-middle" style={{ backgroundColor: ['#C9A84C', '#8A7B6E', '#B89A7E'][i % 3] }} />
+              <span className="inline-block w-2 h-2 rounded-full mr-1.5 align-middle" style={{ backgroundColor: PALETA[i % PALETA.length] }} />
               {p.nombre.split(' ')[0]}
             </button>
           ))}
@@ -254,7 +254,7 @@ export default function CalendarioVista() {
             {profesionalesAMostrar.map((p, i) => (
               <div key={p.userId} className="bg-white rounded-2xl p-3 shadow-sm min-w-0">
                 <div className="flex items-center gap-2 mb-2 px-1">
-                  <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: PALETA[i % 3] }} />
+                  <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: PALETA[i % PALETA.length] }} />
                   <h3 className="font-semibold text-sm text-[#1a1a1a]">{p.nombre}</h3>
                 </div>
                 <FullCalendar
@@ -345,7 +345,7 @@ export default function CalendarioVista() {
                         className={`py-2 px-2 rounded-xl text-xs font-medium text-center transition-all ${
                           profesional?.userId === p.userId ? 'text-white' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
                         }`}
-                        style={profesional?.userId === p.userId ? { backgroundColor: ['#C9A84C', '#8A7B6E', '#B89A7E'][i % 3] } : {}}
+                        style={profesional?.userId === p.userId ? { backgroundColor: PALETA[i % PALETA.length] } : {}}
                       >
                         {p.nombre.split(' ')[0]}
                       </button>

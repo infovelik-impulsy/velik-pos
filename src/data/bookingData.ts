@@ -25,7 +25,9 @@ const LA = "UzLj5T8ZOrJ8reSig5os"  // Luz Aida   — SOLO faciales, masajes, est
 const ZR = "xUf32I3dzoylUW8VDH9z"  // Zuly Rojas — SOLO uñas (manicure, pedicure y combos)
 const JU = "YCFWZJMJzmDEA1MJv27k"  // Juliana García Paz — SOLO uñas (manicure, pedicure y combos)
 
-const NAILS = [ZR, JU]
+const MO = "2lvoTms5Sg8ubmjjUaGs" // Maria Osorio — SOLO uñas (manicure, pedicure y combos)
+
+const NAILS = [ZR, JU, MO]
 const HAIR: string[] = []
 
 export const SERVICIOS: Record<string, Servicio[]> = {
@@ -164,6 +166,7 @@ export const PROFESIONALES: Profesional[] = [
   { nombre: "Luz Aida",       userId: LA, especialidad: "Facial & Corporal", iniciales: "LA", foto: "/fotos/luz.jpg" },
   { nombre: "Zuly Rojas",     userId: ZR, especialidad: "Uñas & Manicure",   iniciales: "ZR", foto: "/fotos/zuly.jpg" },
   { nombre: "Juliana García", userId: JU, especialidad: "Uñas & Manicure",   iniciales: "JG" },
+  { nombre: "Maria Osorio",   userId: MO, especialidad: "Uñas & Manicure",   iniciales: "MO" },
 ]
 
 export const SLOTS_URL = "https://santiagon8nmejia.dominadoresia.com/webhook/booking/slots"

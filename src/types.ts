@@ -8,6 +8,7 @@ export const PROFESIONALES: Profesional[] = [
   { id: 'UzLj5T8ZOrJ8reSig5os', nombre: 'Luz Aida', color: '#A0856C' },
   { id: 'xUf32I3dzoylUW8VDH9z', nombre: 'Zuly Rojas', color: '#8A7B6E' },
   { id: 'YCFWZJMJzmDEA1MJv27k', nombre: 'Juliana García', color: '#B89A7E' },
+  { id: '2lvoTms5Sg8ubmjjUaGs', nombre: 'Maria Osorio', color: '#C9A084' },
 ]
 
 export function getProfesional(id: string): Profesional | undefined {
