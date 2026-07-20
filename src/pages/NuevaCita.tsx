@@ -6,6 +6,7 @@ import type { Servicio, Profesional } from '../data/bookingData'
 import ContactSearch from '../components/ContactSearch'
 import { supabase } from '../lib/supabase'
 import { crearCitaForzada } from '../lib/ghl'
+import { diaCerrado } from '../lib/festivos'
 
 // forced = slot generado localmente para HOY (se agenda de forma forzada,
 // saltando la validación del webhook: cualquier hora libre, aunque ya pasó)
@@ -42,6 +43,11 @@ export default function NuevaCita({ rol = 'admin' }: { rol?: string }) {
 
   async function crear() {
     if (!servicio || !profesional || !slot || !nombre || !telefono) return
+    const cerrado = diaCerrado(slot.date)
+    if (cerrado.cerrado) {
+      setError(`No se puede agendar ese día: es ${cerrado.motivo}.`)
+      return
+    }
     setGuardando(true); setError('')
     const tel = telefono.startsWith('+') ? telefono : '+57' + telefono.replace(/\D/g, '')
     const precio = servicio.precioEditable
@@ -314,6 +320,7 @@ function SlotPicker({ servicio, profesional, selected, onSelect }: {
   // sin importar que la hora ya pasó (la única condición es que no choque con otra cita).
   const slotsHoy = useMemo<Slot[]>(() => {
     const out: Slot[] = []
+    if (diaCerrado(hoy).cerrado) return out
     const n = new Date()
     const dur = servicio.duracion || GRID_MIN
     const pad = (x: number) => String(x).padStart(2, '0')

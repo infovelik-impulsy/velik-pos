@@ -4,6 +4,7 @@ import { X, CheckCircle, ChevronLeft, FileText } from 'lucide-react'
 import { generarFacturaAlegra } from '../lib/alegra'
 import { supabase } from '../lib/supabase'
 import { updateAppointmentStatus, crearCitaForzada } from '../lib/ghl'
+import { diaCerrado } from '../lib/festivos'
 import { SERVICIOS } from '../data/bookingData'
 import { PROFESIONALES, METODOS_PAGO, type ServicioVendido } from '../types'
 
@@ -128,6 +129,15 @@ export default function NuevaVenta({ rol = 'admin' }: { rol?: string }) {
   async function guardar() {
     const hayItems = servicios.length > 0 || productos.length > 0 || cafeteria.length > 0
     if (!clienteNombre || !profesionalId || !fechaCita || !horaCita || !hayItems) return
+
+    if (!state?.appointmentId) {
+      const cerrado = diaCerrado(fechaCita)
+      if (cerrado.cerrado) {
+        alert(`No se puede crear una cita nueva ese día: es ${cerrado.motivo}.`)
+        return
+      }
+    }
+
     setGuardando(true)
 
     // Verificar si ya existe una venta para esta cita agendada

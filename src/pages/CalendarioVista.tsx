@@ -12,6 +12,7 @@ import { PROFESIONALES, CATEGORIAS, SERVICIOS } from '../data/bookingData'
 import type { Servicio, Profesional } from '../data/bookingData'
 import { supabase } from '../lib/supabase'
 import { crearCitaForzada, updateAppointmentInGHL, updateAppointmentStatus } from '../lib/ghl'
+import { diaCerrado } from '../lib/festivos'
 import ContactSearch from '../components/ContactSearch'
 
 interface CitaRow {
@@ -194,6 +195,11 @@ export default function CalendarioVista() {
 
   async function crearDesdeModal() {
     if (!modalInicio || !servicio || !profesional || !cliente) return
+    const cerrado = diaCerrado(format(modalInicio, 'yyyy-MM-dd'))
+    if (cerrado.cerrado) {
+      setErrorModal(`No se puede agendar ese día: es ${cerrado.motivo}.`)
+      return
+    }
     setGuardando(true)
     setErrorModal('')
     try {
