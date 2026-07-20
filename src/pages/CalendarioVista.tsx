@@ -200,6 +200,11 @@ export default function CalendarioVista() {
       setErrorModal(`No se puede agendar ese día: es ${cerrado.motivo}.`)
       return
     }
+    const hora = modalInicio.getHours()
+    if (hora < 9 || hora >= 19) {
+      setErrorModal('No se puede agendar fuera del horario del salón (9:00 AM - 7:00 PM).')
+      return
+    }
     setGuardando(true)
     setErrorModal('')
     try {
@@ -315,8 +320,8 @@ export default function CalendarioVista() {
                   headerToolbar={false}
                   locale="es"
                   allDaySlot={false}
-                  slotMinTime="08:00:00"
-                  slotMaxTime="20:00:00"
+                  slotMinTime="09:00:00"
+                  slotMaxTime="19:00:00"
                   slotDuration="00:15:00"
                   height="auto"
                   nowIndicator
