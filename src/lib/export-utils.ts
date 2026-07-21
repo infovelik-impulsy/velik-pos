@@ -73,7 +73,8 @@ export async function exportToExcel(data: ExportData, fileName: string) {
     ['Efectivo', data.paymentBreakdown.efectivo, '', ''],
     ['Transferencia', data.paymentBreakdown.transferencia, '', ''],
     ['Tarjeta', data.paymentBreakdown.tarjeta, '', ''],
-    ['Mixto', data.paymentBreakdown.mixto, '', ''],
+    ['De la casa', data.paymentBreakdown.de_la_casa, '', ''],
+    ['(de estos, ventas con pago mixto)', '', data.paymentBreakdown.ventas_mixtas, ''],
     [],
     ['TOTAL', data.paymentBreakdown.total_dinero, data.paymentBreakdown.total_transacciones, ''],
   ]
@@ -207,7 +208,6 @@ export async function exportToPDF(
         { label: 'Efectivo', value: paymentBreakdown.efectivo },
         { label: 'Transferencia / Wompi', value: paymentBreakdown.transferencia },
         { label: 'Tarjeta / Datáfono', value: paymentBreakdown.tarjeta },
-        { label: 'Mixto', value: paymentBreakdown.mixto },
         { label: 'De la casa', value: paymentBreakdown.de_la_casa },
       ]
       metodos.forEach((m, i) => {

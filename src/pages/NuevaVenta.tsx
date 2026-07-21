@@ -187,7 +187,9 @@ export default function NuevaVenta({ rol = 'admin' }: { rol?: string }) {
 
     const mixtoCalc = metodoPago === 'mixto' ? calcularMontosMixto(total, mixto) : null
     const efectivo = metodoPago === 'efectivo' ? total : mixtoCalc ? mixtoCalc.efectivo : 0
-    const digital = metodoPago === 'transferencia' || metodoPago === 'tarjeta' ? total : mixtoCalc ? mixtoCalc.digital : 0
+    const transferencia = metodoPago === 'transferencia' ? total : mixtoCalc ? mixtoCalc.transferencia : 0
+    const tarjeta = metodoPago === 'tarjeta' ? total : mixtoCalc ? mixtoCalc.tarjeta : 0
+    const digital = transferencia + tarjeta
     const notasFinal = mixtoCalc ? [mixtoCalc.detalle, notas].filter(Boolean).join(' — ') : notas
 
     // Si no viene de una cita agendada, creamos la cita en GHL (forzada) para que
@@ -250,6 +252,8 @@ export default function NuevaVenta({ rol = 'admin' }: { rol?: string }) {
       comision_profesional: comision,
       comision_velik: total - comision,
       notas: notasFinal,
+      pagado_transferencia: transferencia,
+      pagado_tarjeta: tarjeta,
     })
 
     // Descontar stock cafetería

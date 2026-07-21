@@ -92,8 +92,10 @@ export function calcularMontosMixto(total: number, v: MixtoValue) {
   porMetodo[v.metodo1] += v.monto1
   porMetodo[v.metodo2] += monto2
   const efectivo = porMetodo.efectivo
-  const digital = porMetodo.transferencia + porMetodo.tarjeta
+  const transferencia = porMetodo.transferencia
+  const tarjeta = porMetodo.tarjeta
+  const digital = transferencia + tarjeta
   const OPT = { efectivo: 'Efectivo', transferencia: 'Transferencia', tarjeta: 'Tarjeta' } as const
   const detalle = `Mixto: ${OPT[v.metodo1]} $${v.monto1.toLocaleString('es-CO')} + ${OPT[v.metodo2]} $${monto2.toLocaleString('es-CO')}`
-  return { efectivo, digital, detalle }
+  return { efectivo, transferencia, tarjeta, digital, detalle }
 }

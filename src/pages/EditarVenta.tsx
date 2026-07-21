@@ -98,7 +98,9 @@ export default function EditarVenta() {
     const comision = totalServicios * 0.4 + totalProductos * 0.05
     const mixtoCalc = metodoPago === 'mixto' ? calcularMontosMixto(total, mixto) : null
     const efectivo = metodoPago === 'efectivo' ? total : mixtoCalc ? mixtoCalc.efectivo : 0
-    const digital = metodoPago === 'transferencia' || metodoPago === 'tarjeta' ? total : mixtoCalc ? mixtoCalc.digital : 0
+    const transferencia = metodoPago === 'transferencia' ? total : mixtoCalc ? mixtoCalc.transferencia : 0
+    const tarjeta = metodoPago === 'tarjeta' ? total : mixtoCalc ? mixtoCalc.tarjeta : 0
+    const digital = transferencia + tarjeta
     const notasFinal = mixtoCalc ? [mixtoCalc.detalle, notas].filter(Boolean).join(' — ') : notas
 
     const { error } = await supabase.from('ventas').update({
@@ -114,6 +116,8 @@ export default function EditarVenta() {
       metodo_pago: metodoPago,
       pagado_efectivo: efectivo,
       pagado_digital: digital,
+      pagado_transferencia: transferencia,
+      pagado_tarjeta: tarjeta,
       comision_profesional: comision,
       comision_velik: total - comision,
       notas: notasFinal,

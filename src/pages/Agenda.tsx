@@ -158,7 +158,9 @@ export default function Agenda() {
     const comision = total * 0.4
     const mixtoCalc = metodoPagoRapido === 'mixto' ? calcularMontosMixto(total, mixtoRapido) : null
     const efectivo = metodoPagoRapido === 'efectivo' ? total : mixtoCalc ? mixtoCalc.efectivo : 0
-    const digital = metodoPagoRapido === 'transferencia' || metodoPagoRapido === 'tarjeta' ? total : mixtoCalc ? mixtoCalc.digital : 0
+    const transferencia = metodoPagoRapido === 'transferencia' ? total : mixtoCalc ? mixtoCalc.transferencia : 0
+    const tarjeta = metodoPagoRapido === 'tarjeta' ? total : mixtoCalc ? mixtoCalc.tarjeta : 0
+    const digital = transferencia + tarjeta
 
     const { error } = await supabase.from('ventas').insert({
       appointment_id: cita.id,
@@ -175,6 +177,8 @@ export default function Agenda() {
       metodo_pago: metodoPagoRapido,
       pagado_efectivo: efectivo,
       pagado_digital: digital,
+      pagado_transferencia: transferencia,
+      pagado_tarjeta: tarjeta,
       comision_profesional: comision,
       comision_velik: total - comision,
       ...(mixtoCalc ? { notas: mixtoCalc.detalle } : {}),

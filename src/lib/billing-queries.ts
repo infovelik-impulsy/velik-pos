@@ -27,8 +27,8 @@ export interface PaymentBreakdown {
   efectivo: number
   transferencia: number
   tarjeta: number
-  mixto: number
   de_la_casa: number
+  ventas_mixtas: number
   total_transacciones: number
   total_dinero: number
 }
@@ -145,7 +145,7 @@ export async function getPaymentMethodBreakdown(
 ): Promise<PaymentBreakdown> {
   let query = supabase
     .from('ventas')
-    .select('metodo_pago, total, pagado_efectivo, pagado_digital')
+    .select('metodo_pago, total, pagado_efectivo, pagado_transferencia, pagado_tarjeta, pagado_digital')
 
   query = applyFilters(query, startDate, endDate, profesionalId)
   const { data, error } = await query
@@ -155,34 +155,34 @@ export async function getPaymentMethodBreakdown(
     efectivo: 0,
     transferencia: 0,
     tarjeta: 0,
-    mixto: 0,
     de_la_casa: 0,
+    ventas_mixtas: 0,
     total_transacciones: 0,
     total_dinero: 0,
   }
 
   data?.forEach(row => {
     breakdown.total_transacciones += 1
-    breakdown.total_dinero += row.total || 0
 
-    switch (row.metodo_pago) {
-      case 'efectivo':
-        breakdown.efectivo += row.pagado_efectivo || 0
-        break
-      case 'transferencia':
-        breakdown.transferencia += row.pagado_digital || 0
-        break
-      case 'tarjeta':
-        breakdown.tarjeta += row.pagado_digital || 0
-        break
-      case 'mixto':
-        breakdown.efectivo += row.pagado_efectivo || 0
-        breakdown.mixto += row.pagado_digital || 0
-        break
-      case 'de_la_casa':
-        breakdown.de_la_casa += row.total || 0
-        break
+    if (row.metodo_pago === 'de_la_casa') {
+      breakdown.de_la_casa += row.total || 0
+      return
     }
+
+    breakdown.total_dinero += row.total || 0
+    breakdown.efectivo += row.pagado_efectivo || 0
+    // Compatibilidad: ventas antiguas antes de separar transferencia/tarjeta
+    // solo tienen pagado_digital; si no hay desglose fino, cae en tarjeta por defecto.
+    const tieneDesgloseFino = (row.pagado_transferencia || 0) > 0 || (row.pagado_tarjeta || 0) > 0
+    if (tieneDesgloseFino) {
+      breakdown.transferencia += row.pagado_transferencia || 0
+      breakdown.tarjeta += row.pagado_tarjeta || 0
+    } else if (row.metodo_pago === 'transferencia') {
+      breakdown.transferencia += row.pagado_digital || 0
+    } else if (row.pagado_digital) {
+      breakdown.tarjeta += row.pagado_digital || 0
+    }
+    if (row.metodo_pago === 'mixto') breakdown.ventas_mixtas += 1
   })
 
   return breakdown

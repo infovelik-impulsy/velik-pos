@@ -35,6 +35,8 @@ export interface Venta {
   metodo_pago: 'efectivo' | 'transferencia' | 'tarjeta' | 'mixto'
   pagado_efectivo: number
   pagado_digital: number
+  pagado_transferencia?: number
+  pagado_tarjeta?: number
   comision_profesional: number
   comision_velik: number
   notas?: string
