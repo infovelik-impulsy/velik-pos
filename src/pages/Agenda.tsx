@@ -7,6 +7,7 @@ import { PROFESIONALES, METODOS_PAGO, type ServicioVendido } from '../types'
 import { supabase } from '../lib/supabase'
 import { updateAppointmentStatus, eliminarBloqueoGHL } from '../lib/ghl'
 import ServiceSelector from '../components/ServiceSelector'
+import MixtoSelector, { calcularMontosMixto, type MixtoValue } from '../components/MixtoSelector'
 
 const METODO_ICONO: Record<string, string> = {
   efectivo: '💵',
@@ -55,7 +56,7 @@ export default function Agenda() {
   const [metodoPagoRapido, setMetodoPagoRapido] = useState<'efectivo' | 'transferencia' | 'tarjeta' | 'mixto' | 'de_la_casa'>('efectivo')
   const [serviciosRapidos, setServiciosRapidos] = useState<ServicioVendido[]>([])
   const [mostrarSelectorRapido, setMostrarSelectorRapido] = useState(false)
-  const [pagadoEfectivoRapido, setPagadoEfectivoRapido] = useState(0)
+  const [mixtoRapido, setMixtoRapido] = useState<MixtoValue>({ metodo1: 'efectivo', metodo2: 'transferencia', monto1: 0 })
   const [guardandoVentaRapida, setGuardandoVentaRapida] = useState(false)
   const navigate = useNavigate()
 
@@ -137,7 +138,7 @@ export default function Agenda() {
     setMetodoPagoRapido('efectivo')
     setServiciosRapidos([{ nombre: cita.titulo, precio: parsePrecio(cita.precio) }])
     setMostrarSelectorRapido(false)
-    setPagadoEfectivoRapido(0)
+    setMixtoRapido({ metodo1: 'efectivo', metodo2: 'transferencia', monto1: 0 })
   }
 
   function actualizarPrecioServicioRapido(i: number, precio: number) {
@@ -155,8 +156,9 @@ export default function Agenda() {
     const cita = citaVentaRapida
     const prof = PROFESIONALES.find(p => p.id === cita.profesional_id)
     const comision = total * 0.4
-    const efectivo = metodoPagoRapido === 'efectivo' ? total : metodoPagoRapido === 'mixto' ? pagadoEfectivoRapido : 0
-    const digital = metodoPagoRapido === 'transferencia' || metodoPagoRapido === 'tarjeta' ? total : metodoPagoRapido === 'mixto' ? (total - pagadoEfectivoRapido) : 0
+    const mixtoCalc = metodoPagoRapido === 'mixto' ? calcularMontosMixto(total, mixtoRapido) : null
+    const efectivo = metodoPagoRapido === 'efectivo' ? total : mixtoCalc ? mixtoCalc.efectivo : 0
+    const digital = metodoPagoRapido === 'transferencia' || metodoPagoRapido === 'tarjeta' ? total : mixtoCalc ? mixtoCalc.digital : 0
 
     const { error } = await supabase.from('ventas').insert({
       appointment_id: cita.id,
@@ -175,6 +177,7 @@ export default function Agenda() {
       pagado_digital: digital,
       comision_profesional: comision,
       comision_velik: total - comision,
+      ...(mixtoCalc ? { notas: mixtoCalc.detalle } : {}),
     })
 
     if (error) {
@@ -537,15 +540,11 @@ export default function Agenda() {
                               🏠 De la casa
                             </button>
                             {metodoPagoRapido === 'mixto' && (
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-500 flex-shrink-0">Efectivo $</span>
-                                <input
-                                  type="number"
-                                  value={pagadoEfectivoRapido || ''}
-                                  onChange={e => setPagadoEfectivoRapido(Number(e.target.value))}
-                                  className="flex-1 border border-gray-200 rounded-lg px-2 py-1 text-xs focus:outline-none"
-                                />
-                              </div>
+                              <MixtoSelector
+                                total={serviciosRapidos.reduce((s, sv) => s + (sv.precio || 0), 0)}
+                                value={mixtoRapido}
+                                onChange={setMixtoRapido}
+                              />
                             )}
                             <div className="flex gap-1.5 pt-1">
                               <button

@@ -24,6 +24,7 @@ import ContactSearch from '../components/ContactSearch'
 import ServiceSelector from '../components/ServiceSelector'
 import ProductoSelector from '../components/ProductoSelector'
 import CafeteriaSelector, { type ItemCafeteriaCarrito } from '../components/CafeteriaSelector'
+import MixtoSelector, { calcularMontosMixto, type MixtoValue } from '../components/MixtoSelector'
 
 interface ProductoCarrito {
   nombre: string
@@ -72,7 +73,7 @@ export default function NuevaVenta({ rol = 'admin' }: { rol?: string }) {
       : []
   )
   const [metodoPago, setMetodoPago] = useState<'efectivo' | 'transferencia' | 'tarjeta' | 'mixto' | 'de_la_casa'>('efectivo')
-  const [pagadoEfectivo, setPagadoEfectivo] = useState(0)
+  const [mixto, setMixto] = useState<MixtoValue>({ metodo1: 'efectivo', metodo2: 'transferencia', monto1: 0 })
   const [productos, setProductos] = useState<ProductoCarrito[]>([])
   const [cafeteria, setCafeteria] = useState<ItemCafeteriaCarrito[]>([])
   const [notas, setNotas] = useState('')
@@ -92,7 +93,6 @@ export default function NuevaVenta({ rol = 'admin' }: { rol?: string }) {
   const totalProductos = productos.reduce((s, p) => s + (p.precio || 0), 0)
   const totalCafeteria = cafeteria.reduce((s, c) => s + (c.precio * c.cantidad), 0)
   const total = totalServicios + totalProductos + totalCafeteria
-  const pagadoDigital = metodoPago === 'mixto' ? total - pagadoEfectivo : 0
 
   function removeServicio(i: number) {
     setServicios(s => s.filter((_, idx) => idx !== i))
@@ -185,8 +185,10 @@ export default function NuevaVenta({ rol = 'admin' }: { rol?: string }) {
     const comisionProductos = totalProductos * 0.05
     const comision = comisionServicios + comisionProductos
 
-    const efectivo = metodoPago === 'efectivo' ? total : metodoPago === 'mixto' ? pagadoEfectivo : 0
-    const digital = metodoPago === 'transferencia' || metodoPago === 'tarjeta' ? total : metodoPago === 'mixto' ? pagadoDigital : 0
+    const mixtoCalc = metodoPago === 'mixto' ? calcularMontosMixto(total, mixto) : null
+    const efectivo = metodoPago === 'efectivo' ? total : mixtoCalc ? mixtoCalc.efectivo : 0
+    const digital = metodoPago === 'transferencia' || metodoPago === 'tarjeta' ? total : mixtoCalc ? mixtoCalc.digital : 0
+    const notasFinal = mixtoCalc ? [mixtoCalc.detalle, notas].filter(Boolean).join(' — ') : notas
 
     // Si no viene de una cita agendada, creamos la cita en GHL (forzada) para que
     // quede también en el calendario oficial, y usamos su id para vincular venta ↔ cita.
@@ -247,7 +249,7 @@ export default function NuevaVenta({ rol = 'admin' }: { rol?: string }) {
       pagado_digital: digital,
       comision_profesional: comision,
       comision_velik: total - comision,
-      notas,
+      notas: notasFinal,
     })
 
     // Descontar stock cafetería
@@ -694,24 +696,11 @@ export default function NuevaVenta({ rol = 'admin' }: { rol?: string }) {
           🏠 De la casa — Velik asume el costo
         </button>
         {metodoPago === 'mixto' && (
-          <div className="mt-3 space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500 w-28">Efectivo:</span>
-              <div className="relative flex-1">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
-                <input
-                  type="number"
-                  value={pagadoEfectivo || ''}
-                  onChange={e => setPagadoEfectivo(Number(e.target.value))}
-                  className="w-full border border-gray-200 rounded-xl pl-6 pr-3 py-2 text-sm focus:outline-none focus:border-[#C9A84C]"
-                />
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500 w-28">Digital:</span>
-              <span className="text-sm font-medium">${pagadoDigital.toLocaleString('es-CO')}</span>
-            </div>
-          </div>
+          <MixtoSelector
+            total={total}
+            value={mixto}
+            onChange={setMixto}
+          />
         )}
       </section>
 
