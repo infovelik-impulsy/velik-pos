@@ -49,7 +49,7 @@ export default function Facturacion() {
             dailySales={data?.dailySales || []}
             professionals={data?.professionals || []}
             topServices={data?.topServices || []}
-            paymentBreakdown={data?.paymentBreakdown || { efectivo: 0, transferencia: 0, tarjeta: 0, mixto: 0, de_la_casa: 0, total_transacciones: 0, total_dinero: 0 }}
+            paymentBreakdown={data?.paymentBreakdown || { efectivo: 0, transferencia: 0, tarjeta: 0, de_la_casa: 0, ventas_mixtas: 0, total_transacciones: 0, total_dinero: 0 }}
           />
         </div>
 
@@ -100,7 +100,7 @@ export default function Facturacion() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <ProfessionalBreakdown data={data?.professionals || []} loading={loading} />
           <PaymentMethodBreakdown
-            data={data?.paymentBreakdown || { efectivo: 0, transferencia: 0, tarjeta: 0, mixto: 0, de_la_casa: 0, total_transacciones: 0, total_dinero: 0 }}
+            data={data?.paymentBreakdown || { efectivo: 0, transferencia: 0, tarjeta: 0, de_la_casa: 0, ventas_mixtas: 0, total_transacciones: 0, total_dinero: 0 }}
             loading={loading}
           />
         </div>
