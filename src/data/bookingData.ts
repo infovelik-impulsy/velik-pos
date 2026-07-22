@@ -116,8 +116,8 @@ export const SERVICIOS: Record<string, Servicio[]> = {
     { nombre: "Extensión de Pestañas Efecto Tecnológico", calendarId: "4O1RVMdKaXEUaHqQqVP1", duracion: 90, precio: "$200.000", profesionales: [] },
     { nombre: "Retoque Pestañas",                         calendarId: "yuikssBrbkVHsArQoe65", duracion: 60, precio: "$80.000",  profesionales: [] },
     { nombre: "Pestañas Punto a Punto",                   calendarId: "zT9oLreL1DCiwWDmO1Dx", duracion: 45, precio: "$50.000",  profesionales: HAIR },
-    { nombre: "Depilación de Cejas con Cera",             calendarId: "VYpzK2GHuBJ63aO2lSaV", duracion: 10, precio: "$25.000",  profesionales: HAIR },
-    { nombre: "Depilación de Cejas con Hilo",             calendarId: "ozLRNZ5V55zBOpGxcygz", duracion: 15, precio: "$30.000",  profesionales: [] },
+    { nombre: "Depilación de Cejas con Cera",             calendarId: "VYpzK2GHuBJ63aO2lSaV", duracion: 10, precio: "$30.000",  profesionales: HAIR },
+    { nombre: "Depilación de Cejas con Hilo",             calendarId: "ozLRNZ5V55zBOpGxcygz", duracion: 15, precio: "$35.000",  profesionales: [] },
     { nombre: "Depilación de Cejas con Henna",            calendarId: "n49lc4VkUvtvdtCRcgTB", duracion: 10, precio: "$55.000",  profesionales: HAIR },
     { nombre: "Depilación Perfilado/Cuchilla Cejas",      calendarId: "GcGJ59uvGEDf3LZCyrg2", duracion: 25, precio: "$20.000",  profesionales: HAIR },
   ],
@@ -141,8 +141,8 @@ export const SERVICIOS: Record<string, Servicio[]> = {
 
   // ─── MAQUILLAJE PROFESIONAL ── Luz (Baño de Novia: Carolina y Laura) ─────────
   "Maquillaje Profesional": [
-    { nombre: "Maquillaje Social",    calendarId: "71J4eTC3TIEuDXfsP1Iw", duracion: 60, precio: "$170.000", profesionales: [LA] },
-    { nombre: "Maquillaje Blindado",  calendarId: "hdrmUKbZXwO4tbNVsIkb", duracion: 60, precio: "$200.000", profesionales: [LA] },
+    { nombre: "Maquillaje Social",    calendarId: "71J4eTC3TIEuDXfsP1Iw", duracion: 60, precio: "$230.000", profesionales: [LA] },
+    { nombre: "Maquillaje Blindado",  calendarId: "hdrmUKbZXwO4tbNVsIkb", duracion: 60, precio: "$250.000", profesionales: [LA] },
     { nombre: "Maquillaje Halloween", calendarId: "PelRqVASPHp0QEu7P5Xs", duracion: 60, precio: "$230.000", profesionales: [LA] },
     { nombre: "Baño de Novia Brazos", calendarId: "OybBhb6gij304Vromp7n", duracion: 15, precio: "$30.000",  profesionales: HAIR },
   ],
