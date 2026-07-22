@@ -22,16 +22,31 @@ export default function Clientes({ rol = 'admin' }: { rol?: string }) {
 
   async function cargar() {
     setLoading(true)
-    const { data } = await supabase
-      .from('ventas')
-      .select('cliente_telefono, cliente_nombre, fecha_cita, total, metodo_pago')
-      .order('fecha_cita', { ascending: false })
 
-    if (!data) { setLoading(false); return }
+    // Supabase limita cada respuesta a 1000 filas — con miles de ventas hay
+    // que paginar, si no el conteo de visitas queda incompleto para clientes
+    // con historial antiguo.
+    const data: { cliente_telefono: string | null; cliente_nombre: string | null; fecha_cita: string | null; total: number | null; metodo_pago: string | null }[] = []
+    const PAGE = 1000
+    let desde = 0
+    while (true) {
+      const { data: page, error } = await supabase
+        .from('ventas')
+        .select('cliente_telefono, cliente_nombre, fecha_cita, total, metodo_pago')
+        .order('fecha_cita', { ascending: false })
+        .range(desde, desde + PAGE - 1)
+      if (error || !page) break
+      data.push(...page)
+      if (page.length < PAGE) break
+      desde += PAGE
+    }
+
+    if (data.length === 0) { setLoading(false); return }
 
     const map = new Map<string, ClienteResumen>()
     data.forEach(v => {
-      const key = v.cliente_telefono || v.cliente_nombre
+      const key = v.cliente_telefono || v.cliente_nombre || ''
+      if (!key) return
       if (!map.has(key)) {
         map.set(key, {
           telefono: v.cliente_telefono || '',
@@ -44,7 +59,7 @@ export default function Clientes({ rol = 'admin' }: { rol?: string }) {
       const c = map.get(key)!
       c.visitas += 1
       if (v.metodo_pago !== 'de_la_casa') c.total_gastado += v.total || 0
-      if ((v.fecha_cita || '') > c.ultimo_servicio) c.ultimo_servicio = v.fecha_cita
+      if ((v.fecha_cita || '') > c.ultimo_servicio) c.ultimo_servicio = v.fecha_cita || ''
     })
 
     setClientes(Array.from(map.values()).sort((a, b) => b.visitas - a.visitas))
