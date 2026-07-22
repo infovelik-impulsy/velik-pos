@@ -89,23 +89,24 @@ export const SERVICIOS: Record<string, Servicio[]> = {
     { nombre: "Alisado Natural Argán y Coco (Medio)",       calendarId: "YsyBC5BKtrnN8YQYRDBm", duracion: 300, precio: "$290.000", precioEditable: true, profesionales: [LS] },
     { nombre: "Alisado Natural Argán y/o Coco Largo",       calendarId: "aO1pbT4UQDyqLJwXnPqX", duracion: 300, precio: "$400.000", precioEditable: true, profesionales: [LS] },
     { nombre: "Alisado Natural Argán y/o Coco Extra Largo", calendarId: "NFFYkmfD3gwaVACAOBxq", duracion: 300, precio: "$430.000", precioEditable: true, profesionales: [LS] },
-    { nombre: "Color Cabello Corto",                        calendarId: "tdu7sEKcoUaJGN6TS5dR", duracion: 60,  precio: "$150.000", precioEditable: true, profesionales: HAIR },
-    { nombre: "Color Cabello Medio",                        calendarId: "XEmC3LZdNFLzri44z5fe", duracion: 60,  precio: "$220.000", precioEditable: true, profesionales: HAIR },
-    { nombre: "Color Cabello Largo",                        calendarId: "SZnHg7E8gOsBB0CxxpAk", duracion: 90,  precio: "$290.000", precioEditable: true, profesionales: HAIR },
-    { nombre: "Color Cabello Extra Largo",                  calendarId: "HXfDgBJXCdD5xD7rqgmW", duracion: 90,  precio: "$360.000", precioEditable: true, profesionales: HAIR },
+    { nombre: "Color Cabello Corto",                        calendarId: "tdu7sEKcoUaJGN6TS5dR", duracion: 60,  precio: "$150.000", precioEditable: true, profesionales: [LS] },
+    { nombre: "Color Cabello Medio",                        calendarId: "XEmC3LZdNFLzri44z5fe", duracion: 60,  precio: "$220.000", precioEditable: true, profesionales: [LS] },
+    { nombre: "Color Cabello Largo",                        calendarId: "SZnHg7E8gOsBB0CxxpAk", duracion: 90,  precio: "$290.000", precioEditable: true, profesionales: [LS] },
+    { nombre: "Color Cabello Extra Largo",                  calendarId: "HXfDgBJXCdD5xD7rqgmW", duracion: 90,  precio: "$360.000", precioEditable: true, profesionales: [LS] },
     { nombre: "Cepillado Cabello Corto",                    calendarId: "AFzeRInudMfQvytS7rYI", duracion: 30,  precio: "$50.000",  precioEditable: true, profesionales: [LS] },
     { nombre: "Cepillado Cabello Medio",                    calendarId: "BhjqV08NlQwTyAer5Rah", duracion: 40,  precio: "$70.000",  precioEditable: true, profesionales: [LS] },
     { nombre: "Cepillado Cabello Largo",                    calendarId: "zxVN8YcfF9nQh3uOhLcD", duracion: 45,  precio: "$90.000",  precioEditable: true, profesionales: [LS] },
     { nombre: "Cepillado Cabello Extralargo",               calendarId: "IM2RYaBSfWNytuAmACml", duracion: 60,  precio: "$120.000", precioEditable: true, profesionales: [LS] },
     { nombre: "Planchado de Cabello",                       calendarId: "eSmQWFTgnrsIhICBidoF", duracion: 40,  precio: "$50.000",  profesionales: HAIR },
     { nombre: "Ondas",                                      calendarId: "pyw2lCLu7OmMz5i1Xj0i", duracion: 45,  precio: "$70.000",  profesionales: HAIR },
-    { nombre: "Corte en Capas",                             calendarId: "cYESJstUsKOBcrKLfI61", duracion: 35,  precio: "$70.000",  profesionales: HAIR },
-    { nombre: "Corte de Puntas",                            calendarId: "4aMo5CLViO46g2Q6jnip", duracion: 30,  precio: "$45.000",  profesionales: HAIR },
+    { nombre: "Corte en Capas",                             calendarId: "cYESJstUsKOBcrKLfI61", duracion: 35,  precio: "$70.000",  profesionales: [LS] },
+    { nombre: "Corte de Puntas",                            calendarId: "4aMo5CLViO46g2Q6jnip", duracion: 30,  precio: "$45.000",  profesionales: [LS] },
     { nombre: "Corte Caballero",                            calendarId: "6V88WbxYuumHKt5RBfGO", duracion: 30,  precio: "$70.000",  profesionales: [LS] },
     { nombre: "Terapia Capilar de L'Oréal",                 calendarId: "gJhd4efPJ7Zs7Ogybq95", duracion: 20,  precio: "$120.000", profesionales: HAIR },
     { nombre: "Terapia Capilar Authentic",                  calendarId: "",                       duracion: 60,  precio: "$250.000", profesionales: HAIR },
     { nombre: "Toxina Botulínica",                          calendarId: "7G42EdlizK39sGWSRTWO", duracion: 20,  precio: "$0",       profesionales: HAIR },
     { nombre: "Hidratación Profunda",                       calendarId: "FHCC3Uhec8QgNtvCkQUM", duracion: 60,  precio: "$300.000", profesionales: [LS] },
+    { nombre: "Peinados",                                   calendarId: "a9HZ2nSGGqmnzNd5P6VQ", duracion: 45,  precio: "$0",        precioEditable: true, profesionales: [LS] },
   ],
 
   // ─── CEJAS Y PESTAÑAS ── Carolina y Laura (extensiones/retoque solo Laura) ──
@@ -143,9 +144,9 @@ export const SERVICIOS: Record<string, Servicio[]> = {
 
   // ─── MAQUILLAJE PROFESIONAL ── Luz (Baño de Novia: Carolina y Laura) ─────────
   "Maquillaje Profesional": [
-    { nombre: "Maquillaje Social",    calendarId: "71J4eTC3TIEuDXfsP1Iw", duracion: 60, precio: "$230.000", profesionales: [LA] },
-    { nombre: "Maquillaje Blindado",  calendarId: "hdrmUKbZXwO4tbNVsIkb", duracion: 60, precio: "$250.000", profesionales: [LA] },
-    { nombre: "Maquillaje Halloween", calendarId: "PelRqVASPHp0QEu7P5Xs", duracion: 60, precio: "$230.000", profesionales: [LA] },
+    { nombre: "Maquillaje Social",    calendarId: "71J4eTC3TIEuDXfsP1Iw", duracion: 60, precio: "$230.000", profesionales: [LA, LS] },
+    { nombre: "Maquillaje Blindado",  calendarId: "hdrmUKbZXwO4tbNVsIkb", duracion: 60, precio: "$250.000", profesionales: [LA, LS] },
+    { nombre: "Maquillaje Halloween", calendarId: "PelRqVASPHp0QEu7P5Xs", duracion: 60, precio: "$230.000", profesionales: [LA, LS] },
     { nombre: "Baño de Novia Brazos", calendarId: "OybBhb6gij304Vromp7n", duracion: 15, precio: "$30.000",  profesionales: HAIR },
   ],
 

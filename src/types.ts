@@ -65,5 +65,6 @@ export const USUARIOS = [
   { id: 'UzLj5T8ZOrJ8reSig5os', nombre: 'Luz Aida (Admin)', pin: '1800', rol: 'admin' },
   { id: 'xUf32I3dzoylUW8VDH9z', nombre: 'Zuly Rojas', pin: '0704', rol: 'profesional' },
   { id: 'YCFWZJMJzmDEA1MJv27k', nombre: 'Juliana García', pin: '0405', rol: 'profesional' },
+  { id: 'h9MxOmhWbbosHU0BR8MT', nombre: 'Leidy Saldarriaga', pin: '0612', rol: 'profesional' },
   { id: 'UzLj5T8ZOrJ8reSig5os', nombre: 'Manuela (Recepción)', pin: '0987', rol: 'recepcion' },
 ]
