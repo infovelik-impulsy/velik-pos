@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import { updateAppointmentInGHL } from '../lib/ghl'
 import { PROFESIONALES } from '../types'
 import ServiceSelector from '../components/ServiceSelector'
+import { verificarSolape } from '../lib/disponibilidad'
 
 interface LocationState { citaId: string }
 
@@ -24,6 +25,7 @@ export default function EditarCita() {
   const [servicioNombre, setServicioNombre] = useState('')
   const [servicioPrecio, setServicioPrecio] = useState(0)
   const [profesionalId, setProfesionalId] = useState('')
+  const [duracionMin, setDuracionMin] = useState(60)
 
   useEffect(() => { loadCita() }, [])
 
@@ -45,21 +47,32 @@ export default function EditarCita() {
       }
       setServicioNombre(data.titulo || '')
       setProfesionalId(data.profesional_id || '')
+      if (data.start_time && data.end_time) {
+        const mins = Math.round((new Date(data.end_time).getTime() - new Date(data.start_time).getTime()) / 60000)
+        if (mins > 0) setDuracionMin(mins)
+      }
     }
     setLoading(false)
   }
 
   async function guardar() {
     if (!fechaCita || !horaCita || !profesionalId) return
-    setGuardando(true)
 
     const prof = PROFESIONALES.find(p => p.id === profesionalId)
     const startISO = `${fechaCita}T${horaCita}:00-05:00`
     const endDate = new Date(`${fechaCita}T${horaCita}:00`)
-    endDate.setMinutes(endDate.getMinutes() + 60)
+    endDate.setMinutes(endDate.getMinutes() + duracionMin)
     const endH = String(endDate.getHours()).padStart(2, '0')
     const endM = String(endDate.getMinutes()).padStart(2, '0')
     const endISO = `${fechaCita}T${endH}:${endM}:00-05:00`
+
+    const solape = await verificarSolape(profesionalId, startISO, endISO, state.citaId)
+    if (solape.solapa) {
+      alert(`${prof?.nombre || 'La profesional'} ya tiene una cita en ese horario: ${solape.detalle}.`)
+      return
+    }
+
+    setGuardando(true)
 
     const updates: Record<string, unknown> = {
       cliente_nombre: clienteNombre,
@@ -172,7 +185,7 @@ export default function EditarCita() {
         ) : (
           <p className="text-xs text-[#8a7a6a] mb-3">Selecciona el nuevo servicio (opcional)</p>
         )}
-        <ServiceSelector onSelect={s => { setServicioNombre(s.nombre); setServicioPrecio(s.precio) }} />
+        <ServiceSelector onSelect={s => { setServicioNombre(s.nombre); setServicioPrecio(s.precio); if (s.duracion) setDuracionMin(s.duracion) }} />
       </section>
 
       <button onClick={guardar} disabled={guardando || !profesionalId || !fechaCita || !horaCita}

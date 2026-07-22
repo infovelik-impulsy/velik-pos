@@ -13,6 +13,7 @@ import type { Servicio, Profesional } from '../data/bookingData'
 import { supabase } from '../lib/supabase'
 import { crearCitaForzada, updateAppointmentInGHL, updateAppointmentStatus } from '../lib/ghl'
 import { diaCerrado } from '../lib/festivos'
+import { verificarSolape } from '../lib/disponibilidad'
 import ContactSearch from '../components/ContactSearch'
 
 interface CitaRow {
@@ -205,12 +206,19 @@ export default function CalendarioVista() {
       setErrorModal('No se puede agendar fuera del horario del salón (9:00 AM - 7:00 PM).')
       return
     }
+    const startISO = toColombiaISO(modalInicio)
+    const endDate = new Date(modalInicio.getTime() + (servicio.duracion || 30) * 60000)
+    const endISO = toColombiaISO(endDate)
+
+    const solape = await verificarSolape(profesional.userId, startISO, endISO)
+    if (solape.solapa) {
+      setErrorModal(`${profesional.nombre} ya tiene una cita en ese horario: ${solape.detalle}.`)
+      return
+    }
+
     setGuardando(true)
     setErrorModal('')
     try {
-      const startISO = toColombiaISO(modalInicio)
-      const endDate = new Date(modalInicio.getTime() + (servicio.duracion || 30) * 60000)
-      const endISO = toColombiaISO(endDate)
       const titulo = `${servicio.nombre} - ${cliente.nombre}`
       const tel = cliente.telefono.startsWith('+') ? cliente.telefono : '+57' + cliente.telefono.replace(/\D/g, '')
 

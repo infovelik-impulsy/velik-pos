@@ -5,6 +5,7 @@ import { generarFacturaAlegra } from '../lib/alegra'
 import { supabase } from '../lib/supabase'
 import { updateAppointmentStatus, crearCitaForzada } from '../lib/ghl'
 import { diaCerrado } from '../lib/festivos'
+import { verificarSolape } from '../lib/disponibilidad'
 import { SERVICIOS } from '../data/bookingData'
 import { PROFESIONALES, METODOS_PAGO, type ServicioVendido } from '../types'
 
@@ -205,6 +206,14 @@ export default function NuevaVenta({ rol = 'admin' }: { rol?: string }) {
           endD.setMinutes(endD.getMinutes() + (cal.duracion || 30))
           const pad = (x: number) => String(x).padStart(2, '0')
           const endISO = `${fechaCita}T${pad(endD.getHours())}:${pad(endD.getMinutes())}:00-05:00`
+
+          const solape = await verificarSolape(profesionalId, startISO, endISO)
+          if (solape.solapa) {
+            alert(`${prof?.nombre || 'La profesional'} ya tiene una cita en ese horario: ${solape.detalle}.`)
+            setGuardando(false)
+            return
+          }
+
           const res = await crearCitaForzada({
             calendarId: cal.calendarId,
             userId: profesionalId,
