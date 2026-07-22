@@ -26,6 +26,7 @@ const ZR = "xUf32I3dzoylUW8VDH9z"  // Zuly Rojas — SOLO uñas (manicure, pedic
 const JU = "YCFWZJMJzmDEA1MJv27k"  // Juliana García Paz — SOLO uñas (manicure, pedicure y combos)
 
 const MO = "2lvoTms5Sg8ubmjjUaGs" // Maria Osorio — SOLO uñas (manicure, pedicure y combos)
+const LS = "h9MxOmhWbbosHU0BR8MT" // Leidy Saldarriaga — cabello (corte caballero/cepillado/alisado), cejas y pestañas (lifting/laminado/depilación/punto a punto), masajes/paquetes corporales
 
 const NAILS = [ZR, JU, MO]
 const HAIR: string[] = []
@@ -84,42 +85,43 @@ export const SERVICIOS: Record<string, Servicio[]> = {
   // ─── CABELLO ── Carolina y Laura ─────────────────────────────────────────────
   "Cabello": [
     { nombre: "Valoración de Cabello",                      calendarId: "yePA3PPHJC9Fdu6A6WMt", duracion: 30,  precio: "$30.000",  profesionales: [] },
-    { nombre: "Alisado Natural Argán y Coco (Corto)",       calendarId: "tYgB9RKWsWnAY6yzHbzo", duracion: 300, precio: "$250.000", precioEditable: true, profesionales: HAIR },
-    { nombre: "Alisado Natural Argán y Coco (Medio)",       calendarId: "YsyBC5BKtrnN8YQYRDBm", duracion: 300, precio: "$290.000", precioEditable: true, profesionales: HAIR },
-    { nombre: "Alisado Natural Argán y/o Coco Largo",       calendarId: "aO1pbT4UQDyqLJwXnPqX", duracion: 300, precio: "$400.000", precioEditable: true, profesionales: HAIR },
-    { nombre: "Alisado Natural Argán y/o Coco Extra Largo", calendarId: "NFFYkmfD3gwaVACAOBxq", duracion: 300, precio: "$430.000", precioEditable: true, profesionales: HAIR },
+    { nombre: "Alisado Natural Argán y Coco (Corto)",       calendarId: "tYgB9RKWsWnAY6yzHbzo", duracion: 300, precio: "$250.000", precioEditable: true, profesionales: [LS] },
+    { nombre: "Alisado Natural Argán y Coco (Medio)",       calendarId: "YsyBC5BKtrnN8YQYRDBm", duracion: 300, precio: "$290.000", precioEditable: true, profesionales: [LS] },
+    { nombre: "Alisado Natural Argán y/o Coco Largo",       calendarId: "aO1pbT4UQDyqLJwXnPqX", duracion: 300, precio: "$400.000", precioEditable: true, profesionales: [LS] },
+    { nombre: "Alisado Natural Argán y/o Coco Extra Largo", calendarId: "NFFYkmfD3gwaVACAOBxq", duracion: 300, precio: "$430.000", precioEditable: true, profesionales: [LS] },
     { nombre: "Color Cabello Corto",                        calendarId: "tdu7sEKcoUaJGN6TS5dR", duracion: 60,  precio: "$150.000", precioEditable: true, profesionales: HAIR },
     { nombre: "Color Cabello Medio",                        calendarId: "XEmC3LZdNFLzri44z5fe", duracion: 60,  precio: "$220.000", precioEditable: true, profesionales: HAIR },
     { nombre: "Color Cabello Largo",                        calendarId: "SZnHg7E8gOsBB0CxxpAk", duracion: 90,  precio: "$290.000", precioEditable: true, profesionales: HAIR },
     { nombre: "Color Cabello Extra Largo",                  calendarId: "HXfDgBJXCdD5xD7rqgmW", duracion: 90,  precio: "$360.000", precioEditable: true, profesionales: HAIR },
-    { nombre: "Cepillado Cabello Corto",                    calendarId: "AFzeRInudMfQvytS7rYI", duracion: 30,  precio: "$50.000",  precioEditable: true, profesionales: HAIR },
-    { nombre: "Cepillado Cabello Medio",                    calendarId: "BhjqV08NlQwTyAer5Rah", duracion: 40,  precio: "$70.000",  precioEditable: true, profesionales: HAIR },
-    { nombre: "Cepillado Cabello Largo",                    calendarId: "zxVN8YcfF9nQh3uOhLcD", duracion: 45,  precio: "$90.000",  precioEditable: true, profesionales: HAIR },
-    { nombre: "Cepillado Cabello Extralargo",               calendarId: "IM2RYaBSfWNytuAmACml", duracion: 60,  precio: "$120.000", precioEditable: true, profesionales: HAIR },
+    { nombre: "Cepillado Cabello Corto",                    calendarId: "AFzeRInudMfQvytS7rYI", duracion: 30,  precio: "$50.000",  precioEditable: true, profesionales: [LS] },
+    { nombre: "Cepillado Cabello Medio",                    calendarId: "BhjqV08NlQwTyAer5Rah", duracion: 40,  precio: "$70.000",  precioEditable: true, profesionales: [LS] },
+    { nombre: "Cepillado Cabello Largo",                    calendarId: "zxVN8YcfF9nQh3uOhLcD", duracion: 45,  precio: "$90.000",  precioEditable: true, profesionales: [LS] },
+    { nombre: "Cepillado Cabello Extralargo",               calendarId: "IM2RYaBSfWNytuAmACml", duracion: 60,  precio: "$120.000", precioEditable: true, profesionales: [LS] },
     { nombre: "Planchado de Cabello",                       calendarId: "eSmQWFTgnrsIhICBidoF", duracion: 40,  precio: "$50.000",  profesionales: HAIR },
     { nombre: "Ondas",                                      calendarId: "pyw2lCLu7OmMz5i1Xj0i", duracion: 45,  precio: "$70.000",  profesionales: HAIR },
     { nombre: "Corte en Capas",                             calendarId: "cYESJstUsKOBcrKLfI61", duracion: 35,  precio: "$70.000",  profesionales: HAIR },
     { nombre: "Corte de Puntas",                            calendarId: "4aMo5CLViO46g2Q6jnip", duracion: 30,  precio: "$45.000",  profesionales: HAIR },
-    { nombre: "Corte Caballero",                            calendarId: "6V88WbxYuumHKt5RBfGO", duracion: 30,  precio: "$50.000",  profesionales: HAIR },
+    { nombre: "Corte Caballero",                            calendarId: "6V88WbxYuumHKt5RBfGO", duracion: 30,  precio: "$70.000",  profesionales: [LS] },
     { nombre: "Terapia Capilar de L'Oréal",                 calendarId: "gJhd4efPJ7Zs7Ogybq95", duracion: 20,  precio: "$120.000", profesionales: HAIR },
     { nombre: "Terapia Capilar Authentic",                  calendarId: "",                       duracion: 60,  precio: "$250.000", profesionales: HAIR },
     { nombre: "Toxina Botulínica",                          calendarId: "7G42EdlizK39sGWSRTWO", duracion: 20,  precio: "$0",       profesionales: HAIR },
+    { nombre: "Hidratación Profunda",                       calendarId: "FHCC3Uhec8QgNtvCkQUM", duracion: 60,  precio: "$300.000", profesionales: [LS] },
   ],
 
   // ─── CEJAS Y PESTAÑAS ── Carolina y Laura (extensiones/retoque solo Laura) ──
   "Cejas y Pestañas": [
-    { nombre: "Lifting de Pestañas",                      calendarId: "Z7WKPMSF94iQoA8Mf9ne", duracion: 60, precio: "$120.000", profesionales: HAIR },
-    { nombre: "Laminado de Cejas",                        calendarId: "JGZXM08wqm28dl4qfp9T", duracion: 50, precio: "$100.000", profesionales: HAIR },
-    { nombre: "Laminado de Cejas y Lifting de Pestañas",  calendarId: "KuZ6tseSF1WIC3wmAwGj", duracion: 70, precio: "$200.000", profesionales: HAIR },
+    { nombre: "Lifting de Pestañas",                      calendarId: "Z7WKPMSF94iQoA8Mf9ne", duracion: 60, precio: "$130.000", profesionales: [LS] },
+    { nombre: "Laminado de Cejas",                        calendarId: "JGZXM08wqm28dl4qfp9T", duracion: 50, precio: "$120.000", profesionales: [LS] },
+    { nombre: "Laminado de Cejas y Lifting de Pestañas",  calendarId: "KuZ6tseSF1WIC3wmAwGj", duracion: 70, precio: "$200.000", profesionales: [LS] },
     { nombre: "Extensión de Pestañas Efecto Clásica",     calendarId: "dry2VkC24zeouSdN4VEm", duracion: 70, precio: "$160.000", profesionales: [] },
     { nombre: "Extensión de Pestañas Efecto Híbrido",     calendarId: "dbxPJAla6tTHNv73eo1l", duracion: 90, precio: "$180.000", profesionales: [] },
     { nombre: "Extensión de Pestañas Efecto Tecnológico", calendarId: "4O1RVMdKaXEUaHqQqVP1", duracion: 90, precio: "$200.000", profesionales: [] },
     { nombre: "Retoque Pestañas",                         calendarId: "yuikssBrbkVHsArQoe65", duracion: 60, precio: "$80.000",  profesionales: [] },
-    { nombre: "Pestañas Punto a Punto",                   calendarId: "zT9oLreL1DCiwWDmO1Dx", duracion: 45, precio: "$50.000",  profesionales: HAIR },
-    { nombre: "Depilación de Cejas con Cera",             calendarId: "VYpzK2GHuBJ63aO2lSaV", duracion: 10, precio: "$30.000",  profesionales: HAIR },
-    { nombre: "Depilación de Cejas con Hilo",             calendarId: "ozLRNZ5V55zBOpGxcygz", duracion: 15, precio: "$35.000",  profesionales: [] },
-    { nombre: "Depilación de Cejas con Henna",            calendarId: "n49lc4VkUvtvdtCRcgTB", duracion: 10, precio: "$55.000",  profesionales: HAIR },
-    { nombre: "Depilación Perfilado/Cuchilla Cejas",      calendarId: "GcGJ59uvGEDf3LZCyrg2", duracion: 25, precio: "$20.000",  profesionales: HAIR },
+    { nombre: "Pestañas Punto a Punto",                   calendarId: "zT9oLreL1DCiwWDmO1Dx", duracion: 45, precio: "$50.000",  profesionales: [LS] },
+    { nombre: "Depilación de Cejas con Cera",             calendarId: "VYpzK2GHuBJ63aO2lSaV", duracion: 10, precio: "$30.000",  profesionales: [LS] },
+    { nombre: "Depilación de Cejas con Hilo",             calendarId: "ozLRNZ5V55zBOpGxcygz", duracion: 15, precio: "$35.000",  profesionales: [LS] },
+    { nombre: "Depilación de Cejas con Henna",            calendarId: "n49lc4VkUvtvdtCRcgTB", duracion: 10, precio: "$55.000",  profesionales: [LS] },
+    { nombre: "Depilación Perfilado/Cuchilla Cejas",      calendarId: "GcGJ59uvGEDf3LZCyrg2", duracion: 25, precio: "$20.000",  profesionales: [LS] },
   ],
 
   // ─── DEPILACIÓN ── Carolina y Laura (hilo solo Carolina) ─────────────────────
@@ -149,16 +151,16 @@ export const SERVICIOS: Record<string, Servicio[]> = {
 
   // ─── CORPORAL ── Luz (Piedras Volcánicas: Laura y Luz) ───────────────────────
   "Corporal": [
-    { nombre: "Drenaje Linfático",                           calendarId: "wAwK46EAzP7OMVbVZ4Na", duracion: 60,  precio: "$100.000",   profesionales: [LA] },
-    { nombre: "Masaje Relajación Piedras Volcánicas + Velas",calendarId: "q2Iz4gfTyoB3JkRNZ4CZ", duracion: 60,  precio: "$140.000",   profesionales: [LA] },
-    { nombre: "Paquete 1 Masaje Reductor",                   calendarId: "kjgB0Whm8mjpYv8I075K", duracion: 45,  precio: "$450.000",   profesionales: [LA] },
-    { nombre: "Paquete 2 Masaje Reductor",                   calendarId: "8iU9qGnCM5nT6816pEAh", duracion: 45,  precio: "$650.000",   profesionales: [LA] },
-    { nombre: "Paquete 3 Masaje Reductor",                   calendarId: "uajeiWuAmnwZ9BPA4RlT", duracion: 45,  precio: "$850.000",   profesionales: [LA] },
-    { nombre: "Reestructuración de Estrías",                 calendarId: "9PiZEDHNec91qK58o3de", duracion: 40,  precio: "$400.000",   profesionales: [LA] },
-    { nombre: "Camuflaje de Estrías",                        calendarId: "xU7HfkiIbhZwHo1EnrTz", duracion: 120, precio: "$1.600.000", profesionales: [LA] },
-    { nombre: "Limpieza Facial Especial",                    calendarId: "vxUBF94v8PKqobjUBeZc", duracion: 90,  precio: "$150.000",   profesionales: [LA] },
-    { nombre: "Limpieza Facial Tradicional",                 calendarId: "fz9614uqbCIz8bLDXYNR", duracion: 60,  precio: "$100.000",   profesionales: [LA] },
-    { nombre: "Cosmetología Facial",                         calendarId: "6Gq72d3MJ8FqYsWYEeWD", duracion: 30,  precio: "$30.000",    profesionales: [LA] },
+    { nombre: "Drenaje Linfático",                           calendarId: "wAwK46EAzP7OMVbVZ4Na", duracion: 60,  precio: "$100.000",   profesionales: [LA, LS] },
+    { nombre: "Masaje Relajación Piedras Volcánicas + Velas",calendarId: "q2Iz4gfTyoB3JkRNZ4CZ", duracion: 60,  precio: "$140.000",   profesionales: [LA, LS] },
+    { nombre: "Paquete 1 Masaje Reductor",                   calendarId: "kjgB0Whm8mjpYv8I075K", duracion: 45,  precio: "$450.000",   profesionales: [LA, LS] },
+    { nombre: "Paquete 2 Masaje Reductor",                   calendarId: "8iU9qGnCM5nT6816pEAh", duracion: 45,  precio: "$650.000",   profesionales: [LA, LS] },
+    { nombre: "Paquete 3 Masaje Reductor",                   calendarId: "uajeiWuAmnwZ9BPA4RlT", duracion: 45,  precio: "$850.000",   profesionales: [LA, LS] },
+    { nombre: "Reestructuración de Estrías",                 calendarId: "9PiZEDHNec91qK58o3de", duracion: 40,  precio: "$400.000",   profesionales: [LA, LS] },
+    { nombre: "Camuflaje de Estrías",                        calendarId: "xU7HfkiIbhZwHo1EnrTz", duracion: 120, precio: "$1.600.000", profesionales: [LA, LS] },
+    { nombre: "Limpieza Facial Especial",                    calendarId: "vxUBF94v8PKqobjUBeZc", duracion: 90,  precio: "$150.000",   profesionales: [LA, LS] },
+    { nombre: "Limpieza Facial Tradicional",                 calendarId: "fz9614uqbCIz8bLDXYNR", duracion: 60,  precio: "$100.000",   profesionales: [LA, LS] },
+    { nombre: "Cosmetología Facial",                         calendarId: "6Gq72d3MJ8FqYsWYEeWD", duracion: 30,  precio: "$30.000",    profesionales: [LA, LS] },
   ],
 }
 
@@ -167,6 +169,7 @@ export const PROFESIONALES: Profesional[] = [
   { nombre: "Zuly Rojas",     userId: ZR, especialidad: "Uñas & Manicure",   iniciales: "ZR", foto: "/fotos/zuly.jpg" },
   { nombre: "Juliana García", userId: JU, especialidad: "Uñas & Manicure",   iniciales: "JG" },
   { nombre: "Maria Osorio",   userId: MO, especialidad: "Uñas & Manicure",   iniciales: "MO" },
+  { nombre: "Leidy Saldarriaga", userId: LS, especialidad: "Cabello, Cejas y Pestañas", iniciales: "LS" },
 ]
 
 export const SLOTS_URL = "https://santiagon8nmejia.dominadoresia.com/webhook/booking/slots"
