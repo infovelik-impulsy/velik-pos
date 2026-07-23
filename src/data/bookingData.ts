@@ -84,7 +84,7 @@ export const SERVICIOS: Record<string, Servicio[]> = {
 
   // ─── CABELLO ── Carolina y Laura ─────────────────────────────────────────────
   "Cabello": [
-    { nombre: "Valoración de Cabello",                      calendarId: "yePA3PPHJC9Fdu6A6WMt", duracion: 30,  precio: "$30.000",  profesionales: [] },
+    { nombre: "Valoración de Cabello",                      calendarId: "yePA3PPHJC9Fdu6A6WMt", duracion: 30,  precio: "$30.000",  profesionales: [LS] },
     { nombre: "Alisado Natural Argán y Coco (Corto)",       calendarId: "tYgB9RKWsWnAY6yzHbzo", duracion: 300, precio: "$250.000", precioEditable: true, profesionales: [LS] },
     { nombre: "Alisado Natural Argán y Coco (Medio)",       calendarId: "YsyBC5BKtrnN8YQYRDBm", duracion: 300, precio: "$290.000", precioEditable: true, profesionales: [LS] },
     { nombre: "Alisado Natural Argán y/o Coco Largo",       calendarId: "aO1pbT4UQDyqLJwXnPqX", duracion: 300, precio: "$400.000", precioEditable: true, profesionales: [LS] },
@@ -152,16 +152,16 @@ export const SERVICIOS: Record<string, Servicio[]> = {
 
   // ─── CORPORAL ── Luz (Piedras Volcánicas: Laura y Luz) ───────────────────────
   "Corporal": [
-    { nombre: "Drenaje Linfático",                           calendarId: "wAwK46EAzP7OMVbVZ4Na", duracion: 60,  precio: "$100.000",   profesionales: [LA, LS] },
-    { nombre: "Masaje Relajación Piedras Volcánicas + Velas",calendarId: "q2Iz4gfTyoB3JkRNZ4CZ", duracion: 60,  precio: "$140.000",   profesionales: [LA, LS] },
-    { nombre: "Paquete 1 Masaje Reductor",                   calendarId: "kjgB0Whm8mjpYv8I075K", duracion: 45,  precio: "$450.000",   profesionales: [LA, LS] },
-    { nombre: "Paquete 2 Masaje Reductor",                   calendarId: "8iU9qGnCM5nT6816pEAh", duracion: 45,  precio: "$650.000",   profesionales: [LA, LS] },
-    { nombre: "Paquete 3 Masaje Reductor",                   calendarId: "uajeiWuAmnwZ9BPA4RlT", duracion: 45,  precio: "$850.000",   profesionales: [LA, LS] },
-    { nombre: "Reestructuración de Estrías",                 calendarId: "9PiZEDHNec91qK58o3de", duracion: 40,  precio: "$400.000",   profesionales: [LA, LS] },
-    { nombre: "Camuflaje de Estrías",                        calendarId: "xU7HfkiIbhZwHo1EnrTz", duracion: 120, precio: "$1.600.000", profesionales: [LA, LS] },
-    { nombre: "Limpieza Facial Especial",                    calendarId: "vxUBF94v8PKqobjUBeZc", duracion: 90,  precio: "$150.000",   profesionales: [LA, LS] },
-    { nombre: "Limpieza Facial Tradicional",                 calendarId: "fz9614uqbCIz8bLDXYNR", duracion: 60,  precio: "$100.000",   profesionales: [LA, LS] },
-    { nombre: "Cosmetología Facial",                         calendarId: "6Gq72d3MJ8FqYsWYEeWD", duracion: 30,  precio: "$30.000",    profesionales: [LA, LS] },
+    { nombre: "Drenaje Linfático",                           calendarId: "wAwK46EAzP7OMVbVZ4Na", duracion: 60,  precio: "$100.000",   profesionales: [LA] },
+    { nombre: "Masaje Relajación Piedras Volcánicas + Velas",calendarId: "q2Iz4gfTyoB3JkRNZ4CZ", duracion: 60,  precio: "$140.000",   profesionales: [LA] },
+    { nombre: "Paquete 1 Masaje Reductor",                   calendarId: "kjgB0Whm8mjpYv8I075K", duracion: 45,  precio: "$450.000",   profesionales: [LA] },
+    { nombre: "Paquete 2 Masaje Reductor",                   calendarId: "8iU9qGnCM5nT6816pEAh", duracion: 45,  precio: "$650.000",   profesionales: [LA] },
+    { nombre: "Paquete 3 Masaje Reductor",                   calendarId: "uajeiWuAmnwZ9BPA4RlT", duracion: 45,  precio: "$850.000",   profesionales: [LA] },
+    { nombre: "Reestructuración de Estrías",                 calendarId: "9PiZEDHNec91qK58o3de", duracion: 40,  precio: "$400.000",   profesionales: [LA] },
+    { nombre: "Camuflaje de Estrías",                        calendarId: "xU7HfkiIbhZwHo1EnrTz", duracion: 120, precio: "$1.600.000", profesionales: [LA] },
+    { nombre: "Limpieza Facial Especial",                    calendarId: "vxUBF94v8PKqobjUBeZc", duracion: 90,  precio: "$150.000",   profesionales: [LA] },
+    { nombre: "Limpieza Facial Tradicional",                 calendarId: "fz9614uqbCIz8bLDXYNR", duracion: 60,  precio: "$100.000",   profesionales: [LA] },
+    { nombre: "Cosmetología Facial",                         calendarId: "6Gq72d3MJ8FqYsWYEeWD", duracion: 30,  precio: "$30.000",    profesionales: [LA] },
   ],
 }
 
