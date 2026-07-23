@@ -168,8 +168,8 @@ export const SERVICIOS: Record<string, Servicio[]> = {
 export const PROFESIONALES: Profesional[] = [
   { nombre: "Luz Aida",       userId: LA, especialidad: "Facial & Corporal", iniciales: "LA", foto: "/fotos/luz.jpg" },
   { nombre: "Zuly Rojas",     userId: ZR, especialidad: "Uñas & Manicure",   iniciales: "ZR", foto: "/fotos/zuly.jpg" },
-  { nombre: "Juliana García", userId: JU, especialidad: "Uñas & Manicure",   iniciales: "JG" },
-  { nombre: "Maria Osorio",   userId: MO, especialidad: "Uñas & Manicure",   iniciales: "MO" },
+  { nombre: "Juliana García", userId: JU, especialidad: "Uñas & Manicure",   iniciales: "JG", foto: "/fotos/juliana.png" },
+  { nombre: "Maria Osorio",   userId: MO, especialidad: "Uñas & Manicure",   iniciales: "MO", foto: "/fotos/maria.png" },
   { nombre: "Leidy Saldarriaga", userId: LS, especialidad: "Cabello, Cejas y Pestañas", iniciales: "LS" },
 ]
 
