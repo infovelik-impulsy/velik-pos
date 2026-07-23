@@ -316,11 +316,14 @@ export default function Agenda() {
           </div>
         ) : (
           /* Grid: 1 columna en móvil, una por profesional en desktop */
-          <div className={`grid gap-5 ${
-            citasPorProfesional.length === 1 ? 'grid-cols-1 max-w-lg mx-auto' :
-            citasPorProfesional.length === 2 ? 'grid-cols-1 md:grid-cols-2' :
-            'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
-          }`}>
+          <div
+            className={`grid gap-5 ${
+              citasPorProfesional.length === 1 ? 'grid-cols-1 max-w-lg mx-auto' :
+              citasPorProfesional.length === 2 ? 'grid-cols-1 md:grid-cols-2' :
+              'grid-cols-1 md:[grid-template-columns:repeat(var(--num-prof),minmax(0,1fr))]'
+            }`}
+            style={citasPorProfesional.length > 2 ? { '--num-prof': citasPorProfesional.length } as React.CSSProperties : undefined}
+          >
             {citasPorProfesional.map(({ profesional, citas: cs }) => (
               <div key={profesional.id} className="min-w-0">
                 {/* Cabecera profesional */}
