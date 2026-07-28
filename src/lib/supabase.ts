@@ -1,15 +1,35 @@
 import { createClient } from '@supabase/supabase-js'
 
+// Wraps localStorage so a throw (Safari private mode, cookies blocked, etc.)
+// falls back to an in-memory store instead of crashing the whole app on load.
+const memoryStore = new Map<string, string>()
+const safeStorage = {
+  getItem: (key: string) => {
+    try { return window.localStorage.getItem(key) } catch { return memoryStore.get(key) ?? null }
+  },
+  setItem: (key: string, value: string) => {
+    try { window.localStorage.setItem(key, value) } catch { memoryStore.set(key, value) }
+  },
+  removeItem: (key: string) => {
+    try { window.localStorage.removeItem(key) } catch { memoryStore.delete(key) }
+  },
+}
+
 export const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
+  import.meta.env.VITE_SUPABASE_ANON_KEY,
+  { auth: { storage: safeStorage } }
 )
 
 // Auto-authenticate with internal system user on load
-supabase.auth.signInWithPassword({
-  email: import.meta.env.VITE_SUPABASE_APP_EMAIL,
-  password: import.meta.env.VITE_SUPABASE_APP_PASS,
-}).catch(() => {})
+try {
+  supabase.auth.signInWithPassword({
+    email: import.meta.env.VITE_SUPABASE_APP_EMAIL,
+    password: import.meta.env.VITE_SUPABASE_APP_PASS,
+  }).catch(() => {})
+} catch {
+  // ignore — should be unreachable now that storage access is guarded, kept as a last resort
+}
 
 // Service role client — bypasses RLS for delete/admin operations
 const SERVICE_KEY = import.meta.env.VITE_SUPABASE_SERVICE_KEY
